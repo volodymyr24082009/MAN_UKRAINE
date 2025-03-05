@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адмін-панель - АвтоЛікар24.7</title>
+    <style>
+       :root {
+    --background-dark: #1a1a1a;
+    --background-light: #f5f5f5;
+    --text-dark: #fff;
+    --text-light: #333;
+    --primary-color: #ff3300;
+    --secondary-color: #ff6600;
+    --accent-color: #007bff;
+}
+
+html {
+    scroll-behavior: smooth;
+    height: 100%;
+    font-size: 16px;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background: var(--background-dark);
+    background-image: radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+                      radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-position: 0 0, 25px 25px;
+    padding: 20px;
+    color: var(--text-dark);
+    font-family: 'Roboto', Arial, sans-serif;
+    transition: background 0.3s ease, color 0.3s ease;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+html.light body {
+    background: var(--background-light);
+    color: var(--text-light);
+}
+
+/* Контейнер */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Хедер */
+header {
+    width: 100%;
+    background: linear-gradient(145deg, #222222, #333333);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+html.light header {
+    background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Лого */
+.logo {
+    font-size: clamp(1.2rem, 2vw, 1.8rem);
+    font-weight: bold;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+/* Кнопки навігації */
+.nav-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 10px 15px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Перемикач теми */
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px;
+}
+
+html.light .slider {
+    background-color: #ccc;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(30px);
+}
+
+/* Основний контент */
+main {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+/* Таблиця */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: linear-gradient(145deg, #222222, #333333);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+html.light table {
+    background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html.light th, html.light td {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+th {
+    background-color: var(--primary-color);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* Адаптація */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .nav-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    .theme-switch-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    table {
+        font-size: 14px;
+        display: block;
+        overflow-x: auto;
+    }
+
+    th, td {
+        padding: 8px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    header {
+        padding: 10px;
+    }
+
+    .logo {
+        font-size: 1.2rem;
+    }
+
+    button {
+        font-size: 0.8rem;
+        padding: 8px 12px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    th, td {
+        padding: 6px 8px;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html" class="logo">ProFix Network Hub</a>
+            <div class="nav-buttons">
+                <button onclick="window.location.href='index.html'">Головна</button>
+                <button onclick="window.location.href='profile.html'">Профіль</button>
+                <button onclick="window.location.href='auth.html'">Реєстрація та Авторизація</button>
+            </div>
+            <div class="theme-switch-container">
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider">
+                        <span class="moon">🌙</span>
+                        <span class="sun">☀️</span>
+                    </span>
+                </label>
+            </div>
+        </header>
+
+        <main>
+            <h1>Адмін-панель</h1>
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ім'я користувача</th>
+                        <th>Роль</th>
+                        <th>Ім'я</th>
+                        <th>Прізвище</th>
+                        <th>Email</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table content will be dynamically populated -->
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        
+        // Check for saved theme preference
+        if (localStorage.getItem('theme') === 'light') {
+            htmlElement.classList.remove('dark');
+            htmlElement.classList.add('light');
+            themeToggle.checked = true;
+        }
+        
+        // Toggle theme when switch is clicked
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                htmlElement.classList.remove('dark');
+                htmlElement.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                htmlElement.classList.remove('light');
+                htmlElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Load and display users
+        function loadUsers() {
+            fetch('/admin/users')
+                .then(response => response.json())
+                .then(users => {
+                    const tableBody = document.querySelector('#usersTable tbody');
+                    tableBody.innerHTML = '';
+                    users.forEach(user => {
+                        const row = `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.role_master ? 'Майстер' : 'Користувач'}</td>
+                                <td>${user.first_name || ''}</td>
+                                <td>${user.last_name || ''}</td>
+                                <td>${user.email || ''}</td>
+                                <td><button onclick="deleteUser(${user.id})">Видалити</button></td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error('Помилка при завантаженні користувачів:', error));
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Ви впевнені, що хочете видалити цього користувача?')) {
+                fetch(`/admin/users/${userId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        loadUsers();
+                    })
+                    .catch(error => console.error('Помилка при видаленні користувача:', error));
+            }
+        }
+
+        // Load users when page loads
+        loadUsers();
+    </script>
+</body>
+</html>
+
