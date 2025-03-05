@@ -3,10 +3,9 @@ const bodyParser = require("body-parser")
 const { Pool } = require("pg")
 const path = require("path")
 const dotenv = require("dotenv")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const cors = require("cors")
-import { SpeedInsights } from "@vercel/speed-insights/next"
 dotenv.config()
 
 const app = express()
