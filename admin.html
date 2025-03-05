@@ -244,6 +244,15 @@ th {
   display: inline-block;
 }
 
+.status-completed {
+  background-color: rgba(0, 0, 255, 0.2);
+  color: #0088ff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  display: inline-block;
+}
+
 /* Кнопки дій */
 .action-buttons {
   display: flex;
@@ -256,6 +265,14 @@ th {
 
 .reject-btn {
   background: linear-gradient(90deg, #cc0000, #aa0000);
+}
+
+.complete-btn {
+  background: linear-gradient(90deg, #0066cc, #0044aa);
+}
+
+.call-btn {
+  background: linear-gradient(90deg, #9900cc, #7700aa);
 }
 
 /* Вкладки */
@@ -402,11 +419,12 @@ th {
           <h1>Адмін-панель</h1>
           
           <div class="tabs">
-              <button class="tab active" data-tab="users">Користувачі</button>
+              <button class="tab" data-tab="users">Користувачі</button>
               <button class="tab" data-tab="master-requests">Запити майстрів</button>
+              <button class="tab active" data-tab="orders">Заявки</button>
           </div>
           
-          <div id="users-tab" class="tab-content active">
+          <div id="users-tab" class="tab-content">
               <table id="usersTable">
                   <thead>
                       <tr>
@@ -440,6 +458,28 @@ th {
                           <th>Галузі</th>
                           <th>Навички</th>
                           <th>Статус</th>
+                          <th>Дата створення</th>
+                          <th>Дії</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <!-- Table content will be dynamically populated -->
+                  </tbody>
+              </table>
+          </div>
+          
+          <div id="orders-tab" class="tab-content active">
+              <h2>Заявки клієнтів</h2>
+              <table id="ordersTable">
+                  <thead>
+                      <tr>
+                          <th>ID</th>
+                          <th>Тема</th>
+                          <th>Опис</th>
+                          <th>Клієнт</th>
+                          <th>Телефон</th>
+                          <th>Статус</th>
+                          <th>Майстер</th>
                           <th>Дата створення</th>
                           <th>Дії</th>
                       </tr>
@@ -497,6 +537,8 @@ th {
                   loadUsers();
               } else if (tabId === 'master-requests') {
                   loadMasterRequests();
+              } else if (tabId === 'orders') {
+                  loadOrders();
               }
           });
       });
@@ -588,12 +630,72 @@ th {
               })
               .catch(error => console.error('Помилка при завантаженні запитів майстрів:', error));
       }
+      
+      // Load and display orders
+      function loadOrders() {
+    fetch('/orders')
+      .then(response => response.json())
+      .then(data => {
+        const tableBody = document.querySelector('#ordersTable tbody');
+        tableBody.innerHTML = '';
+        
+        data.orders.forEach(order => {
+          const createdDate = new Date(order.created_at).toLocaleString('uk-UA');
+          const clientName = `${order.user_first_name || ''} ${order.user_last_name || ''} (${order.user_username})`;
+          const masterName = order.master_id ? 
+            `${order.master_first_name || ''} ${order.master_last_name || ''} (${order.master_username})` : 
+            'Не призначено';
+          
+          // Отримуємо ID поточного користувача
+          const currentUserId = localStorage.getItem('userId');
+          
+          let actionButtons = '';
+          
+          if (order.status === 'pending') {
+            actionButtons = `
+              <button class="approve-btn" onclick="updateOrderStatus(${order.id}, 'approved', ${currentUserId})">Прийняти</button>
+              <button class="reject-btn" onclick="updateOrderStatus(${order.id}, 'rejected', ${currentUserId})">Відхилити</button>
+            `;
+          } else if (order.status === 'approved' && order.master_id == currentUserId) {
+            actionButtons = `
+              <button class="complete-btn" onclick="updateOrderStatus(${order.id}, 'completed', ${currentUserId})">Завершити</button>
+            `;
+          }
+          
+          // Додаємо кнопку для дзвінка
+          if (order.phone) {
+            actionButtons += `
+              <button class="call-btn" onclick="callClient('${order.phone}')">Зателефонувати</button>
+            `;
+          }
+          
+          const row = `
+            <tr>
+              <td>${order.id}</td>
+              <td>${order.title}</td>
+              <td>${order.description || 'Немає опису'}</td>
+              <td>${clientName}</td>
+              <td>${order.phone}</td>
+              <td><span class="status-${order.status}">${getStatusText(order.status)}</span></td>
+              <td>${masterName}</td>
+              <td>${createdDate}</td>
+              <td class="action-buttons">
+                ${actionButtons}
+              </td>
+            </tr>
+          `;
+          tableBody.innerHTML += row;
+        });
+      })
+      .catch(error => console.error('Помилка при завантаженні замовлень:', error));
+  }
 
       function getStatusText(status) {
           switch(status) {
               case 'pending': return 'На розгляді';
               case 'approved': return 'Затверджено';
               case 'rejected': return 'Відхилено';
+              case 'completed': return 'Завершено';
               default: return '';
           }
       }
@@ -626,12 +728,76 @@ th {
                   .catch(error => console.error(`Помилка при ${statusText === 'затвердити' ? 'затвердженні' : 'відхиленні'} запиту:`, error));
           }
       }
+      
+      function updateOrderStatus(orderId, status, masterId) {
+    const statusTexts = {
+      'approved': 'прийняти',
+      'rejected': 'відхилити',
+      'completed': 'завершити'
+    };
+    
+    const statusText = statusTexts[status] || status;
+    
+    if (confirm(`Ви впевнені, що хочете ${statusText} цю заявку?`)) {
+      fetch(`/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` // Додаємо токен для авторизації
+        },
+        body: JSON.stringify({ 
+          status: status,
+          master_id: status === 'rejected' ? null : masterId
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert(data.message);
+            loadOrders();
+          } else {
+            alert(data.message || 'Помилка при оновленні статусу заявки');
+          }
+        })
+        .catch(error => console.error(`Помилка при оновленні статусу заявки:`, error));
+    }
+  }
+      
+      function callClient(phoneNumber) {
+          // Видаляємо всі нецифрові символи з номера телефону
+          const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
+          
+          // Створюємо посилання для дзвінка
+          window.location.href = `tel:${cleanPhoneNumber}`;
+      }
 
-      // Load users when page loads
-      document.addEventListener('DOMContentLoaded', function() {
-          loadUsers();
-      });
+      // Додайте цю функцію для отримання даних користувача при завантаженні сторінки
+  function getUserData() {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('/user-data', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            localStorage.setItem('userId', data.userId);
+            localStorage.setItem('userRole', data.role);
+          } else {
+            console.error('Помилка отримання даних користувача:', data.message);
+          }
+        })
+        .catch(error => console.error('Помилка при отриманні даних користувача:', error));
+    }
+  }
+
+  // Викликайте цю функцію при завантаженні сторінки
+  document.addEventListener('DOMContentLoaded', function() {
+    getUserData();
+    loadOrders();
+  });
   </script>
 </body>
 </html>
-

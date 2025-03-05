@@ -9,7 +9,7 @@ const cors = require("cors")
 dotenv.config()
 
 const app = express()
-const port = process.env.PORT || 30015
+const port = process.env.PORT || 3003
 
 // Підключення до бази даних
 const pool = new Pool({
@@ -87,6 +87,21 @@ const createTables = async () => {
     );
   `
 
+  // Нова таблиця для замовлень
+  const ordersTableQuery = `
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      phone VARCHAR(15) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      master_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `
+
   try {
     await pool.query(userTableQuery)
     await pool.query(userProfileTableQuery)
@@ -94,10 +109,13 @@ const createTables = async () => {
     await pool.query(addRoleMasterColumnQuery)
     await pool.query(addApprovalStatusColumnQuery)
     await pool.query(masterRequestsTableQuery)
+    await pool.query(ordersTableQuery)
     console.log("Таблиці створено або вже існують, колонки додано (якщо їх не було).")
   } catch (err) {
     console.error("Помилка при створенні таблиць:", err)
+  
   }
+  
 }
 
 createTables()
@@ -612,8 +630,164 @@ app.get("/api/user-master-timeline", async (req, res) => {
   }
 })
 
+// НОВІ ЕНДПОІНТИ ДЛЯ ЗАМОВЛЕНЬ
+
+// Створення нового замовлення
+app.post("/orders", async (req, res) => {
+  const { user_id, title, description, phone } = req.body
+
+  if (!user_id || !title || !phone) {
+    return res.status(400).json({ message: "Усі обов'язкові поля повинні бути заповнені" })
+  }
+
+  try {
+    // Перевірка чи існує користувач
+    const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [user_id])
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "Користувача не знайдено" })
+    }
+
+    // Створення нового замовлення
+    const newOrder = await pool.query(
+      "INSERT INTO orders (user_id, title, description, phone, status) VALUES ($1, $2, $3, $4, 'pending') RETURNING id",
+      [user_id, title, description, phone]
+    )
+
+    console.log(`Нове замовлення з ID ${newOrder.rows[0].id} успішно створено.`)
+    res.status(201).json({ 
+      success: true, 
+      message: "Замовлення успішно створено", 
+      orderId: newOrder.rows[0].id 
+    })
+  } catch (err) {
+    console.error("Помилка при створенні замовлення:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Отримання всіх замовлень
+app.get("/orders", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.master_id, o.created_at, o.updated_at,
+             u.username as user_username, 
+             up.first_name as user_first_name, 
+             up.last_name as user_last_name,
+             up.email as user_email,
+             m.username as master_username,
+             mp.first_name as master_first_name,
+             mp.last_name as master_last_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      LEFT JOIN users m ON o.master_id = m.id
+      LEFT JOIN user_profile mp ON m.id = mp.user_id
+      ORDER BY o.created_at DESC
+    `)
+
+    res.status(200).json({ orders: result.rows })
+  } catch (err) {
+    console.error("Помилка при отриманні замовлень:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Отримання замовлень користувача
+app.get("/orders/user/:userId", async (req, res) => {
+  const userId = req.params.userId
+
+  try {
+    const result = await pool.query(`
+      SELECT o.id, o.title, o.description, o.phone, o.status, 
+             o.master_id, o.created_at, o.updated_at,
+             m.username as master_username,
+             mp.first_name as master_first_name,
+             mp.last_name as master_last_name
+      FROM orders o
+      LEFT JOIN users m ON o.master_id = m.id
+      LEFT JOIN user_profile mp ON m.id = mp.user_id
+      WHERE o.user_id = $1
+      ORDER BY o.created_at DESC
+    `, [userId])
+
+    res.status(200).json({ orders: result.rows })
+  } catch (err) {
+    console.error("Помилка при отриманні замовлень користувача:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Отримання замовлень, оброблених майстром
+app.get("/orders/master/:masterId", async (req, res) => {
+  const masterId = req.params.masterId
+
+  try {
+    const result = await pool.query(`
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.created_at, o.updated_at,
+             u.username as user_username, 
+             up.first_name as user_first_name, 
+             up.last_name as user_last_name,
+             up.email as user_email
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      WHERE o.master_id = $1
+      ORDER BY o.updated_at DESC
+    `, [masterId])
+
+    res.status(200).json({ orders: result.rows })
+  } catch (err) {
+    console.error("Помилка при отриманні замовлень майстра:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Оновлення статусу замовлення
+app.put("/orders/:orderId", async (req, res) => {
+  const orderId = req.params.orderId
+  const { status, master_id } = req.body
+
+  if (!status || !["pending", "approved", "rejected", "completed"].includes(status)) {
+    return res.status(400).json({ message: "Невірний статус" })
+  }
+
+  try {
+    // Перевірка чи існує замовлення
+    const orderResult = await pool.query("SELECT * FROM orders WHERE id = $1", [orderId])
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ message: "Замовлення не знайдено" })
+    }
+
+    // Перевірка чи користувач є майстром
+    if (master_id) {
+      const masterResult = await pool.query(`
+        SELECT * FROM user_profile 
+        WHERE user_id = $1 AND role_master = true AND approval_status = 'approved'
+      `, [master_id])
+      
+      if (masterResult.rows.length === 0) {
+        return res.status(403).json({ message: "Тільки затверджені майстри можуть обробляти замовлення" })
+      }
+    }
+
+    // Оновлення статусу замовлення
+    await pool.query(`
+      UPDATE orders 
+      SET status = $1, master_id = $2, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = $3
+    `, [status, master_id, orderId])
+
+    console.log(`Статус замовлення з ID ${orderId} змінено на ${status}.`)
+    res.status(200).json({ success: true, message: `Статус замовлення змінено на ${status}` })
+  } catch (err) {
+    console.error("Помилка при оновленні статусу замовлення:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
 // Запуск сервера
 app.listen(port, () => {
   console.log(`Сервер запущено на http://localhost:${port}`)
 })
-

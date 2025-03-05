@@ -305,6 +305,121 @@
             border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
 
+        /* Стилі для форми замовлення */
+        .order-form-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        html.light .order-form-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .order-form-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+
+        .order-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--text-dark);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        html.light .form-group input,
+        html.light .form-group textarea {
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            background-color: rgba(255, 255, 255, 0.8);
+            color: var(--text-light);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(255, 51, 0, 0.3);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            padding: 12px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .form-message {
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .form-message.success {
+            background-color: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            display: block;
+        }
+
+        .form-message.error {
+            background-color: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+            display: block;
+        }
+
         /* Адаптивність */
         @media (max-width: 992px) {
             .chart-container {
@@ -413,6 +528,27 @@
             <h1>Ласкаво просимо до ProFix Network Hub</h1>
             <p>Тут ви можете знайти найкращі послуги для вашого автомобіля.</p>
             
+            <!-- Форма для створення замовлення -->
+            <div class="order-form-container">
+                <h2 class="order-form-title">Залишити заявку на ремонт</h2>
+                <form id="orderForm" class="order-form">
+                    <div class="form-group">
+                        <label for="orderTitle">Тема заявки*</label>
+                        <input type="text" id="orderTitle" name="title" required placeholder="Наприклад: Заміна масла">
+                    </div>
+                    <div class="form-group">
+                        <label for="orderDescription">Опис проблеми</label>
+                        <textarea id="orderDescription" name="description" placeholder="Детально опишіть проблему з вашим автомобілем"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderPhone">Номер телефону*</label>
+                        <input type="tel" id="orderPhone" name="phone" required placeholder="+380XXXXXXXXX">
+                    </div>
+                    <button type="submit" class="submit-btn" id="submitOrderBtn">Відправити заявку</button>
+                    <div id="orderFormMessage" class="form-message"></div>
+                </form>
+            </div>
+            
             <!-- Контейнер для графіків в один ряд -->
             <div class="charts-row">
                 <!-- Графік кількості користувачів та майстрів -->
@@ -453,7 +589,7 @@
             <div class="footer-section">
                 <h3>Контакти</h3>
                 <p>Телефон: +380 12 345 6789</p>
-                <p>Email: info@autolikar247.ua</p>
+                <p>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="254c4b434a654450514a494c4e44571711120b5044">[email&#160;protected]</a></p>
                 <p>Адреса: м. Київ, вул. Автомобільна, 24</p>
             </div>
         </div>
@@ -462,7 +598,7 @@
         </div>
     </footer>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         const themeToggle = document.getElementById('themeToggle');
         const htmlElement = document.documentElement;
         
@@ -705,6 +841,75 @@
         document.addEventListener('DOMContentLoaded', () => {
             initAgeChart();
             initUserMasterChart();
+            
+            // Обробка форми замовлення
+            const orderForm = document.getElementById('orderForm');
+            const orderFormMessage = document.getElementById('orderFormMessage');
+            
+            orderForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const submitBtn = document.getElementById('submitOrderBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Відправка...';
+                
+                const title = document.getElementById('orderTitle').value;
+                const description = document.getElementById('orderDescription').value;
+                const phone = document.getElementById('orderPhone').value;
+                
+                // Перевірка чи користувач авторизований
+                const userId = localStorage.getItem('userId');
+                if (!userId) {
+                    orderFormMessage.textContent = 'Будь ласка, авторизуйтесь для відправки заявки';
+                    orderFormMessage.className = 'form-message error';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Відправити заявку';
+                    
+                    // Перенаправлення на сторінку авторизації через 2 секунди
+                    setTimeout(() => {
+                        window.location.href = 'auth.html';
+                    }, 2000);
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/orders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            title,
+                            description,
+                            phone
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        orderFormMessage.textContent = 'Заявку успішно відправлено! Наші майстри зв\'яжуться з вами найближчим часом.';
+                        orderFormMessage.className = 'form-message success';
+                        orderForm.reset();
+                    } else {
+                        orderFormMessage.textContent = data.message || 'Помилка при відправці заявки';
+                        orderFormMessage.className = 'form-message error';
+                    }
+                } catch (error) {
+                    console.error('Помилка:', error);
+                    orderFormMessage.textContent = 'Помилка з\'єднання з сервером';
+                    orderFormMessage.className = 'form-message error';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Відправити заявку';
+                    
+                    // Приховати повідомлення через 5 секунд
+                    setTimeout(() => {
+                        orderFormMessage.style.display = 'none';
+                    }, 5000);
+                }
+            });
         });
     </script>
 </body>
