@@ -13,6 +13,8 @@
             --primary-color: #ff3300;
             --secondary-color: #ff6600;
             --accent-color: #007bff;
+            --transition-speed: 0.4s;
+            --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         html {
@@ -34,7 +36,8 @@
             padding: 20px;
             color: var(--text-dark);
             font-family: 'Roboto', Arial, sans-serif;
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: background var(--transition-speed) var(--transition-timing), 
+                        color var(--transition-speed) var(--transition-timing);
             margin: 0;
             overflow-x: hidden;
         }
@@ -63,7 +66,7 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
-            transition: all 0.3s ease;
+            transition: all var(--transition-speed) var(--transition-timing);
         }
 
         html.light header {
@@ -93,7 +96,7 @@
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all var(--transition-speed) var(--transition-timing);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -182,6 +185,39 @@
             to {
                 opacity: 1;
                 transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
@@ -284,7 +320,16 @@
             border-radius: 8px;
             color: var(--text-dark);
             font-size: 1rem;
-            transition: all 0.3s ease;
+            transition: all var(--transition-speed) var(--transition-timing);
+        }
+
+        html.light input[type="text"],
+        html.light input[type="email"],
+        html.light input[type="date"],
+        html.light textarea {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--text-light);
         }
 
         input:focus,
@@ -300,7 +345,11 @@
             margin-bottom: 8px;
             font-weight: 500;
             color: var(--text-dark);
-            transition: color 0.3s ease;
+            transition: color var(--transition-speed) var(--transition-timing);
+        }
+
+        html.light label {
+            color: var(--text-light);
         }
 
         input:focus + label,
@@ -310,31 +359,224 @@
 
         /* Enhanced services section */
         #services {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            transition: all 0.3s ease;
+            background: linear-gradient(145deg, rgba(34, 34, 34, 0.9), rgba(51, 51, 51, 0.9));
+            border: 1px solid rgba(255, 51, 0, 0.2);
+            border-radius: 12px;
+            margin-top: 25px;
+            padding: 25px;
+            transition: all var(--transition-speed) var(--transition-timing);
             transform-origin: top;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        html.light #services {
+            background: linear-gradient(145deg, rgba(240, 240, 240, 0.9), rgba(250, 250, 250, 0.9));
+            border: 1px solid rgba(255, 51, 0, 0.2);
         }
 
         #services.visible {
-            animation: fadeInScale 0.4s ease-out;
+            animation: fadeInScale 0.4s ease-out forwards;
+            max-height: 5000px;
+            opacity: 1;
+            padding: 25px;
         }
 
         #services:hover {
             background: rgba(255, 51, 0, 0.1);
         }
 
+        #services label:first-child {
+            font-size: 1.1em;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: block;
+        }
+
         .service-option {
+            margin: 15px 0;
             padding: 10px;
-            margin: 5px 0;
-            border-radius: 6px;
-            transition: all 0.3s ease;
+            border-radius: 8px;
+            transition: all var(--transition-speed) var(--transition-timing);
         }
 
         .service-option:hover {
             background: rgba(255, 51, 0, 0.1);
+            transform: translateX(5px);
+        }
+
+        /* Custom checkbox styling */
+        .checkbox-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            cursor: pointer;
+            padding: 5px;
+            transition: all var(--transition-speed) var(--transition-timing);
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkbox-wrapper .checkmark {
+            position: relative;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 51, 0, 0.5);
+            border-radius: 6px;
+            transition: all var(--transition-speed) var(--transition-timing);
+        }
+
+        html.light .checkbox-wrapper .checkmark {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(255, 51, 0, 0.3);
+        }
+
+        .checkbox-wrapper:hover .checkmark {
+            background: rgba(255, 51, 0, 0.1);
+            transform: scale(1.05);
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:checked ~ .checkmark {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .checkbox-wrapper .checkmark:after {
+            content: '';
+            position: absolute;
+            display: none;
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:checked ~ .checkmark:after {
+            display: block;
+            animation: checkmark 0.2s ease-in-out forwards;
+        }
+
+        @keyframes checkmark {
+            0% {
+                opacity: 0;
+                transform: rotate(45deg) scale(0);
+            }
+            100% {
+                opacity: 1;
+                transform: rotate(45deg) scale(1);
+            }
+        }
+
+        /* Industry skills section - IMPROVED TRANSITIONS */
+        .industry-skills {
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+            margin-top: 0;
+            padding: 0 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all var(--transition-speed) var(--transition-timing);
+            transform: translateY(-20px);
+            border-left: 3px solid transparent;
+        }
+
+        html.light .industry-skills {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .industry-skills h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            opacity: 0;
+            transition: opacity var(--transition-speed) var(--transition-timing);
+        }
+
+        .industry-skills.visible {
+            height: auto;
+            opacity: 1;
+            margin-top: 20px;
+            padding: 15px;
+            transform: translateY(0);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .industry-skills.visible h3 {
+            opacity: 1;
+        }
+
+        .industry-skills.visible.slide-in-right {
+            animation: slideInFromRight 0.5s var(--transition-timing);
+        }
+
+        .industry-skills.visible.slide-in-left {
+            animation: slideInFromLeft 0.5s var(--transition-timing);
+        }
+
+        .industry-skills.visible.slide-in-top {
+            animation: slideInFromTop 0.5s var(--transition-timing);
+        }
+
+        .industry-skills.visible.slide-in-bottom {
+            animation: slideInFromBottom 0.5s var(--transition-timing);
+        }
+
+        .industry-skills.fade-out {
+            opacity: 0;
+            height: 0;
+            margin-top: 0;
+            padding: 0 15px;
+            transform: translateY(-20px);
+            transition: all var(--transition-speed) var(--transition-timing);
+        }
+
+        .custom-skills {
+            margin-top: 20px;
+        }
+
+        .status-pending {
+            background-color: rgba(255, 165, 0, 0.2);
+            color: orange;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .status-approved {
+            background-color: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .status-rejected {
+            background-color: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-left: 10px;
         }
 
         /* Enhanced button styling */
@@ -345,7 +587,7 @@
             font-weight: 600;
             letter-spacing: 1px;
             text-transform: uppercase;
-            transition: all 0.3s ease;
+            transition: all var(--transition-speed) var(--transition-timing);
             position: relative;
             overflow: hidden;
         }
@@ -467,114 +709,6 @@
                 font-size: 0.9rem;
             }
         }
-
-        /* Custom checkbox styling */
-        .checkbox-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            cursor: pointer;
-            padding: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-            height: 0;
-            width: 0;
-        }
-
-        .checkbox-wrapper .checkmark {
-            position: relative;
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 51, 0, 0.5);
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
-
-        .checkbox-wrapper:hover .checkmark {
-            background: rgba(255, 51, 0, 0.1);
-            transform: scale(1.05);
-        }
-
-        .checkbox-wrapper input[type="checkbox"]:checked ~ .checkmark {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .checkbox-wrapper .checkmark:after {
-            content: '';
-            position: absolute;
-            display: none;
-            left: 7px;
-            top: 3px;
-            width: 6px;
-            height: 12px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-
-        .checkbox-wrapper input[type="checkbox"]:checked ~ .checkmark:after {
-            display: block;
-            animation: checkmark 0.2s ease-in-out forwards;
-        }
-
-        @keyframes checkmark {
-            0% {
-                opacity: 0;
-                transform: rotate(45deg) scale(0);
-            }
-            100% {
-                opacity: 1;
-                transform: rotate(45deg) scale(1);
-            }
-        }
-
-        /* Services section enhancement */
-        #services {
-            background: linear-gradient(145deg, rgba(34, 34, 34, 0.9), rgba(51, 51, 51, 0.9));
-            border: 1px solid rgba(255, 51, 0, 0.2);
-            padding: 25px;
-            border-radius: 12px;
-            margin-top: 25px;
-        }
-
-        #services label:first-child {
-            font-size: 1.1em;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .service-option {
-            margin: 15px 0;
-            padding: 10px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .service-option:hover {
-            background: rgba(255, 51, 0, 0.1);
-            transform: translateX(5px);
-        }
-
-        html.light .checkbox-wrapper .checkmark {
-            background: rgba(0, 0, 0, 0.05);
-            border-color: rgba(255, 51, 0, 0.3);
-        }
-
-        html.light #services {
-            background: linear-gradient(145deg, rgba(240, 240, 240, 0.9), rgba(250, 250, 250, 0.9));
-            border: 1px solid rgba(255, 51, 0, 0.2);
-        }
     </style>
 </head>
 <body>
@@ -635,42 +769,118 @@
                     <input type="checkbox" id="role_master" name="role_master" />
                     <span class="checkmark"></span>
                     Я майстер
+                    <span id="approval-status"></span>
                 </label>
 
-                <div id="services" style="display: none">
-                  <label>Оберіть послугу:</label>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Діагностика двигуна"><span class="checkmark"></span>Діагностика двигуна</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт трансмісії"><span class="checkmark"></span>Ремонт трансмісії</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Заміна гальмівних дисків"><span class="checkmark"></span>Заміна гальмівних дисків</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт кондиціонера"><span class="checkmark"></span>Ремонт кондиціонера</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Заміна масла"><span class="checkmark"></span>Заміна масла</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт підвіски"><span class="checkmark"></span>Ремонт підвіски</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Заміна свічок запалювання"><span class="checkmark"></span>Заміна свічок запалювання</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Покраска автомобіля"><span class="checkmark"></span>Покраска автомобіля</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт електричних систем"><span class="checkmark"></span>Ремонт електричних систем</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Охолодження двигуна"><span class="checkmark"></span>Охолодження двигуна</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Заміна фільтру"><span class="checkmark"></span>Заміна фільтру</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт стартера"><span class="checkmark"></span>Ремонт стартера</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт електродвигуна"><span class="checkmark"></span>Ремонт електродвигуна</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Перевірка системи живлення"><span class="checkmark"></span>Перевірка системи живлення</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Проблеми з акумулятором"><span class="checkmark"></span>Проблеми з акумулятором</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт вихлопної системи"><span class="checkmark"></span>Ремонт вихлопної системи</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Заміна ременя"><span class="checkmark"></span>Заміна ременя</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Перевірка системи охолодження"><span class="checkmark"></span>Перевірка системи охолодження</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт підшипників"><span class="checkmark"></span>Ремонт підшипників</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт системи підйому"><span class="checkmark"></span>Ремонт системи підйому</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт рульового управління"><span class="checkmark"></span>Ремонт рульового управління</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Заміна гальмівної рідини"><span class="checkmark"></span>Заміна гальмівної рідини</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт паливної системи"><span class="checkmark"></span>Ремонт паливної системи</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Заміна амортизаторів"><span class="checkmark"></span>Заміна амортизаторів</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт системи запалювання"><span class="checkmark"></span>Ремонт системи запалювання</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Проблеми з трансмісією"><span class="checkmark"></span>Проблеми з трансмісією</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт кузова"><span class="checkmark"></span>Ремонт кузова</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт фар"><span class="checkmark"></span>Ремонт фар</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Заміна гальмівних колодок"><span class="checkmark"></span>Заміна гальмівних колодок</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт двигуна"><span class="checkmark"></span>Ремонт двигуна</label></div>
-                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="services" value="Ремонт системи випуску газів"><span class="checkmark"></span>Ремонт системи випуску газів</label></div>
-              </div>
+                <div id="services">
+                  <label>Оберіть галузь:</label>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Інформаційні технології" data-industry="it"><span class="checkmark"></span>Інформаційні технології</label></div>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Медицина" data-industry="medicine"><span class="checkmark"></span>Медицина</label></div>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Енергетика" data-industry="energy"><span class="checkmark"></span>Енергетика</label></div>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Аграрна галузь" data-industry="agriculture"><span class="checkmark"></span>Аграрна галузь</label></div>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Фінанси та банківська справа" data-industry="finance"><span class="checkmark"></span>Фінанси та банківська справа</label></div>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Освіта" data-industry="education"><span class="checkmark"></span>Освіта</label></div>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Туризм і гостинність" data-industry="tourism"><span class="checkmark"></span>Туризм і гостинність</label></div>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Будівництво та нерухомість" data-industry="construction"><span class="checkmark"></span>Будівництво та нерухомість</label></div>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Транспорт" data-industry="transport"><span class="checkmark"></span>Транспорт</label></div>
+                  <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Мистецтво і культура" data-industry="art"><span class="checkmark"></span>Мистецтво і культура</label></div>
+                  
+                  <!-- Industry-specific skills sections -->
+                  <div id="it-skills" class="industry-skills">
+                    <h3>Навички в галузі Інформаційних технологій:</h3>
+                    <div class="form-group">
+                      <label for="it-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="it-skills-text" name="it-skills-text" placeholder="Наприклад: Розробка веб-сайтів, мобільних додатків, налаштування серверів..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Розробка веб-сайтів, мобільних додатків, налаштування серверів...</p>
+                    </div>
+                  </div>
+                  
+                  <div id="medicine-skills" class="industry-skills">
+                    <h3>Навички в галузі Медицини:</h3>
+                    <div class="form-group">
+                      <label for="medicine-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="medicine-skills-text" name="medicine-skills-text" placeholder="Наприклад: Терапія, хірургія, педіатрія..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Терапія, хірургія, педіатрія...</p>
+                    </div>
+                  </div>
+                  
+                  <div id="energy-skills" class="industry-skills">
+                    <h3>Навички в галузі Енергетики:</h3>
+                    <div class="form-group">
+                      <label for="energy-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="energy-skills-text" name="energy-skills-text" placeholder="Наприклад: Відновлювана енергетика, електроенергетика..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Відновлювана енергетика, електроенергетика...</p>
+                    </div>
+                  </div>
+                  
+                  <div id="agriculture-skills" class="industry-skills">
+                    <h3>Навички в Аграрній галузі:</h3>
+                    <div class="form-group">
+                      <label for="agriculture-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="agriculture-skills-text" name="agriculture-skills-text" placeholder="Наприклад: Рослинництво, тваринництво  name="agriculture-skills-text" placeholder="Наприклад: Рослинництво, тваринництво, агрономія..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Рослинництво, тваринництво, агрономія...</p>
+                    </div>
+                  </div>
+                  
+                  <div id="finance-skills" class="industry-skills">
+                    <h3>Навички в галузі Фінансів та банківської справи:</h3>
+                    <div class="form-group">
+                      <label for="finance-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="finance-skills-text" name="finance-skills-text" placeholder="Наприклад: Бухгалтерський облік, фінансовий аналіз..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Бухгалтерський облік, фінансовий аналіз...</p>
+                    </div>
+                  </div>
+                  
+                  <div id="education-skills" class="industry-skills">
+                    <h3>Навички в галузі Освіти:</h3>
+                    <div class="form-group">
+                      <label for="education-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="education-skills-text" name="education-skills-text" placeholder="Наприклад: Викладання, репетиторство, розробка навчальних програм..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Викладання, репетиторство, розробка навчальних програм...</p>
+                    </div>
+                  </div>
+                  
+                  <div id="tourism-skills" class="industry-skills">
+                    <h3>Навички в галузі Туризму і гостинності:</h3>
+                    <div class="form-group">
+                      <label for="tourism-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="tourism-skills-text" name="tourism-skills-text" placeholder="Наприклад: Організація турів, готельний менеджмент..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Організація турів, готельний менеджмент...</p>
+                    </div>
+                  </div>
+                  
+                  <div id="construction-skills" class="industry-skills">
+                    <h3>Навички в галузі Будівництва та нерухомості:</h3>
+                    <div class="form-group">
+                      <label for="construction-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="construction-skills-text" name="construction-skills-text" placeholder="Наприклад: Архітектурне проектування, будівельні роботи..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Архітектурне проектування, будівельні роботи...</p>
+                    </div>
+                  </div>
+                  
+                  <div id="transport-skills" class="industry-skills">
+                    <h3>Навички в галузі Транспорту:</h3>
+                    <div class="form-group">
+                      <label for="transport-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="transport-skills-text" name="transport-skills-text" placeholder="Наприклад: Логістика, вантажні перевезення..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Логістика, вантажні перевезення...</p>
+                    </div>
+                  </div>
+                  
+                  <div id="art-skills" class="industry-skills">
+                    <h3>Навички в галузі Мистецтва і культури:</h3>
+                    <div class="form-group">
+                      <label for="art-skills-text">Опишіть ваші навички в цій галузі:</label>
+                      <textarea id="art-skills-text" name="art-skills-text" placeholder="Наприклад: Образотворче мистецтво, музика, театр..." rows="4"></textarea>
+                      <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Образотворче мистецтво, музика, театр...</p>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group custom-skills" style="margin-top: 20px;">
+                    <label for="custom-skills">Інші навички (вкажіть самостійно):</label>
+                    <textarea id="custom-skills" name="custom-skills" placeholder="Вкажіть інші навички, які у вас є, але не зазначені вище..." rows="4"></textarea>
+                  </div>
+                </div>
                 <button type="submit">Оновити профіль</button>
             </form>
 
@@ -753,13 +963,30 @@
                     
                     document.getElementById("role_master").checked = data.profile.role_master || false;
                     
+                    // Display approval status if available
+                    if (data.profile.approval_status) {
+                        const statusElement = document.getElementById('approval-status');
+                        statusElement.textContent = getStatusText(data.profile.approval_status);
+                        statusElement.className = `status-${data.profile.approval_status}`;
+                    }
+                    
                     if (data.profile.role_master) {
                         document.getElementById("services").style.display = "block";
+                        document.getElementById("services").classList.add("visible");
                         loadUserServices(userId);
                     }
                 }
             } catch (error) {
                 showError(error.message);
+            }
+        }
+        
+        function getStatusText(status) {
+            switch(status) {
+                case 'pending': return 'На розгляді';
+                case 'approved': return 'Затверджено';
+                case 'rejected': return 'Відхилено';
+                default: return '';
             }
         }
         
@@ -775,16 +1002,46 @@
                 const data = await response.json();
                 
                 if (data.services && data.services.length > 0) {
+                    // Reset all checkboxes
                     document.querySelectorAll('#services input[type="checkbox"]').forEach(checkbox => {
                         checkbox.checked = false;
                     });
                     
+                    // Clear all textareas
+                    document.querySelectorAll('#services textarea').forEach(textarea => {
+                        textarea.value = '';
+                    });
+                    
+                    const selectedIndustries = [];
+                    
                     data.services.forEach(service => {
-                        const checkbox = Array.from(document.querySelectorAll('#services input[type="checkbox"]'))
-                            .find(cb => cb.value === service.service_name);
-                        
-                        if (checkbox) {
-                            checkbox.checked = true;
+                        if (service.service_type === 'industry') {
+                            const checkbox = Array.from(document.querySelectorAll('#services input[name="industry"]'))
+                                .find(cb => cb.value === service.service_name);
+                            
+                            if (checkbox) {
+                                checkbox.checked = true;
+                                selectedIndustries.push(checkbox.dataset.industry);
+                            }
+                        } else if (service.service_type.endsWith('-skills-text')) {
+                            const textarea = document.getElementById(service.service_type);
+                            if (textarea) {
+                                textarea.value = service.service_name;
+                            }
+                        } else if (service.service_type === 'custom-skills') {
+                            document.getElementById('custom-skills').value = service.service_name;
+                        }
+                    });
+                    
+                    // Show industry-specific skills sections
+                    selectedIndustries.forEach(industry => {
+                        const skillsSection = document.getElementById(`${industry}-skills`);
+                        if (skillsSection) {
+                            skillsSection.classList.add('visible');
+                            // Add random animation class for initial load
+                            const animations = ['slide-in-right', 'slide-in-left', 'slide-in-top', 'slide-in-bottom'];
+                            const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+                            skillsSection.classList.add(randomAnimation);
                         }
                     });
                 }
@@ -829,7 +1086,8 @@
                 phone: document.getElementById("phone").value,
                 address: document.getElementById("address").value,
                 date_of_birth: document.getElementById("date_of_birth").value,
-                role_master: document.getElementById("role_master").checked
+                role_master: document.getElementById("role_master").checked,
+                approval_status: document.getElementById("role_master").checked ? 'pending' : null
             };
             
             try {
@@ -845,10 +1103,32 @@
                 }
                 
                 if (formData.role_master) {
-                    const selectedServices = Array.from(
-                        document.querySelectorAll('#services input[type="checkbox"]:checked')
-                    ).map(checkbox => checkbox.value);
+                    // Get selected industries
+                    const selectedIndustries = Array.from(
+                        document.querySelectorAll('#services input[name="industry"]:checked')
+                    ).map(checkbox => ({
+                        name: checkbox.value,
+                        type: 'industry',
+                        industry: checkbox.dataset.industry
+                    }));
                     
+                    // Get skills texts for each selected industry
+                    const skillsTexts = [];
+                    selectedIndustries.forEach(industry => {
+                        const textareaId = `${industry.industry}-skills-text`;
+                        const textarea = document.getElementById(textareaId);
+                        if (textarea && textarea.value.trim()) {
+                            skillsTexts.push({
+                                name: textarea.value,
+                                type: textareaId
+                            });
+                        }
+                    });
+                    
+                    // Get custom skills
+                    const customSkills = document.getElementById('custom-skills').value;
+                    
+                    // Delete existing services
                     const servicesResponse = await fetch(`/services/${userId}`);
                     const servicesData = await servicesResponse.json();
                     
@@ -860,16 +1140,59 @@
                         }
                     }
                     
-                    for (const serviceName of selectedServices) {
+                    // Add industries
+                    for (const industry of selectedIndustries) {
                         await fetch(`/services/${userId}`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ service_name: serviceName })
+                            body: JSON.stringify({ 
+                                service_name: industry.name,
+                                service_type: industry.type
+                            })
                         });
                     }
+                    
+                    // Add skills texts
+                    for (const skill of skillsTexts) {
+                        await fetch(`/services/${userId}`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ 
+                                service_name: skill.name,
+                                service_type: skill.type
+                            })
+                        });
+                    }
+                    
+                    // Add custom skills
+                    if (customSkills.trim()) {
+                        await fetch(`/services/${userId}`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ 
+                                service_name: customSkills,
+                                service_type: 'custom-skills'
+                            })
+                        });
+                    }
+                    
+                    // Create master request
+                    await fetch(`/master-requests`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            user_id: userId,
+                            status: 'pending'
+                        })
+                    });
+                    
+                    // Update approval status display
+                    const statusElement = document.getElementById('approval-status');
+                    statusElement.textContent = 'На розгляді';
+                    statusElement.className = 'status-pending';
                 }
                 
-                showSuccess('Профіль успішно оновлено!');
+                showSuccess('Профіль успішно оновлено! Якщо ви обрали роль майстра, ваш запит буде розглянуто адміністратором.');
             } catch (error) {
                 showError(error.message);
             }
@@ -880,16 +1203,83 @@
             const servicesDiv = document.getElementById("services");
             if (this.checked) {
                 servicesDiv.style.display = "block";
-                servicesDiv.classList.add("visible");
+                setTimeout(() => {
+                    servicesDiv.classList.add("visible");
+                }, 10);
             } else {
                 servicesDiv.classList.remove("visible");
                 setTimeout(() => {
                     servicesDiv.style.display = "none";
-                }, 300);
+                }, 400);
+                
+                // Hide all industry skills sections
+                document.querySelectorAll('.industry-skills').forEach(section => {
+                    section.classList.add('fade-out');
+                    setTimeout(() => {
+                        section.classList.remove('visible');
+                        section.classList.remove('fade-out');
+                        section.classList.remove('slide-in-right', 'slide-in-left', 'slide-in-top', 'slide-in-bottom');
+                    }, 400);
+                });
             }
         });
+        
+        // Enhanced transitions for industry checkboxes
+        let lastActiveIndustry = null;
+        
+        document.querySelectorAll('input[name="industry"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const industry = this.dataset.industry;
+                const skillsSection = document.getElementById(`${industry}-skills`);
+                
+                if (this.checked && skillsSection) {
+                    // Determine animation direction based on position in the list
+                    const allIndustries = Array.from(document.querySelectorAll('input[name="industry"]'));
+                    const currentIndex = allIndustries.indexOf(this);
+                    
+                    // Remove all animation classes first
+                    skillsSection.classList.remove('slide-in-right', 'slide-in-left', 'slide-in-top', 'slide-in-bottom');
+                    
+                    // Add appropriate animation class
+                    if (lastActiveIndustry) {
+                        const lastIndex = allIndustries.findIndex(cb => cb.dataset.industry === lastActiveIndustry);
+                        
+                        if (currentIndex > lastIndex) {
+                            skillsSection.classList.add('slide-in-right');
+                        } else {
+                            skillsSection.classList.add('slide-in-left');
+                        }
+                    } else {
+                        skillsSection.classList.add('slide-in-bottom');
+                    }
+                    
+                    // Show the section with animation
+                    skillsSection.classList.add('visible');
+                    lastActiveIndustry = industry;
+                    
+                } else if (skillsSection) {
+                    // Add fade out animation
+                    skillsSection.classList.add('fade-out');
+                    
+                    // Remove the section after animation completes
+                    setTimeout(() => {
+                        skillsSection.classList.remove('visible');
+                        skillsSection.classList.remove('fade-out');
+                        skillsSection.classList.remove('slide-in-right', 'slide-in-left', 'slide-in-top', 'slide-in-bottom');
+                        
+                        // Update last active industry
+                        const activeCheckboxes = Array.from(document.querySelectorAll('input[name="industry"]:checked'));
+                        if (activeCheckboxes.length > 0) {
+                            lastActiveIndustry = activeCheckboxes[activeCheckboxes.length - 1].dataset.industry;
+                        } else {
+                            lastActiveIndustry = null;
+                        }
+                    }, 400);
+                }
+            });
+        });
 
-        // Add animation for form submission feedback
+        // Enhanced animation for form submission feedback
         function showSuccess(message) {
             const successElement = document.getElementById('success-message');
             successElement.textContent = message;
@@ -941,4 +1331,3 @@
     </script>
 </body>
 </html>
-

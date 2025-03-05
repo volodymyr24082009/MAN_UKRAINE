@@ -48,7 +48,8 @@ const createTables = async () => {
     CREATE TABLE IF NOT EXISTS user_services (
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      service_name VARCHAR(255) NOT NULL
+      service_name VARCHAR(255) NOT NULL,
+      service_type VARCHAR(50) DEFAULT 'service'
     );
   `
 
@@ -64,12 +65,36 @@ const createTables = async () => {
     END $$;
   `
 
+  const addApprovalStatusColumnQuery = `
+    DO $$ 
+    BEGIN 
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'user_profile' AND column_name = 'approval_status'
+      ) THEN
+        ALTER TABLE user_profile ADD COLUMN approval_status VARCHAR(20) DEFAULT NULL;
+      END IF;
+    END $$;
+  `
+
+  const masterRequestsTableQuery = `
+    CREATE TABLE IF NOT EXISTS master_requests (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `
+
   try {
     await pool.query(userTableQuery)
     await pool.query(userProfileTableQuery)
     await pool.query(userServicesTableQuery)
     await pool.query(addRoleMasterColumnQuery)
-    console.log("Таблиці створено або вже існують, колонку role_master додано (якщо її не було).")
+    await pool.query(addApprovalStatusColumnQuery)
+    await pool.query(masterRequestsTableQuery)
+    console.log("Таблиці створено або вже існують, колонки додано (якщо їх не було).")
   } catch (err) {
     console.error("Помилка при створенні таблиць:", err)
   }
@@ -208,7 +233,7 @@ app.get("/profile/:userId", async (req, res) => {
 // Оновлення профілю користувача
 app.put("/profile/:userId", async (req, res) => {
   const userId = req.params.userId
-  const { first_name, last_name, email, phone, address, date_of_birth, role_master } = req.body
+  const { first_name, last_name, email, phone, address, date_of_birth, role_master, approval_status } = req.body
 
   try {
     const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [userId])
@@ -219,9 +244,9 @@ app.put("/profile/:userId", async (req, res) => {
     await pool.query(
       `UPDATE user_profile 
        SET first_name = $1, last_name = $2, email = $3, phone = $4, 
-           address = $5, date_of_birth = $6, role_master = $7
-       WHERE user_id = $8`,
-      [first_name, last_name, email, phone, address, date_of_birth, role_master, userId],
+           address = $5, date_of_birth = $6, role_master = $7, approval_status = $8
+       WHERE user_id = $9`,
+      [first_name, last_name, email, phone, address, date_of_birth, role_master, approval_status, userId],
     )
 
     console.log(`Профіль користувача з ID ${userId} успішно оновлено.`)
@@ -232,10 +257,10 @@ app.put("/profile/:userId", async (req, res) => {
   }
 })
 
-// Дода��ання послуги для користувача
+// Додавання послуги для користувача
 app.post("/services/:userId", async (req, res) => {
   const userId = req.params.userId
-  const { service_name } = req.body
+  const { service_name, service_type = "service" } = req.body
 
   if (!service_name) {
     return res.status(400).json({ message: "Назва послуги обов'язкова" })
@@ -247,9 +272,13 @@ app.post("/services/:userId", async (req, res) => {
       return res.status(404).json({ message: "Користувача не знайдено" })
     }
 
-    await pool.query("INSERT INTO user_services (user_id, service_name) VALUES ($1, $2)", [userId, service_name])
+    await pool.query("INSERT INTO user_services (user_id, service_name, service_type) VALUES ($1, $2, $3)", [
+      userId,
+      service_name,
+      service_type,
+    ])
 
-    console.log(`Послугу "${service_name}" додано для користувача з ID ${userId}.`)
+    console.log(`Послугу "${service_name}" типу "${service_type}" додано для користувача з ID ${userId}.`)
     res.status(201).json({ success: true, message: "Послугу успішно додано" })
   } catch (err) {
     console.error("Помилка при додаванні послуги:", err)
@@ -290,11 +319,105 @@ app.delete("/services/:serviceId", async (req, res) => {
   }
 })
 
+// Створення запиту на роль майстра
+app.post("/master-requests", async (req, res) => {
+  const { user_id, status = "pending" } = req.body
+
+  if (!user_id) {
+    return res.status(400).json({ message: "ID користувача обов'язковий" })
+  }
+
+  try {
+    // Перевірка чи існує користувач
+    const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [user_id])
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "Користувача не знайдено" })
+    }
+
+    // Перевірка чи вже існує запит
+    const existingRequest = await pool.query(
+      "SELECT * FROM master_requests WHERE user_id = $1 AND status = 'pending'",
+      [user_id],
+    )
+    if (existingRequest.rows.length > 0) {
+      return res.status(400).json({ message: "Запит на роль майстра вже існує" })
+    }
+
+    // Створення нового запиту
+    await pool.query("INSERT INTO master_requests (user_id, status) VALUES ($1, $2)", [user_id, status])
+
+    console.log(`Запит на роль майстра для користувача з ID ${user_id} успішно створено.`)
+    res.status(201).json({ success: true, message: "Запит на роль майстра успішно створено" })
+  } catch (err) {
+    console.error("Помилка при створенні запиту на роль майстра:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Отримання всіх запитів на роль майстра
+app.get("/master-requests", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT mr.id, mr.user_id, mr.status, mr.created_at, mr.updated_at,
+             u.username, up.first_name, up.last_name, up.email
+      FROM master_requests mr
+      JOIN users u ON mr.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      ORDER BY mr.created_at DESC
+    `)
+
+    res.status(200).json({ requests: result.rows })
+  } catch (err) {
+    console.error("Помилка при отриманні запитів на роль майстра:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Оновлення статусу запиту на роль майстра
+app.put("/master-requests/:requestId", async (req, res) => {
+  const requestId = req.params.requestId
+  const { status } = req.body
+
+  if (!status || !["pending", "approved", "rejected"].includes(status)) {
+    return res.status(400).json({ message: "Невірний статус" })
+  }
+
+  try {
+    // Отримання запиту
+    const requestResult = await pool.query("SELECT * FROM master_requests WHERE id = $1", [requestId])
+    if (requestResult.rows.length === 0) {
+      return res.status(404).json({ message: "Запит не знайдено" })
+    }
+
+    const userId = requestResult.rows[0].user_id
+
+    // Оновлення статусу запиту
+    await pool.query("UPDATE master_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2", [
+      status,
+      requestId,
+    ])
+
+    // Оновлення статусу в профілі користувача
+    await pool.query("UPDATE user_profile SET approval_status = $1 WHERE user_id = $2", [status, userId])
+
+    // Якщо запит відхилено, змінюємо роль майстра на false
+    if (status === "rejected") {
+      await pool.query("UPDATE user_profile SET role_master = false WHERE user_id = $1", [userId])
+    }
+
+    console.log(`Статус запиту на роль майстра з ID ${requestId} змінено на ${status}.`)
+    res.status(200).json({ success: true, message: `Статус запиту змінено на ${status}` })
+  } catch (err) {
+    console.error("Помилка при оновленні статусу запиту:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
 // Отримання списку всіх користувачів та майстрів
 app.get("/admin/users", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT u.id, u.username, up.role_master, up.first_name, up.last_name, up.email
+      SELECT u.id, u.username, up.role_master, up.first_name, up.last_name, up.email, up.approval_status
       FROM users u
       LEFT JOIN user_profile up ON u.id = up.user_id
     `)
@@ -313,6 +436,45 @@ app.delete("/admin/users/:userId", async (req, res) => {
     res.json({ message: "Користувача успішно видалено" })
   } catch (err) {
     console.error("Помилка при видаленні користувача:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Отримання списку всіх користувачів з їхніми послугами
+app.get("/admin/users-with-services", async (req, res) => {
+  try {
+    const usersResult = await pool.query(`
+      SELECT u.id, u.username, up.role_master, up.first_name, up.last_name, up.email, up.approval_status
+      FROM users u
+      LEFT JOIN user_profile up ON u.id = up.user_id
+    `)
+
+    const users = usersResult.rows
+
+    // Отримуємо всі послуги для всіх користувачів
+    const servicesResult = await pool.query(`
+      SELECT user_id, service_name, service_type, id
+      FROM user_services
+    `)
+
+    // Групуємо послуги за user_id
+    const servicesMap = {}
+    servicesResult.rows.forEach((service) => {
+      if (!servicesMap[service.user_id]) {
+        servicesMap[service.user_id] = []
+      }
+      servicesMap[service.user_id].push(service)
+    })
+
+    // Додаємо послуги до користувачів
+    const usersWithServices = users.map((user) => ({
+      ...user,
+      services: servicesMap[user.id] || [],
+    }))
+
+    res.json(usersWithServices)
+  } catch (err) {
+    console.error("Помилка при отриманні списку користувачів з послугами:", err)
     res.status(500).json({ message: "Помилка сервера", error: err.message })
   }
 })
