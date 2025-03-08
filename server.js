@@ -630,6 +630,28 @@ app.get("/api/user-master-timeline", async (req, res) => {
   }
 })
 
+// Add this new endpoint after your other API endpoints
+// Endpoint for getting average user age
+app.get("/api/average-age", async (req, res) => {
+  try {
+    console.log("Отримано запит на /api/average-age")
+
+    const result = await pool.query(`
+      SELECT AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, date_of_birth))) as average_age
+      FROM user_profile 
+      WHERE date_of_birth IS NOT NULL
+    `)
+
+    const averageAge = result.rows[0].average_age ? parseFloat(result.rows[0].average_age).toFixed(1) : 'N/A'
+    
+    console.log("Середній вік користувачів:", averageAge)
+    res.json({ averageAge })
+  } catch (error) {
+    console.error("Помилка при обчисленні середнього віку:", error)
+    res.status(500).json({ message: "Помилка сервера", error: error.message })
+  }
+})
+
 // НОВІ ЕНДПОІНТИ ДЛЯ ЗАМОВЛЕНЬ
 
 // Створення нового замовлення
