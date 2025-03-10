@@ -11,6 +11,9 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 3003
 
+// Обслуговування статичних файлів з директорії 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Підключення до бази даних
 const pool = new Pool({
   user: process.env.DB_USER,
