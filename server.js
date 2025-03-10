@@ -9,7 +9,7 @@ const cors = require("cors")
 dotenv.config()
 
 const app = express()
-const port = process.env.PORT || 3003
+const port = process.env.PORT || 3007
 
 // Обслуговування статичних файлів з директорії 'public'
 app.use(express.static(path.join(__dirname, 'public')));
