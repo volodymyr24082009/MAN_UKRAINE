@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>АвтоЛікар24.7</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="manifest" href="/manifest.webmanifest.json">
     <style>
       :root {
         --background-dark: #1a1a1a;
@@ -1072,6 +1073,17 @@
           }
         });
       });
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('Service Worker зареєстровано з обсягом:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Реєстрація Service Worker не вдалася:', error);
+          });
+      }
     </script>
   </body>
 </html>
