@@ -9,7 +9,7 @@ const cors = require("cors")
 dotenv.config()
 
 const app = express()
-const port = process.env.PORT || 3005
+const port = process.env.PORT || 3006
 
 // Обслуговування статичних файлів з директорії 'public'
 app.use(express.static(path.join(__dirname, 'public')));
@@ -98,11 +98,25 @@ const createTables = async () => {
       title VARCHAR(255) NOT NULL,
       description TEXT,
       phone VARCHAR(15) NOT NULL,
+      industry VARCHAR(100),
       status VARCHAR(20) NOT NULL DEFAULT 'pending',
       master_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+  `
+
+  // Додаємо колонку industry до таблиці orders, якщо вона не існує
+  const addIndustryColumnQuery = `
+    DO $$ 
+    BEGIN 
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'orders' AND column_name = 'industry'
+      ) THEN
+        ALTER TABLE orders ADD COLUMN industry VARCHAR(100);
+      END IF;
+    END $$;
   `
 
   try {
@@ -113,12 +127,74 @@ const createTables = async () => {
     await pool.query(addApprovalStatusColumnQuery)
     await pool.query(masterRequestsTableQuery)
     await pool.query(ordersTableQuery)
+    await pool.query(addIndustryColumnQuery)
     console.log("Таблиці створено або вже існують, колонки додано (якщо їх не було).")
+    
+    // Додаємо базові галузі для нових користувачів, якщо вони ще не існують
+    await initializeIndustries()
   } catch (err) {
     console.error("Помилка при створенні таблиць:", err)
-  
   }
-  
+}
+
+// Функція для ініціалізації базових галузей
+const initializeIndustries = async () => {
+  const industries = [
+    { name: 'Інформаційні технології', icon: 'fas fa-laptop-code' },
+    { name: 'Медицина', icon: 'fas fa-heartbeat' },
+    { name: 'Енергетика', icon: 'fas fa-bolt' },
+    { name: 'Аграрна галузь', icon: 'fas fa-tractor' },
+    { name: 'Фінанси та банківська справа', icon: 'fas fa-money-bill-wave' },
+    { name: 'Освіта', icon: 'fas fa-graduation-cap' },
+    { name: 'Туризм і гостинність', icon: 'fas fa-plane' },
+    { name: 'Будівництво та нерухомість', icon: 'fas fa-hard-hat' },
+    { name: 'Транспорт', icon: 'fas fa-truck' },
+    { name: 'Мистецтво і культура', icon: 'fas fa-palette' }
+  ]
+
+  try {
+    // Перевіряємо, чи є вже галузі в базі даних
+    const existingIndustries = await pool.query(`
+      SELECT DISTINCT service_name 
+      FROM user_services 
+      WHERE service_type = 'industry'
+    `)
+
+    const existingIndustryNames = existingIndustries.rows.map(row => row.service_name)
+    
+    // Отримуємо список користувачів з роллю майстра
+    const masters = await pool.query(`
+      SELECT u.id 
+      FROM users u
+      JOIN user_profile up ON u.id = up.user_id
+      WHERE up.role_master = true
+    `)
+
+    // Для кожного майстра додаємо галузі, які ще не існують
+    for (const master of masters.rows) {
+      const masterIndustries = await pool.query(`
+        SELECT service_name 
+        FROM user_services 
+        WHERE user_id = $1 AND service_type = 'industry'
+      `, [master.id])
+      
+      const masterIndustryNames = masterIndustries.rows.map(row => row.service_name)
+      
+      // Додаємо галузі, яких ще немає у майстра
+      for (const industry of industries) {
+        if (!masterIndustryNames.includes(industry.name)) {
+          await pool.query(`
+            INSERT INTO user_services (user_id, service_name, service_type)
+            VALUES ($1, $2, 'industry')
+          `, [master.id, industry.name])
+        }
+      }
+    }
+
+    console.log("Базові галузі успішно ініціалізовано.")
+  } catch (err) {
+    console.error("Помилка при ініціалізації галузей:", err)
+  }
 }
 
 createTables()
@@ -426,6 +502,39 @@ app.put("/master-requests/:requestId", async (req, res) => {
       await pool.query("UPDATE user_profile SET role_master = false WHERE user_id = $1", [userId])
     }
 
+    // Якщо запит схвалено, додаємо базові галузі для майстра
+    if (status === "approved") {
+      // Отримуємо список галузей
+      const industries = [
+        'Інформаційні технології',
+        'Медицина',
+        'Енергетика',
+        'Аграрна галузь',
+        'Фінанси та банківська справа',
+        'Освіта',
+        'Туризм і гостинність',
+        'Будівництво та нерухомість',
+        'Транспорт',
+        'Мистецтво і культура'
+      ]
+
+      // Додаємо галузі для майстра
+      for (const industry of industries) {
+        // Перевіряємо, чи вже є така галузь у майстра
+        const existingIndustry = await pool.query(`
+          SELECT * FROM user_services 
+          WHERE user_id = $1 AND service_name = $2 AND service_type = 'industry'
+        `, [userId, industry])
+
+        if (existingIndustry.rows.length === 0) {
+          await pool.query(`
+            INSERT INTO user_services (user_id, service_name, service_type)
+            VALUES ($1, $2, 'industry')
+          `, [userId, industry])
+        }
+      }
+    }
+
     console.log(`Статус запиту на роль майстра з ID ${requestId} змінено на ${status}.`)
     res.status(200).json({ success: true, message: `Статус запиту змінено на ${status}` })
   } catch (err) {
@@ -633,8 +742,7 @@ app.get("/api/user-master-timeline", async (req, res) => {
   }
 })
 
-// Add this new endpoint after your other API endpoints
-// Endpoint for getting average user age
+// Ендпоінт для отримання середнього віку користувачів
 app.get("/api/average-age", async (req, res) => {
   try {
     console.log("Отримано запит на /api/average-age")
@@ -655,11 +763,78 @@ app.get("/api/average-age", async (req, res) => {
   }
 })
 
-// НОВІ ЕНДПОІНТИ ДЛЯ ЗАМОВЛЕНЬ
+// Ендпоінт для отримання списку галузей
+app.get("/api/industries", async (req, res) => {
+  try {
+    console.log("Отримано запит на /api/industries")
+
+    const industries = [
+      { name: 'Інформаційні технології', icon: 'fas fa-laptop-code', description: 'Розробка програмного забезпечення, веб-сайтів, мобільних додатків та IT-консультації' },
+      { name: 'Медицина', icon: 'fas fa-heartbeat', description: 'Медичні консультації, догляд за пацієнтами та медичне обладнання' },
+      { name: 'Енергетика', icon: 'fas fa-bolt', description: 'Енергетичні рішення, відновлювані джерела енергії та енергоефективність' },
+      { name: 'Аграрна галузь', icon: 'fas fa-tractor', description: 'Сільськогосподарські послуги, агрономія та тваринництво' },
+      { name: 'Фінанси та банківська справа', icon: 'fas fa-money-bill-wave', description: 'Фінансові консультації, бухгалтерія та інвестиційні поради' },
+      { name: 'Освіта', icon: 'fas fa-graduation-cap', description: 'Навчання, тренінги та освітні програми' },
+      { name: 'Туризм і гостинність', icon: 'fas fa-plane', description: 'Туристичні послуги, організація подорожей та готельний бізнес' },
+      { name: 'Будівництво та нерухомість', icon: 'fas fa-hard-hat', description: 'Будівельні роботи, ремонт та консультації з нерухомості' },
+      { name: 'Транспорт', icon: 'fas fa-truck', description: 'Транспортні послуги, логістика та доставка' },
+      { name: 'Мистецтво і культура', icon: 'fas fa-palette', description: 'Творчі послуги, дизайн та організація культурних заходів' }
+    ]
+
+    res.json(industries)
+  } catch (error) {
+    console.error("Помилка при отриманні списку галузей:", error)
+    res.status(500).json({ message: "Помилка сервера", error: error.message })
+  }
+})
+
+// Ендпоінт для отримання послуг за галуззю
+app.get("/api/services-by-industry/:industry", async (req, res) => {
+  const industry = req.params.industry
+
+  try {
+    console.log(`Отримано запит на /api/services-by-industry/${industry}`)
+
+    // Отримуємо всіх майстрів з вказаною галуззю
+    const mastersResult = await pool.query(`
+      SELECT u.id
+      FROM users u
+      JOIN user_profile up ON u.id = up.user_id
+      JOIN user_services us ON u.id = us.user_id
+      WHERE up.role_master = true 
+      AND up.approval_status = 'approved'
+      AND us.service_type = 'industry'
+      AND us.service_name = $1
+    `, [industry])
+
+    const masterIds = mastersResult.rows.map(row => row.id)
+
+    if (masterIds.length === 0) {
+      return res.json([])
+    }
+
+    // Отримуємо всі послуги цих майстрів
+    const servicesResult = await pool.query(`
+      SELECT service_name, COUNT(*) as count
+      FROM user_services
+      WHERE user_id = ANY($1)
+      AND service_type != 'industry'
+      GROUP BY service_name
+      ORDER BY count DESC
+    `, [masterIds])
+
+    res.json(servicesResult.rows)
+  } catch (error) {
+    console.error("Помилка при отриманні послуг за галуззю:", error)
+    res.status(500).json({ message: "Помилка сервера", error: error.message })
+  }
+})
+
+// ЕНДПОІНТИ ДЛЯ ЗАМОВЛЕНЬ
 
 // Створення нового замовлення
 app.post("/orders", async (req, res) => {
-  const { user_id, title, description, phone } = req.body
+  const { user_id, title, description, phone, industry } = req.body
 
   if (!user_id || !title || !phone) {
     return res.status(400).json({ message: "Усі обов'язкові поля повинні бути заповнені" })
@@ -674,8 +849,8 @@ app.post("/orders", async (req, res) => {
 
     // Створення нового замовлення
     const newOrder = await pool.query(
-      "INSERT INTO orders (user_id, title, description, phone, status) VALUES ($1, $2, $3, $4, 'pending') RETURNING id",
-      [user_id, title, description, phone]
+      "INSERT INTO orders (user_id, title, description, phone, industry, status) VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id",
+      [user_id, title, description, phone, industry]
     )
 
     console.log(`Нове замовлення з ID ${newOrder.rows[0].id} успішно створено.`)
@@ -695,7 +870,7 @@ app.get("/orders", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
-             o.master_id, o.created_at, o.updated_at,
+             o.industry, o.master_id, o.created_at, o.updated_at,
              u.username as user_username, 
              up.first_name as user_first_name, 
              up.last_name as user_last_name,
@@ -725,7 +900,7 @@ app.get("/orders/user/:userId", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT o.id, o.title, o.description, o.phone, o.status, 
-             o.master_id, o.created_at, o.updated_at,
+             o.industry, o.master_id, o.created_at, o.updated_at,
              m.username as master_username,
              mp.first_name as master_first_name,
              mp.last_name as master_last_name
@@ -750,7 +925,7 @@ app.get("/orders/master/:masterId", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
-             o.created_at, o.updated_at,
+             o.industry, o.created_at, o.updated_at,
              u.username as user_username, 
              up.first_name as user_first_name, 
              up.last_name as user_last_name,

@@ -1,0 +1,2751 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Адмін-панель - ProFix Network Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --background-dark: #1a1a1a;
+      --background-light: #f5f5f5;
+      --text-dark: #fff;
+      --text-light: #333;
+      --primary-color: #ff3300;
+      --secondary-color: #ff6600;
+      --accent-color: #007bff;
+      --success-color: #00cc00;
+      --warning-color: #ffcc00;
+      --danger-color: #cc0000;
+      --info-color: #0088ff;
+      --card-bg-dark: #2a2a2a;
+      --card-bg-light: #ffffff;
+      --border-dark: #444;
+      --border-light: #ddd;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      height: 100%;
+      font-size: 16px;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--background-dark);
+      background-image: radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+                        radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      background-position: 0 0, 25px 25px;
+      padding: 0;
+      margin: 0;
+      color: var(--text-dark);
+      font-family: 'Roboto', Arial, sans-serif;
+      transition: background 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    html.light body {
+      background: var(--background-light);
+      color: var(--text-light);
+    }
+
+    /* Layout */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(145deg, #222222, #333333);
+      color: var(--text-dark);
+      padding: 20px 0;
+      height: 100vh;
+      position: fixed;
+      overflow-y: auto;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    html.light .sidebar {
+      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+      color: var(--text-light);
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-header {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+    }
+
+    html.light .sidebar-header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo i {
+      font-size: 1.8rem;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 5px;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      color: var(--text-dark);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-left: 3px solid transparent;
+    }
+
+    html.light .sidebar-menu a {
+      color: var(--text-light);
+    }
+
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      background: rgba(255, 51, 0, 0.1);
+      border-left: 3px solid var(--primary-color);
+    }
+
+    .sidebar-menu i {
+      width: 20px;
+      text-align: center;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 250px;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: linear-gradient(145deg, #222222, #333333);
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      margin-bottom: 20px;
+    }
+
+    html.light .header {
+      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-title h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: var(--primary-color);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 30px;
+    }
+
+    .theme-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #333;
+      transition: .4s;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px;
+    }
+
+    html.light .slider {
+      background-color: #ccc;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary-color);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(30px);
+    }
+
+    .user-menu {
+      position: relative;
+    }
+
+    .user-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: none;
+      border: none;
+      color: var(--text-dark);
+      cursor: pointer;
+    }
+
+    html.light .user-menu-btn {
+      color: var(--text-light);
+    }
+
+    .user-avatar {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .user-menu-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: linear-gradient(145deg, #222222, #333333);
+      border-radius: 5px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      min-width: 180px;
+      z-index: 1000;
+      display: none;
+    }
+
+    html.light .user-menu-dropdown {
+      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-menu-dropdown.show {
+      display: block;
+    }
+
+    .user-menu-dropdown a {
+      display: block;
+      padding: 10px 15px;
+      color: var(--text-dark);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    html.light .user-menu-dropdown a {
+      color: var(--text-light);
+    }
+
+    .user-menu-dropdown a:hover {
+      background: rgba(255, 51, 0, 0.1);
+    }
+
+    /* Dashboard Cards */
+    .dashboard-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: linear-gradient(145deg, #222222, #333333);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    html.light .card {
+      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    html.light .card:hover {
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      color: var(--text-dark);
+      margin: 0;
+    }
+
+    html.light .card-title {
+      color: var(--text-light);
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .card-icon.users {
+      background-color: rgba(0, 123, 255, 0.2);
+      color: var(--accent-color);
+    }
+
+    .card-icon.masters {
+      background-color: rgba(255, 51, 0, 0.2);
+      color: var(--primary-color);
+    }
+
+    .card-icon.orders {
+      background-color: rgba(0, 204, 0, 0.2);
+      color: var(--success-color);
+    }
+
+    .card-icon.pending {
+      background-color: rgba(255, 204, 0, 0.2);
+      color: var(--warning-color);
+    }
+
+    .card-value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 10px 0;
+      color: var(--text-dark);
+    }
+
+    html.light .card-value {
+      color: var(--text-light);
+    }
+
+    .card-change {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9rem;
+    }
+
+    .card-change.positive {
+      color: var(--success-color);
+    }
+
+    .card-change.negative {
+      color: var(--danger-color);
+    }
+
+    /* Charts */
+    .charts-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .chart-card {
+      background: linear-gradient(145deg, #222222, #333333);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    html.light .chart-card {
+      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .chart-title {
+      font-size: 1.1rem;
+      color: var(--text-dark);
+      margin: 0;
+    }
+
+    html.light .chart-title {
+      color: var(--text-light);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+
+    /* Tables */
+    .table-container {
+      background: linear-gradient(145deg, #222222, #333333);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      margin-bottom: 30px;
+    }
+
+    html.light .table-container {
+      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    html.light .table-header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .table-title {
+      font-size: 1.1rem;
+      color: var(--text-dark);
+      margin: 0;
+    }
+
+    html.light .table-title {
+      color: var(--text-light);
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      padding: 8px 15px 8px 35px;
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-dark);
+      width: 200px;
+      transition: all 0.3s ease;
+    }
+
+    html.light .search-box input {
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--text-light);
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      width: 250px;
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    html.light .search-box i {
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    html.light th, html.light td {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    th {
+      background-color: var(--primary-color);
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    tbody tr {
+      transition: all 0.3s ease;
+    }
+
+    tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    html.light tbody tr:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    /* Status Badges */
+    .status-badge {
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      display: inline-block;
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .status-pending {
+      background-color: rgba(255, 204, 0, 0.2);
+      color: var(--warning-color);
+    }
+
+    .status-approved {
+      background-color: rgba(0, 204, 0, 0.2);
+      color: var(--success-color);
+    }
+
+    .status-rejected {
+      background-color: rgba(204, 0, 0, 0.2);
+      color: var(--danger-color);
+    }
+
+    .status-completed {
+      background-color: rgba(0, 136, 255, 0.2);
+      color: var(--info-color);
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border-radius: 5px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(90deg, #00cc00, #00aa00);
+      color: white;
+    }
+
+    .btn-danger {
+      background: linear-gradient(90deg, #cc0000, #aa0000);
+      color: white;
+    }
+
+    .btn-info {
+      background: linear-gradient(90deg, #0066cc, #0044aa);
+      color: white;
+    }
+
+    .btn-warning {
+      background: linear-gradient(90deg, #ffcc00, #ffaa00);
+      color: white;
+    }
+
+    .btn-purple {
+      background: linear-gradient(90deg, #9900cc, #7700aa);
+      color: white;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      width: 35px;
+      height: 35px;
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    html.light .pagination button {
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--text-light);
+    }
+
+    .pagination button:hover {
+      background-color: rgba(255, 51, 0, 0.2);
+    }
+
+    .pagination button.active {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1050;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-backdrop.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: linear-gradient(145deg, #222222, #333333);
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transform: translateY(-20px);
+      transition: all 0.3s ease;
+    }
+
+    html.light .modal {
+      background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-backdrop.show .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    html.light .modal-header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      color: var(--primary-color);
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-dark);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    html.light .modal-close {
+      color: var(--text-light);
+    }
+
+    .modal-close:hover {
+      color: var(--primary-color);
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 15px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    html.light .modal-footer {
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+
+    html.light .form-label {
+      color: var(--text-light);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 15px;
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-dark);
+      transition: all 0.3s ease;
+    }
+
+    html.light .form-control {
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--text-light);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    textarea.form-control {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .sidebar {
+        width: 70px;
+        padding: 20px 0;
+      }
+
+      .sidebar-header {
+        padding: 0 10px 20px;
+      }
+
+      .logo span {
+        display: none;
+      }
+
+      .sidebar-menu a span {
+        display: none;
+      }
+
+      .sidebar-menu a {
+        justify-content: center;
+        padding: 12px;
+      }
+
+      .sidebar-menu i {
+        width: auto;
+        font-size: 1.2rem;
+      }
+
+      .main-content {
+        margin-left: 70px;
+      }
+
+      .charts-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .table-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .search-box input {
+        width: 100%;
+      }
+
+      .search-box input:focus {
+        width: 100%;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 800px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .main-content {
+        padding: 10px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+
+      .chart-card {
+        padding: 15px;
+      }
+
+      .modal {
+        width: 95%;
+      }
+    }
+
+    /* Loader */
+    .loader-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+    }
+
+    .loader {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 51, 0, 0.3);
+      border-radius: 50%;
+      border-top: 4px solid var(--primary-color);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Notification */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 5px;
+      color: white;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      z-index: 1100;
+      transform: translateX(120%);
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.success {
+      background-color: var(--success-color);
+    }
+
+    .notification.error {
+      background-color: var(--danger-color);
+    }
+
+    .notification.warning {
+      background-color: var(--warning-color);
+    }
+
+    .notification.info {
+      background-color: var(--info-color);
+    }
+
+    /* Tab content */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Tabs in content */
+    .content-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    html.light .content-tabs {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .content-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .content-tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: var(--text-dark);
+      font-weight: 600;
+      position: relative;
+      white-space: nowrap;
+    }
+
+    html.light .content-tab {
+      color: var(--text-light);
+    }
+
+    .content-tab.active {
+      color: var(--primary-color);
+    }
+
+    .content-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--primary-color);
+    }
+
+    /* User profile details */
+    .user-profile-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-label {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 5px;
+    }
+
+    html.light .detail-label {
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .detail-value {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 50px 20px;
+      text-align: center;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      color: rgba(255, 255, 255, 0.2);
+      margin-bottom: 20px;
+    }
+
+    html.light .empty-state i {
+      color: rgba(0, 0, 0, 0.2);
+    }
+
+    .empty-state-text {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 20px;
+    }
+
+    html.light .empty-state-text {
+      color: rgba(0, 0, 0, 0.6);
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          <span>ProFix Network</span>
+        </a>
+      </div>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="#dashboard" class="active" data-tab="dashboard">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Дашборд</span>
+          </a>
+        </li>
+        <li>
+          <a href="#users" data-tab="users">
+            <i class="fas fa-users"></i>
+            <span>Користувачі</span>
+          </a>
+        </li>
+        <li>
+          <a href="#masters" data-tab="masters">
+            <i class="fas fa-user-tie"></i>
+            <span>Майстри</span>
+          </a>
+        </li>
+        <li>
+          <a href="#orders" data-tab="orders">
+            <i class="fas fa-clipboard-list"></i>
+            <span>Заявки</span>
+          </a>
+        </li>
+        <li>
+          <a href="#settings" data-tab="settings">
+            <i class="fas fa-cog"></i>
+            <span>Налаштування</span>
+          </a>
+        </li>
+        <li>
+          <a href="index.html">
+            <i class="fas fa-home"></i>
+            <span>На сайт</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-title">
+          <h1>Адмін-панель</h1>
+        </div>
+        <div class="header-actions">
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider">
+              <span class="moon">🌙</span>
+              <span class="sun">☀️</span>
+            </span>
+          </label>
+          <div class="user-menu">
+            <button class="user-menu-btn" id="userMenuBtn">
+              <div class="user-avatar">A</div>
+              <span>Адміністратор</span>
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="user-menu-dropdown" id="userMenuDropdown">
+              <a href="profile.html"><i class="fas fa-user"></i> Профіль</a>
+              <a href="#"><i class="fas fa-cog"></i> Налаштування</a>
+              <a href="auth.html"><i class="fas fa-sign-out-alt"></i> Вихід</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Tab -->
+      <div id="dashboard-tab" class="tab-content active">
+        <div class="dashboard-cards">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Користувачі</h3>
+              <div class="card-icon users">
+                <i class="fas fa-users"></i>
+              </div>
+            </div>
+            <div class="card-value" id="totalUsers">0</div>
+            <div class="card-change positive">
+              <i class="fas fa-arrow-up"></i>
+              <span id="usersChange">0%</span> за місяць
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Майстри</h3>
+              <div class="card-icon masters">
+                <i class="fas fa-user-tie"></i>
+              </div>
+            </div>
+            <div class="card-value" id="totalMasters">0</div>
+            <div class="card-change positive">
+              <i class="fas fa-arrow-up"></i>
+              <span id="mastersChange">0%</span> за місяць
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Заявки</h3>
+              <div class="card-icon orders">
+                <i class="fas fa-clipboard-list"></i>
+              </div>
+            </div>
+            <div class="card-value" id="totalOrders">0</div>
+            <div class="card-change positive">
+              <i class="fas fa-arrow-up"></i>
+              <span>15%</span> за місяць
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Очікують розгляду</h3>
+              <div class="card-icon pending">
+                <i class="fas fa-clock"></i>
+              </div>
+            </div>
+            <div class="card-value" id="pendingRequests">0</div>
+            <div class="card-change negative">
+              <i class="fas fa-arrow-down"></i>
+              <span>5%</span> за місяць
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-container">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Користувачі та майстри</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="userMasterChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Вікова демографія</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="ageChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <div class="table-header">
+            <h3 class="table-title">Останні заявки</h3>
+            <div class="table-actions">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Пошук..." id="orderSearchInput">
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table id="recentOrdersTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Тема</th>
+                  <th>Клієнт</th>
+                  <th>Телефон</th>
+                  <th>Статус</th>
+                  <th>Майстер</th>
+                  <th>Дата</th>
+                  <th>Дії</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Table content will be dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Tab -->
+      <div id="users-tab" class="tab-content">
+        <div class="table-container">
+          <div class="table-header">
+            <h3 class="table-title">Користувачі</h3>
+            <div class="table-actions">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Пошук..." id="userSearchInput">
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table id="usersTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Ім'я користувача</th>
+                  <th>Роль</th>
+                  <th>Ім'я</th>
+                  <th>Прізвище</th>
+                  <th>Email</th>
+                  <th>Галузі</th>
+                  <th>Навички</th>
+                  <th>Дії</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Table content will be dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="usersPagination">
+            <!-- Pagination will be dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Masters Tab -->
+      <div id="masters-tab" class="tab-content">
+        <div class="content-tabs">
+          <button class="content-tab active" data-content="master-list">Список майстрів</button>
+          <button class="content-tab" data-content="master-requests">Запити на роль майстра</button>
+        </div>
+
+        <div id="master-list-content" class="content-tab-pane active">
+          <div class="table-container">
+            <div class="table-header">
+              <h3 class="table-title">Майстри</h3>
+              <div class="table-actions">
+                <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input type="text" placeholder="Пошук..." id="masterSearchInput">
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table id="mastersTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Ім'я користувача</th>
+                    <th>Ім'я</th>
+                    <th>Прізвище</th>
+                    <th>Email</th>
+                    <th>Галузі</th>
+                    <th>Навички</th>
+                    <th>Статус</th>
+                    <th>Дії</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Table content will be dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" id="mastersPagination">
+              <!-- Pagination will be dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <div id="master-requests-content" class="content-tab-pane">
+          <div class="table-container">
+            <div class="table-header">
+              <h3 class="table-title">Запити на роль майстра</h3>
+              <div class="table-actions">
+                <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input type="text" placeholder="Пошук..." id="requestSearchInput">
+                </div>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table id="masterRequestsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Користувач</th>
+                    <th>Ім'я</th>
+                    <th>Прізвище</th>
+                    <th>Email</th>
+                    <th>Галузі</th>
+                    <th>Навички</th>
+                    <th>Статус</th>
+                    <th>Дата створення</th>
+                    <th>Дії</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Table content will be dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" id="requestsPagination">
+              <!-- Pagination will be dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Tab -->
+      <div id="orders-tab" class="tab-content">
+        <div class="table-container">
+          <div class="table-header">
+            <h3 class="table-title">Заявки клієнтів</h3>
+            <div class="table-actions">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Пошук..." id="ordersSearchInput">
+              </div>
+              <button class="btn btn-primary" id="exportOrdersBtn">
+                <i class="fas fa-download"></i> Експорт
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table id="ordersTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Тема</th>
+                  <th>Опис</th>
+                  <th>Клієнт</th>
+                  <th>Телефон</th>
+                  <th>Статус</th>
+                  <th>Майстер</th>
+                  <th>Дата створення</th>
+                  <th>Дії</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Table content will be dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="ordersPagination">
+            <!-- Pagination will be dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="settings-tab" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Налаштування системи</h3>
+          </div>
+          <div class="card-body">
+            <form id="settingsForm">
+              <div class="form-group">
+                <label class="form-label">Назва сайту</label>
+                <input type="text" class="form-control" id="siteName" value="ProFix Network Hub">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email адміністратора</label>
+                <input type="email" class="form-control" id="adminEmail" value="admin@profixnetwork.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Автоматичне схвалення майстрів</label>
+                <select class="form-control" id="autoApprove">
+                  <option value="0">Ні</option>
+                  <option value="1">Так</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Максимальна кількість послуг на одного майстра</label>
+                <input type="number" class="form-control" id="maxServices" value="10">
+              </div>
+              <button type="submit" class="btn btn-primary">Зберегти налаштування</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Details Modal -->
+  <div class="modal-backdrop" id="userDetailsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Деталі користувача</h3>
+        <button class="modal-close" id="closeUserDetailsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="user-profile-details" id="userProfileDetails">
+          <!-- User details will be dynamically populated -->
+        </div>
+        <div class="form-group">
+          <label class="form-label">Галузі</label>
+          <div id="userIndustries">
+            <!-- Industries will be dynamically populated -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Навички</label>
+          <div id="userSkills">
+            <!-- Skills will be dynamically populated -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="deleteUserBtn">Видалити користувача</button>
+        <button class="btn btn-primary" id="closeUserModalBtn">Закрити</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div class="modal-backdrop" id="orderDetailsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Деталі заявки</h3>
+        <button class="modal-close" id="closeOrderDetailsModal">&times;</button>
+      </div>
+      <div class="modal-body" id="orderDetailsBody">
+        <!-- Order details will be dynamically populated -->
+      </div>
+      <div class="modal-footer" id="orderDetailsFooter">
+        <!-- Action buttons will be dynamically populated -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div class="notification" id="notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="notificationText">Операція успішно виконана</span>
+  </div>
+
+  <script>
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    
+    // Check for saved theme preference
+    if (localStorage.getItem('theme') === 'light') {
+      htmlElement.classList.remove('dark');
+      htmlElement.classList.add('light');
+      themeToggle.checked = true;
+    }
+    
+    // Toggle theme when switch is clicked
+    themeToggle.addEventListener('change', function() {
+      if (this.checked) {
+        htmlElement.classList.remove('dark');
+        htmlElement.classList.add('light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        htmlElement.classList.remove('light');
+        htmlElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      
+      // Update charts with new theme
+      updateChartsTheme();
+    });
+
+    // User Menu Toggle
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userMenuDropdown = document.getElementById('userMenuDropdown');
+    
+    userMenuBtn.addEventListener('click', function() {
+      userMenuDropdown.classList.toggle('show');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!userMenuBtn.contains(event.target) && !userMenuDropdown.contains(event.target)) {
+        userMenuDropdown.classList.remove('show');
+      }
+    });
+
+    // Tab Navigation
+    const tabLinks = document.querySelectorAll('.sidebar-menu a');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        if (this.getAttribute('href').startsWith('#')) {
+          e.preventDefault();
+          const tabId = this.getAttribute('data-tab');
+          
+          // Remove active class from all links and contents
+          tabLinks.forEach(link => link.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+          
+          // Add active class to current link and content
+          this.classList.add('active');
+          document.getElementById(`${tabId}-tab`).classList.add('active');
+          
+          // Load data for the active tab
+          if (tabId === 'dashboard') {
+            loadDashboardData();
+          } else if (tabId === 'users') {
+            loadUsers();
+          } else if (tabId === 'masters') {
+            loadMasters();
+          } else if (tabId === 'orders') {
+            loadOrders();
+          }
+        }
+      });
+    });
+
+    // Content Tabs
+    const contentTabs = document.querySelectorAll('.content-tab');
+    const contentTabPanes = document.querySelectorAll('.content-tab-pane');
+    
+    contentTabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        const contentId = this.getAttribute('data-content');
+        
+        // Remove active class from all tabs and panes
+        contentTabs.forEach(tab => tab.classList.remove('active'));
+        contentTabPanes.forEach(pane => pane.classList.remove('active'));
+        
+        // Add active class to current tab and pane
+        this.classList.add('active');
+        document.getElementById(`${contentId}-content`).classList.add('active');
+        
+        // Load data for the active content tab
+        if (contentId === 'master-list') {
+          loadMasters();
+        } else if (contentId === 'master-requests') {
+          loadMasterRequests();
+        }
+      });
+    });
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+      const notification = document.getElementById('notification');
+      const notificationText = document.getElementById('notificationText');
+      
+      notification.className = 'notification';
+      notification.classList.add(type);
+      notification.classList.add('show');
+      
+      notificationText.textContent = message;
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Load Dashboard Data
+    function loadDashboardData() {
+      // Load user and master counts
+      fetch('/api/user-master-count')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('totalUsers').textContent = data.users;
+          document.getElementById('totalMasters').textContent = data.masters;
+          
+          // Calculate percentage change (placeholder)
+          document.getElementById('usersChange').textContent = '12%';
+          document.getElementById('mastersChange').textContent = '8%';
+        })
+        .catch(error => console.error('Error loading user-master count:', error));
+      
+      // Load orders count
+      fetch('/orders')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('totalOrders').textContent = data.orders.length;
+          
+          // Count pending requests
+          const pendingOrders = data.orders.filter(order => order.status === 'pending').length;
+          document.getElementById('pendingRequests').textContent = pendingOrders;
+          
+          // Load recent orders for dashboard
+          loadRecentOrders(data.orders.slice(0, 5));
+        })
+        .catch(error => console.error('Error loading orders:', error));
+      
+      // Load master requests count
+      fetch('/master-requests')
+        .then(response => response.json())
+        .then(data => {
+          const pendingRequests = data.requests.filter(request => request.status === 'pending').length;
+          // Add to pending count
+          const currentPending = parseInt(document.getElementById('pendingRequests').textContent);
+          document.getElementById('pendingRequests').textContent = currentPending + pendingRequests;
+        })
+        .catch(error => console.error('Error loading master requests:', error));
+      
+      // Load charts
+      loadUserMasterChart();
+      loadAgeChart();
+    }
+
+    // Load User-Master Timeline Chart
+    function loadUserMasterChart() {
+      fetch('/api/user-master-timeline')
+        .then(response => response.json())
+        .then(data => {
+          const ctx = document.getElementById('userMasterChart').getContext('2d');
+          
+          // Format labels and datasets
+          const labels = data.map(item => item.month);
+          const usersData = data.map(item => item.users);
+          const mastersData = data.map(item => item.masters);
+          
+          // Create chart
+          const userMasterChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'Користувачі',
+                  data: usersData,
+                  borderColor: '#007bff',
+                  backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                  tension: 0.3,
+                  fill: true
+                },
+                {
+                  label: 'Майстри',
+                  data: mastersData,
+                  borderColor: '#ff3300',
+                  backgroundColor: 'rgba(255, 51, 0, 0.1)',
+                  tension: 0.3,
+                  fill: true
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'top',
+                  labels: {
+                    color: htmlElement.classList.contains('light') ? '#333' : '#fff'
+                  }
+                },
+                tooltip: {
+                  mode: 'index',
+                  intersect: false
+                }
+              },
+              scales: {
+                x: {
+                  grid: {
+                    color: htmlElement.classList.contains('light') ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
+                  },
+                  ticks: {
+                    color: htmlElement.classList.contains('light') ? '#333' : '#fff'
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: htmlElement.classList.contains('light') ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
+                  },
+                  ticks: {
+                    color: htmlElement.classList.contains('light') ? '#333' : '#fff'
+                  }
+                }
+              }
+            }
+          });
+          
+          // Store chart reference for theme updates
+          window.userMasterChart = userMasterChart;
+        })
+        .catch(error => console.error('Error loading user-master timeline:', error));
+    }
+
+    // Load Age Demographics Chart
+    function loadAgeChart() {
+      fetch('/api/age-demographics')
+        .then(response => response.json())
+        .then(data => {
+          const ctx = document.getElementById('ageChart').getContext('2d');
+          
+          // Format data
+          const labels = data.map(item => item.category);
+          const percentages = data.map(item => item.percentage);
+          
+          // Create chart
+          const ageChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Відсоток користувачів',
+                data: percentages,
+                backgroundColor: [
+                  'rgba(255, 99, 132, 0.7)',
+                  'rgba(54, 162, 235, 0.7)',
+                  'rgba(255, 206, 86, 0.7)',
+                  'rgba(75, 192, 192, 0.7)',
+                  'rgba(153, 102, 255, 0.7)',
+                  'rgba(255, 159, 64, 0.7)',
+                  'rgba(255, 99, 132, 0.7)'
+                ],
+                borderColor: [
+                  'rgba(255, 99, 132, 1)',
+                  'rgba(54, 162, 235, 1)',
+                  'rgba(255, 206, 86, 1)',
+                  'rgba(75, 192, 192, 1)',
+                  'rgba(153, 102, 255, 1)',
+                  'rgba(255, 159, 64, 1)',
+                  'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'top',
+                  labels: {
+                    color: htmlElement.classList.contains('light') ? '#333' : '#fff'
+                  }
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      return `${context.raw.toFixed(1)}%`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: {
+                    color: htmlElement.classList.contains('light') ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
+                  },
+                  ticks: {
+                    color: htmlElement.classList.contains('light') ? '#333' : '#fff'
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: htmlElement.classList.contains('light') ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
+                  },
+                  ticks: {
+                    color: htmlElement.classList.contains('light') ? '#333' : '#fff',
+                    callback: function(value) {
+                      return value + '%';
+                    }
+                  }
+                }
+              }
+            }
+          });
+          
+          // Store chart reference for theme updates
+          window.ageChart = ageChart;
+        })
+        .catch(error => console.error('Error loading age demographics:', error));
+    }
+
+    // Update charts theme
+    function updateChartsTheme() {
+      const textColor = htmlElement.classList.contains('light') ? '#333' : '#fff';
+      const gridColor = htmlElement.classList.contains('light') ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+      
+      // Update user-master chart
+      if (window.userMasterChart) {
+        window.userMasterChart.options.plugins.legend.labels.color = textColor;
+        window.userMasterChart.options.scales.x.grid.color = gridColor;
+        window.userMasterChart.options.scales.y.grid.color = gridColor;
+        window.userMasterChart.options.scales.x.ticks.color = textColor;
+        window.userMasterChart.options.scales.y.ticks.color = textColor;
+        window.userMasterChart.update();
+      }
+      
+      // Update age chart
+      if (window.ageChart) {
+        window.ageChart.options.plugins.legend.labels.color = textColor;
+        window.ageChart.options.scales.x.grid.color = gridColor;
+        window.ageChart.options.scales.y.grid.color = gridColor;
+        window.ageChart.options.scales.x.ticks.color = textColor;
+        window.ageChart.options.scales.y.ticks.color = textColor;
+        window.ageChart.update();
+      }
+    }
+
+    // Load Recent Orders for Dashboard
+    function loadRecentOrders(orders) {
+      const tableBody = document.querySelector('#recentOrdersTable tbody');
+      tableBody.innerHTML = '';
+      
+      if (orders.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <div class="empty-state-text">Немає заявок для відображення</div>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      orders.forEach(order => {
+        const createdDate = new Date(order.created_at).toLocaleString('uk-UA');
+        const clientName = `${order.user_first_name || ''} ${order.user_last_name || ''} (${order.user_username})`;
+        const masterName = order.master_id ? 
+          `${order.master_first_name || ''} ${order.master_last_name || ''} (${order.master_username})` : 
+          'Не призначено';
+        
+        const row = `
+          <tr>
+            <td>${order.id}</td>
+            <td>${order.title}</td>
+            <td>${clientName}</td>
+            <td>${order.phone}</td>
+            <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+            <td>${masterName}</td>
+            <td>${createdDate}</td>
+            <td>
+              <button class="btn btn-info" onclick="showOrderDetails(${order.id})">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+    }
+
+    // Load Users
+    function loadUsers() {
+      fetch('/admin/users-with-services')
+        .then(response => response.json())
+        .then(usersWithServices => {
+          const tableBody = document.querySelector('#usersTable tbody');
+          tableBody.innerHTML = '';
+          
+          if (usersWithServices.length === 0) {
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="9">
+                  <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <div class="empty-state-text">Немає користувачів для відображення</div>
+                  </div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+          
+          usersWithServices.forEach(user => {
+            const industries = user.services
+              .filter(service => service.service_type === 'industry')
+              .map(service => service.service_name)
+              .join(', ');
+              
+            const skills = user.services
+              .filter(service => service.service_type.endsWith('-skills-text') || service.service_type === 'custom-skills')
+              .map(service => service.service_name)
+              .join(', ');
+            
+            const row = `
+              <tr>
+                <td>${user.id}</td>
+                <td>${user.username}</td>
+                <td>${user.role_master ? 'Майстер' : 'Користувач'} ${user.approval_status ? `<span class="status-badge status-${user.approval_status}">${getStatusText(user.approval_status)}</span>` : ''}</td>
+                <td>${user.first_name || ''}</td>
+                <td>${user.last_name || ''}</td>
+                <td>${user.email || ''}</td>
+                <td>${industries || 'Не вказано'}</td>
+                <td>${skills || 'Не вказано'}</td>
+                <td class="action-buttons">
+                  <button class="btn btn-info" onclick="showUserDetails(${user.id})">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-danger" onclick="deleteUser(${user.id})">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            `;
+            tableBody.innerHTML += row;
+          });
+          
+          // Create pagination
+          createPagination(usersWithServices.length, 10, 'usersPagination');
+        })
+        .catch(error => {
+          console.error('Помилка при завантаженні користувачів:', error);
+          showNotification('Помилка при завантаженні користувачів', 'error');
+        });
+    }
+
+    // Load Masters
+    function loadMasters() {
+      fetch('/admin/users-with-services')
+        .then(response => response.json())
+        .then(usersWithServices => {
+          // Filter only masters
+          const masters = usersWithServices.filter(user => user.role_master);
+          
+          const tableBody = document.querySelector('#mastersTable tbody');
+          tableBody.innerHTML = '';
+          
+          if (masters.length === 0) {
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="9">
+                  <div class="empty-state">
+                    <i class="fas fa-user-tie"></i>
+                    <div class="empty-state-text">Немає майстрів для відображення</div>
+                  </div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+          
+          masters.forEach(master => {
+            const industries = master.services
+              .filter(service => service.service_type === 'industry')
+              .map(service => service.service_name)
+              .join(', ');
+              
+            const skills = master.services
+              .filter(service => service.service_type.endsWith('-skills-text') || service.service_type === 'custom-skills')
+              .map(service => service.service_name)
+              .join(', ');
+            
+            const row = `
+              <tr>
+                <td>${master.id}</td>
+                <td>${master.username}</td>
+                <td>${master.first_name || ''}</td>
+                <td>${master.last_name || ''}</td>
+                <td>${master.email || ''}</td>
+                <td>${industries || 'Не вказано'}</td>
+                <td>${skills || 'Не вказано'}</td>
+                <td><span class="status-badge status-${master.approval_status}">${getStatusText(master.approval_status)}</span></td>
+                <td class="action-buttons">
+                  <button class="btn btn-info" onclick="showUserDetails(${master.id})">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-danger" onclick="deleteUser(${master.id})">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            `;
+            tableBody.innerHTML += row;
+          });
+          
+          // Create pagination
+          createPagination(masters.length, 10, 'mastersPagination');
+        })
+        .catch(error => {
+          console.error('Помилка при завантаженні майстрів:', error);
+          showNotification('Помилка при завантаженні майстрів', 'error');
+        });
+    }
+
+    // Load Master Requests
+    function loadMasterRequests() {
+      fetch('/master-requests')
+        .then(response => response.json())
+        .then(async data => {
+          const tableBody = document.querySelector('#masterRequestsTable tbody');
+          tableBody.innerHTML = '';
+          
+          if (data.requests.length === 0) {
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="10">
+                  <div class="empty-state">
+                    <i class="fas fa-clipboard-check"></i>
+                    <div class="empty-state-text">Немає запитів на роль майстра</div>
+                  </div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+          
+          for (const request of data.requests) {
+            // Fetch user services
+            const servicesResponse = await fetch(`/services/${request.user_id}`);
+            const servicesData = await servicesResponse.json();
+            
+            const industries = servicesData.services
+              .filter(service => service.service_type === 'industry')
+              .map(service => service.service_name)
+              .join(', ');
+              
+            const skills = servicesData.services
+              .filter(service => service.service_type.endsWith('-skills-text') || service.service_type === 'custom-skills')
+              .map(service => service.service_name)
+              .join(', ');
+            
+            const createdDate = new Date(request.created_at).toLocaleString('uk-UA');
+            
+            const row = `
+              <tr>
+                <td>${request.id}</td>
+                <td>${request.username}</td>
+                <td>${request.first_name || ''}</td>
+                <td>${request.last_name || ''}</td>
+                <td>${request.email || ''}</td>
+                <td>${industries || 'Не вказано'}</td>
+                <td>${skills || 'Не вказано'}</td>
+                <td><span class="status-badge status-${request.status}">${getStatusText(request.status)}</span></td>
+                <td>${createdDate}</td>
+                <td class="action-buttons">
+                  ${request.status === 'pending' ? `
+                    <button class="btn btn-success" onclick="updateRequestStatus(${request.id}, 'approved')">
+                      <i class="fas fa-check"></i> Затвердити
+                    </button>
+                    <button class="btn btn-danger" onclick="updateRequestStatus(${request.id}, 'rejected')">
+                      <i class="fas fa-times"></i> Відхилити
+                    </button>
+                  ` : ''}
+                </td>
+              </tr>
+            `;
+            tableBody.innerHTML += row;
+          }
+          
+          // Create pagination
+          createPagination(data.requests.length, 10, 'requestsPagination');
+        })
+        .catch(error => {
+          console.error('Помилка при завантаженні запитів майстрів:', error);
+          showNotification('Помилка при завантаженні запитів майстрів', 'error');
+        });
+    }
+
+    // Load Orders
+    function loadOrders() {
+      fetch('/orders')
+        .then(response => response.json())
+        .then(data => {
+          const tableBody = document.querySelector('#ordersTable tbody');
+          tableBody.innerHTML = '';
+          
+          if (data.orders.length === 0) {
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="9">
+                  <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <div class="empty-state-text">Немає заявок для відображення</div>
+                  </div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+          
+          data.orders.forEach(order => {
+            const createdDate = new Date(order.created_at).toLocaleString('uk-UA');
+            const clientName = `${order.user_first_name || ''} ${order.user_last_name || ''} (${order.user_username})`;
+            const masterName = order.master_id ? 
+              `${order.master_first_name || ''} ${order.master_last_name || ''} (${order.master_username})` : 
+              'Не призначено';
+            
+            // Отримуємо ID поточного користувача
+            const currentUserId = localStorage.getItem('userId');
+            
+            let actionButtons = `
+              <button class="btn btn-info" onclick="showOrderDetails(${order.id})">
+                <i class="fas fa-eye"></i>
+              </button>
+            `;
+            
+            if (order.status === 'pending') {
+              actionButtons += `
+                <button class="btn btn-success" onclick="updateOrderStatus(${order.id}, 'approved', ${currentUserId})">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-danger" onclick="updateOrderStatus(${order.id}, 'rejected', ${currentUserId})">
+                  <i class="fas fa-times"></i>
+                </button>
+              `;
+            } else if (order.status === 'approved' && order.master_id == currentUserId) {
+              actionButtons += `
+                <button class="btn btn-primary" onclick="updateOrderStatus(${order.id}, 'completed', ${currentUserId})">
+                  <i class="fas fa-check-double"></i>
+                </button>
+              `;
+            }
+            
+            // Додаємо кнопку для дзвінка
+            if (order.phone) {
+              actionButtons += `
+                <button class="btn btn-purple" onclick="callClient('${order.phone}')">
+                  <i class="fas fa-phone"></i>
+                </button>
+              `;
+            }
+            
+            const row = `
+              <tr>
+                <td>${order.id}</td>
+                <td>${order.title}</td>
+                <td>${order.description || 'Немає опису'}</td>
+                <td>${clientName}</td>
+                <td>${order.phone}</td>
+                <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+                <td>${masterName}</td>
+                <td>${createdDate}</td>
+                <td class="action-buttons">
+                  ${actionButtons}
+                </td>
+              </tr>
+            `;
+            tableBody.innerHTML += row;
+          });
+          
+          // Create pagination
+          createPagination(data.orders.length, 10, 'ordersPagination');
+        })
+        .catch(error => {
+          console.error('Помилка при завантаженні замовлень:', error);
+          showNotification('Помилка при завантаженні замовлень', 'error');
+        });
+    }
+
+    // Create Pagination
+    function createPagination(totalItems, itemsPerPage, paginationId) {
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const paginationContainer = document.getElementById(paginationId);
+      paginationContainer.innerHTML = '';
+      
+      if (totalPages <= 1) {
+        return;
+      }
+      
+      // Previous button
+      const prevButton = document.createElement('button');
+      prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
+      prevButton.disabled = true;
+      paginationContainer.appendChild(prevButton);
+      
+      // Page buttons
+      for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.textContent = i;
+        if (i === 1) {
+          pageButton.classList.add('active');
+        }
+        pageButton.addEventListener('click', function() {
+          // Handle page change
+          const activeButton = paginationContainer.querySelector('button.active');
+          if (activeButton) {
+            activeButton.classList.remove('active');
+          }
+          this.classList.add('active');
+          
+          // Enable/disable prev/next buttons
+          prevButton.disabled = i === 1;
+          nextButton.disabled = i === totalPages;
+          
+          // TODO: Implement actual pagination logic
+        });
+        paginationContainer.appendChild(pageButton);
+      }
+      
+      // Next button
+      const nextButton = document.createElement('button');
+      nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
+      nextButton.disabled = totalPages === 1;
+      paginationContainer.appendChild(nextButton);
+    }
+
+    // Show User Details Modal
+    function showUserDetails(userId) {
+      // Fetch user data
+      fetch(`/profile/${userId}`)
+        .then(response => response.json())
+        .then(async userData => {
+          const profile = userData.profile;
+          
+          // Fetch user services
+          const servicesResponse = await fetch(`/services/${userId}`);
+          const servicesData = await servicesResponse.json();
+          
+          // Populate user details
+          const userProfileDetails = document.getElementById('userProfileDetails');
+          userProfileDetails.innerHTML = `
+            <div class="detail-item">
+              <div class="detail-label">ID</div>
+              <div class="detail-value">${profile.user_id}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Ім'я</div>
+              <div class="detail-value">${profile.first_name || 'Не вказано'}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Прізвище</div>
+              <div class="detail-value">${profile.last_name || 'Не вказано'}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Email</div>
+              <div class="detail-value">${profile.email || 'Не вказано'}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Телефон</div>
+              <div class="detail-value">${profile.phone || 'Не вказано'}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Адреса</div>
+              <div class="detail-value">${profile.address || 'Не вказано'}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Дата народження</div>
+              <div class="detail-value">${profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('uk-UA') : 'Не вказано'}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Роль</div>
+              <div class="detail-value">${profile.role_master ? 'Майстер' : 'Користувач'}</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Статус</div>
+              <div class="detail-value">${profile.approval_status ? `<span class="status-badge status-${profile.approval_status}">${getStatusText(profile.approval_status)}</span>` : 'Не визначено'}</div>
+            </div>
+          `;
+          
+          // Populate industries
+          const userIndustries = document.getElementById('userIndustries');
+          const industries = servicesData.services.filter(service => service.service_type === 'industry');
+          
+          if (industries.length > 0) {
+            userIndustries.innerHTML = industries.map(industry => 
+              `<span class="status-badge status-approved">${industry.service_name}</span>`
+            ).join(' ');
+          } else {
+            userIndustries.innerHTML = 'Не вказано';
+          }
+          
+          // Populate skills
+          const userSkills = document.getElementById('userSkills');
+          const skills = servicesData.services.filter(service => 
+            service.service_type.endsWith('-skills-text') || service.service_type === 'custom-skills'
+          );
+          
+          if (skills.length > 0) {
+            userSkills.innerHTML = skills.map(skill => 
+              `<span class="status-badge status-info">${skill.service_name}</span>`
+            ).join(' ');
+          } else {
+            userSkills.innerHTML = 'Не вказано';
+          }
+          
+          // Set up delete button
+          const deleteUserBtn = document.getElementById('deleteUserBtn');
+          deleteUserBtn.onclick = function() {
+            if (confirm(`Ви впевнені, що хочете видалити користувача з ID ${userId}?`)) {
+              deleteUser(userId);
+              closeUserDetailsModal();
+            }
+          };
+          
+          // Show modal
+          document.getElementById('userDetailsModal').classList.add('show');
+        })
+        .catch(error => {
+          console.error('Помилка при завантаженні деталей користувача:', error);
+          showNotification('Помилка при завантаженні деталей користувача', 'error');
+        });
+    }
+
+    // Close User Details Modal
+    function closeUserDetailsModal() {
+      document.getElementById('userDetailsModal').classList.remove('show');
+    }
+
+    // Show Order Details Modal
+    function showOrderDetails(orderId) {
+      // Fetch order data
+      fetch('/orders')
+        .then(response => response.json())
+        .then(data => {
+          const order = data.orders.find(o => o.id === orderId);
+          
+          if (!order) {
+            showNotification('Замовлення не знайдено', 'error');
+            return;
+          }
+          
+          const createdDate = new Date(order.created_at).toLocaleString('uk-UA');
+          const updatedDate = new Date(order.updated_at).toLocaleString('uk-UA');
+          const clientName = `${order.user_first_name || ''} ${order.user_last_name || ''} (${order.user_username})`;
+          const masterName = order.master_id ? 
+            `${order.master_first_name || ''} ${order.master_last_name || ''} (${order.master_username})` : 
+            'Не призначено';
+          
+          // Populate order details
+          const orderDetailsBody = document.getElementById('orderDetailsBody');
+          orderDetailsBody.innerHTML = `
+            <div class="user-profile-details">
+              <div class="detail-item">
+                <div class="detail-label">ID</div>
+                <div class="detail-value">${order.id}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Тема</div>
+                <div class="detail-value">${order.title}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Статус</div>
+                <div class="detail-value"><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Клієнт</div>
+                <div class="detail-value">${clientName}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Телефон</div>
+                <div class="detail-value">${order.phone}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Майстер</div>
+                <div class="detail-value">${masterName}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Дата створення</div>
+                <div class="detail-value">${createdDate}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Дата оновлення</div>
+                <div class="detail-value">${updatedDate}</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Опис</label>
+              <div class="detail-value">${order.description || 'Немає опису'}</div>
+            </div>
+          `;
+          
+          // Populate action buttons
+          const orderDetailsFooter = document.getElementById('orderDetailsFooter');
+          const currentUserId = localStorage.getItem('userId');
+          
+          let actionButtons = `
+            <button class="btn btn-primary" id="closeOrderModalBtn">Закрити</button>
+          `;
+          
+          if (order.status === 'pending') {
+            actionButtons = `
+              <button class="btn btn-success" onclick="updateOrderStatus(${order.id}, 'approved', ${currentUserId}); closeOrderDetailsModal();">
+                <i class="fas fa-check"></i> Прийняти
+              </button>
+              <button class="btn btn-danger" onclick="updateOrderStatus(${order.id}, 'rejected', ${currentUserId}); closeOrderDetailsModal();">
+                <i class="fas fa-times"></i> Відхилити
+              </button>
+              ${actionButtons}
+            `;
+          } else if (order.status === 'approved' && order.master_id == currentUserId) {
+            actionButtons = `
+              <button class="btn btn-info" onclick="updateOrderStatus(${order.id}, 'completed', ${currentUserId}); closeOrderDetailsModal();">
+                <i class="fas fa-check-double"></i> Завершити
+              </button>
+              ${actionButtons}
+            `;
+          }
+          
+          // Додаємо кнопку для дзвінка
+          if (order.phone) {
+            actionButtons = `
+              <button class="btn btn-purple" onclick="callClient('${order.phone}')">
+                <i class="fas fa-phone"></i> Зателефонувати
+              </button>
+              ${actionButtons}
+            `;
+          }
+          
+          orderDetailsFooter.innerHTML = actionButtons;
+          
+          // Set up close button
+          document.getElementById('closeOrderModalBtn').onclick = closeOrderDetailsModal;
+          
+          // Show modal
+          document.getElementById('orderDetailsModal').classList.add('show');
+        })
+        .catch(error => {
+          console.error('Помилка при завантаженні деталей замовлення:', error);
+          showNotification('Помилка при завантаженні деталей замовлення', 'error');
+        });
+    }
+
+    // Close Order Details Modal
+    function closeOrderDetailsModal() {
+      document.getElementById('orderDetailsModal').classList.remove('show');
+    }
+
+    // Delete User
+    function deleteUser(userId) {
+      if (confirm(`Ви впевнені, що хочете видалити користувача з ID ${userId}?`)) {
+        fetch(`/admin/users/${userId}`, { method: 'DELETE' })
+          .then(response => response.json())
+          .then(data => {
+            showNotification(data.message, 'success');
+            loadUsers();
+            loadMasters();
+            loadDashboardData();
+          })
+          .catch(error => {
+            console.error('Помилка при видаленні користувача:', error);
+            showNotification('Помилка при видаленні користувача', 'error');
+          });
+      }
+    }
+
+    // Update Request Status
+    function updateRequestStatus(requestId, status) {
+      const statusText = status === 'approved' ? 'затвердити' : 'відхилити';
+      if (confirm(`Ви впевнені, що хочете ${statusText} цей запит?`)) {
+        fetch(`/master-requests/${requestId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        })
+          .then(response => response.json())
+          .then(data => {
+            showNotification(data.message, 'success');
+            loadMasterRequests();
+            loadMasters();
+            loadDashboardData();
+          })
+          .catch(error => {
+            console.error(`Помилка при ${statusText === 'затвердити' ? 'затвердженні' : 'відхиленні'} запиту:`, error);
+            showNotification(`Помилка при ${statusText === 'затвердити' ? 'затвердженні' : 'відхиленні'} запиту`, 'error');
+          });
+      }
+    }
+
+    // Update Order Status
+    function updateOrderStatus(orderId, status, masterId) {
+      const statusTexts = {
+        'approved': 'прийняти',
+        'rejected': 'відхилити',
+        'completed': 'завершити'
+      };
+      
+      const statusText = statusTexts[status] || status;
+      
+      if (confirm(`Ви впевнені, що хочете ${statusText} цю заявку?`)) {
+        fetch(`/orders/${orderId}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}` // Додаємо токен для авторизації
+          },
+          body: JSON.stringify({ 
+            status: status,
+            master_id: status === 'rejected' ? null : masterId
+          })
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showNotification(data.message, 'success');
+              loadOrders();
+              loadDashboardData();
+            } else {
+              showNotification(data.message || 'Помилка при оновленні статусу заявки', 'error');
+            }
+          })
+          .catch(error => {
+            console.error(`Помилка при оновленні статусу заявки:`, error);
+            showNotification('Помилка при оновленні статусу заявки', 'error');
+          });
+      }
+    }
+
+    // Call Client
+    function callClient(phoneNumber) {
+      // Видаляємо всі нецифрові символи з номера телефону
+      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
+      
+      // Створюємо посилання для дзвінка
+      window.location.href = `tel:${cleanPhoneNumber}`;
+    }
+
+    // Get Status Text
+    function getStatusText(status) {
+      switch(status) {
+        case 'pending': return 'На розгляді';
+        case 'approved': return 'Затверджено';
+        case 'rejected': return 'Відхилено';
+        case 'completed': return 'Завершено';
+        default: return '';
+      }
+    }
+
+    // Export Orders to CSV
+    document.getElementById('exportOrdersBtn').addEventListener('click', function() {
+      fetch('/orders')
+        .then(response => response.json())
+        .then(data => {
+          // Prepare CSV content
+          let csvContent = "data:text/csv;charset=utf-8,";
+          
+          // Add headers
+          csvContent += "ID,Тема,Опис,Клієнт,Телефон,Статус,Майстер,Дата створення\n";
+          
+          // Add rows
+          data.orders.forEach(order => {
+            const clientName = `${order.user_first_name || ''} ${order.user_last_name || ''} (${order.user_username})`;
+            const masterName = order.master_id ? 
+              `${order.master_first_name || ''} ${order.master_last_name || ''} (${order.master_username})` : 
+              'Не призначено';
+            const createdDate = new Date(order.created_at).toLocaleString('uk-UA');
+            const status = getStatusText(order.status);
+            
+            // Create CSV row
+            const row = [
+              order.id,
+              `"${order.title.replace(/"/g, '""')}"`,
+              `"${(order.description || 'Немає опису').replace(/"/g, '""')}"`,
+              `"${clientName.replace(/"/g, '""')}"`,
+              order.phone,
+              status,
+              `"${masterName.replace(/"/g, '""')}"`,
+              createdDate
+            ].join(',');
+            
+            csvContent += row + "\n";
+          });
+          
+          // Create download link
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", `orders_${new Date().toISOString().slice(0,10)}.csv`);
+          document.body.appendChild(link);
+          
+          // Trigger download
+          link.click();
+          document.body.removeChild(link);
+        })
+        .catch(error => {
+          console.error('Помилка при експорті замовлень:', error);
+          showNotification('Помилка при експорті замовлень', 'error');
+        });
+    });
+
+    // Settings Form Submit
+    document.getElementById('settingsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Get form values
+      const siteName = document.getElementById('siteName').value;
+      const adminEmail = document.getElementById('adminEmail').value;
+      const autoApprove = document.getElementById('autoApprove').value;
+      const maxServices = document.getElementById('maxServices').value;
+      
+      // Save settings (mock implementation)
+      localStorage.setItem('siteName', siteName);
+      localStorage.setItem('adminEmail', adminEmail);
+      localStorage.setItem('autoApprove', autoApprove);
+      localStorage.setItem('maxServices', maxServices);
+      
+      showNotification('Налаштування успішно збережено', 'success');
+    });
+
+    // Search functionality
+    document.getElementById('userSearchInput').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const rows = document.querySelectorAll('#usersTable tbody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    });
+    
+    document.getElementById('masterSearchInput').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const rows = document.querySelectorAll('#mastersTable tbody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    });
+    
+    document.getElementById('requestSearchInput').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const rows = document.querySelectorAll('#masterRequestsTable tbody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    });
+    
+    document.getElementById('ordersSearchInput').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const rows = document.querySelectorAll('#ordersTable tbody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    });
+    
+    document.getElementById('orderSearchInput').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const rows = document.querySelectorAll('#recentOrdersTable tbody tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    });
+
+    // Modal close buttons
+    document.getElementById('closeUserDetailsModal').addEventListener('click', closeUserDetailsModal);
+    document.getElementById('closeUserModalBtn').addEventListener('click', closeUserDetailsModal);
+    document.getElementById('closeOrderDetailsModal').addEventListener('click', closeOrderDetailsModal);
+
+    // Get user data on page load
+    function getUserData() {
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('/user-data', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              localStorage.setItem('userId', data.userId);
+              localStorage.setItem('userRole', data.role);
+              
+              // Update user avatar with first letter of username
+              if (data.username) {
+                const firstLetter = data.username.charAt(0).toUpperCase();
+                document.querySelector('.user-avatar').textContent = firstLetter;
+                document.querySelector('.user-menu-btn span').textContent = data.username;
+              }
+            } else {
+              console.error('Помилка отримання даних користувача:', data.message);
+            }
+          })
+          .catch(error => console.error('Помилка при отриманні даних користувача:', error));
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      getUserData();
+      loadDashboardData();
+    });
+  </script>
+</body>
+</html>
