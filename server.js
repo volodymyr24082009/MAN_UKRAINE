@@ -9,7 +9,7 @@ const cors = require("cors")
 dotenv.config()
 
 const app = express()
-const port = process.env.PORT || 30019
+const port = process.env.PORT || 30020
 
 // Обслуговування статичних файлів з директорії 'public'
 app.use(express.static(path.join(__dirname, 'public')));
@@ -558,6 +558,171 @@ app.get("/admin/users", async (req, res) => {
   }
 })
 
+// Fix the admin/users endpoint to properly fetch master data
+app.get("/admin/users", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT u.id, u.username, up.role_master, up.first_name, up.last_name, 
+             up.email, up.approval_status, up.phone, up.address, up.date_of_birth
+      FROM users u
+      LEFT JOIN user_profile up ON u.id = up.user_id
+      ORDER BY up.role_master DESC, u.id ASC
+    `)
+    res.json(result.rows)
+  } catch (err) {
+    console.error("Помилка при отриманні списку користувачів:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Fix the master-requests endpoint to include more user data
+app.get("/master-requests", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT mr.id, mr.user_id, mr.status, mr.created_at, mr.updated_at,
+             u.username, up.first_name, up.last_name, up.email, up.phone, 
+             up.address, up.date_of_birth
+      FROM master_requests mr
+      JOIN users u ON mr.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      ORDER BY mr.created_at DESC
+    `)
+
+    res.status(200).json({ requests: result.rows })
+  } catch (err) {
+    console.error("Помилка при отриманні запитів на роль майстра:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Add a new endpoint to get all masters with their industries and services
+app.get("/admin/masters", async (req, res) => {
+  try {
+    // Get all users with role_master = true
+    const mastersResult = await pool.query(`
+      SELECT u.id, u.username, up.first_name, up.last_name, up.email, 
+             up.phone, up.address, up.approval_status, up.date_of_birth
+      FROM users u
+      JOIN user_profile up ON u.id = up.user_id
+      WHERE up.role_master = true
+      ORDER BY up.approval_status, u.id
+    `)
+    
+    const masters = mastersResult.rows;
+    
+    // For each master, get their industries and services
+    for (const master of masters) {
+      // Get industries
+      const industriesResult = await pool.query(`
+        SELECT service_name 
+        FROM user_services 
+        WHERE user_id = $1 AND service_type = 'industry'
+      `, [master.id]);
+      
+      master.industries = industriesResult.rows.map(row => row.service_name);
+      
+      // Get services (excluding industries)
+      const servicesResult = await pool.query(`
+        SELECT service_name, service_type
+        FROM user_services 
+        WHERE user_id = $1 AND service_type != 'industry'
+      `, [master.id]);
+      
+      master.services = servicesResult.rows;
+    }
+    
+    res.json(masters);
+  } catch (err) {
+    console.error("Помилка при отриманні списку майстрів:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
+// Improve the master request approval process
+app.put("/master-requests/:requestId", async (req, res) => {
+  const requestId = req.params.requestId
+  const { status } = req.body
+
+  if (!status || !["pending", "approved", "rejected"].includes(status)) {
+    return res.status(400).json({ message: "Невірний статус" })
+  }
+
+  try {
+    // Start a transaction
+    await pool.query('BEGIN');
+    
+    // Get the request
+    const requestResult = await pool.query("SELECT * FROM master_requests WHERE id = $1", [requestId])
+    if (requestResult.rows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ message: "Запит не знайдено" })
+    }
+
+    const userId = requestResult.rows[0].user_id
+
+    // Update request status
+    await pool.query("UPDATE master_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2", [
+      status,
+      requestId,
+    ])
+
+    // Update user profile
+    if (status === "approved") {
+      await pool.query("UPDATE user_profile SET approval_status = $1, role_master = true WHERE user_id = $2", [
+        status, userId
+      ])
+      
+      // Add default industries for the master if they don't exist
+      const industries = [
+        'Інформаційні технології',
+        'Медицина',
+        'Енергетика',
+        'Аграрна галузь',
+        'Фінанси та банківська справа',
+        'Освіта',
+        'Туризм і гостинність',
+        'Будівництво та нерухомість',
+        'Транспорт',
+        'Мистецтво і культура'
+      ]
+
+      for (const industry of industries) {
+        // Check if the industry already exists for this master
+        const existingIndustry = await pool.query(`
+          SELECT * FROM user_services 
+          WHERE user_id = $1 AND service_name = $2 AND service_type = 'industry'
+        `, [userId, industry])
+
+        if (existingIndustry.rows.length === 0) {
+          await pool.query(`
+            INSERT INTO user_services (user_id, service_name, service_type)
+            VALUES ($1, $2, 'industry')
+          `, [userId, industry])
+        }
+      }
+    } else if (status === "rejected") {
+      await pool.query("UPDATE user_profile SET approval_status = $1, role_master = false WHERE user_id = $2", [
+        status, userId
+      ])
+    } else {
+      await pool.query("UPDATE user_profile SET approval_status = $1 WHERE user_id = $2", [
+        status, userId
+      ])
+    }
+    
+    // Commit the transaction
+    await pool.query('COMMIT');
+
+    console.log(`Статус запиту на роль майстра з ID ${requestId} змінено на ${status}.`)
+    res.status(200).json({ success: true, message: `Статус запиту змінено на ${status}` })
+  } catch (err) {
+    // Rollback in case of error
+    await pool.query('ROLLBACK');
+    console.error("Помилка при оновленні статусу запиту:", err)
+    res.status(500).json({ message: "Помилка сервера", error: err.message })
+  }
+})
+
 // Видалення користувача
 app.delete("/admin/users/:userId", async (req, res) => {
   const userId = req.params.userId
@@ -991,3 +1156,4 @@ app.put("/orders/:orderId", async (req, res) => {
 app.listen(port, () => {
   console.log(`Сервер запущено на http://localhost:${port}`)
 })
+
