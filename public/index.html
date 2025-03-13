@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProFix Network Hub - Професійні послуги</title>
+  <meta name="description" content="ProFix Network Hub - платформа, що з'єднує клієнтів з професійними майстрами для різних галузей">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="manifest" href="/manifest.webmanifest.json">
+  <style>
+    :root {
+      --background-dark: #121212;
+      --background-light: #f8f9fa;
+      --text-dark: #ffffff;
+      --text-light: #212529;
+      --primary-color: #ff3300;
+      --secondary-color: #ff6600;
+      --accent-color: #007bff;
+      --success-color: #28a745;
+      --warning-color: #ffc107;
+      --danger-color: #dc3545;
+      --info-color: #17a2b8;
+      --card-bg-dark: #1e1e1e;
+      --card-bg-light: #ffffff;
+      --border-dark: #333333;
+      --border-light: #dee2e6;
+      --footer-bg-dark: #1a1a1a;
+      --footer-bg-light: #e9ecef;
+      --shadow-dark: 0 5px 15px rgba(0, 0, 0, 0.5);
+      --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.1);
+      --gradient-dark: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+      --gradient-light: linear-gradient(145deg, #f0f0f0, #ffffff);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      height: 100%;
+      font-size: 16px;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--background-dark);
+      background-image: 
+        radial-gradient(rgba(255, 51, 0, 0.05) 1px, transparent 1px),
+        radial-gradient(rgba(255, 51, 0, 0.05) 1px, transparent 1px);
+      background-size: 50px 50px;
+      background-position: 0 0, 25px 25px;
+      color: var(--text-dark);
+      font-family: 'Montserrat', sans-serif;
+      transition: background 0.3s ease, color 0.3s ease;
+      margin: 0;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    html.light body {
+      background: var(--background-light);
+      color: var(--text-light);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      flex: 1;
+    }
+
+    /* Header Styles */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      width: 100%;
+      background: rgba(18, 18, 18, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-dark);
+      transition: all 0.3s ease;
+    }
+
+    html.light .header {
+      background: rgba(248, 249, 250, 0.95);
+      box-shadow: var(--shadow-light);
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-decoration: none;
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .logo i {
+      font-size: 1.8rem;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-link {
+      color: var(--text-dark);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 8px 12px;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    html.light .nav-link {
+      color: var(--text-light);
+    }
+
+    .nav-link:hover {
+      color: var(--primary-color);
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: var(--primary-color);
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .nav-link:hover::after {
+      width: 80%;
+    }
+
+    .nav-button {
+      padding: 10px 20px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
+    }
+
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 30px;
+      margin-left: 15px;
+    }
+
+    .theme-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #333;
+      transition: .4s;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px;
+    }
+
+    html.light .slider {
+      background-color: #ccc;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary-color);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(30px);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-dark);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    html.light .mobile-menu-btn {
+      color: var(--text-light);
+    }
+
+    /* Hero Section */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 20px;
+      background: url('/placeholder.svg?height=600&width=1200') center/cover no-repeat;
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      margin-top: 30px;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(18, 18, 18, 0.8), rgba(18, 18, 18, 0.6));
+      z-index: 1;
+    }
+
+    html.light .hero::before {
+      background: linear-gradient(rgba(248, 249, 250, 0.8), rgba(248, 249, 250, 0.6));
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+    }
+
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--primary-color);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-subtitle {
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      color: var(--text-dark);
+    }
+
+    html.light .hero-subtitle {
+      color: var(--text-light);
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .hero-btn {
+      padding: 15px 30px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(255, 51, 0, 0.4);
+    }
+
+    .hero-btn.secondary {
+      background: transparent;
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .hero-btn.secondary:hover {
+      background: rgba(255, 51, 0, 0.1);
+    }
+
+    /* Industries Section */
+    .industries-section {
+      padding: 60px 0;
+    }
+
+    .section-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 40px;
+      color: var(--primary-color);
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: var(--primary-color);
+    }
+
+    .industries-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+
+    .industry-card {
+      background: var(--gradient-dark);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: var(--shadow-dark);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid var(--border-dark);
+    }
+
+    html.light .industry-card {
+      background: var(--gradient-light);
+      box-shadow: var(--shadow-light);
+      border: 1px solid var(--border-light);
+    }
+
+    .industry-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    html.light .industry-card:hover {
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .industry-icon {
+      font-size: 3rem;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+
+    .industry-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 10px;
+    }
+
+    html.light .industry-name {
+      color: var(--text-light);
+    }
+
+    /* Order Form Section */
+    .order-section {
+      padding: 60px 0;
+    }
+
+    .order-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .order-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 15px;
+      box-shadow: var(--shadow-dark);
+    }
+
+    html.light .order-image {
+      box-shadow: var(--shadow-light);
+    }
+
+    .order-form-container {
+      background: var(--gradient-dark);
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: var(--shadow-dark);
+      border: 1px solid var(--border-dark);
+    }
+
+    html.light .order-form-container {
+      background: var(--gradient-light);
+      box-shadow: var(--shadow-light);
+      border: 1px solid var(--border-light);
+    }
+
+    .order-form-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 30px;
+      color: var(--primary-color);
+      text-align: center;
+    }
+
+    .order-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-dark);
+    }
+
+    html.light .form-group label {
+      color: var(--text-light);
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-dark);
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text-dark);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    html.light .form-group input,
+    html.light .form-group textarea,
+    html.light .form-group select {
+      border: 1px solid var(--border-light);
+      background-color: rgba(255, 255, 255, 0.8);
+      color: var(--text-light);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(255, 51, 0, 0.3);
+    }
+
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .submit-btn {
+      padding: 15px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
+    }
+
+    .submit-btn:disabled {
+      background: #888;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .form-message {
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      margin-top: 15px;
+      display: none;
+      font-weight: 600;
+    }
+
+    .form-message.success {
+      background-color: rgba(40, 167, 69, 0.2);
+      color: var(--success-color);
+      display: block;
+    }
+
+    .form-message.error {
+      background-color: rgba(220, 53, 69, 0.2);
+      color: var(--danger-color);
+      display: block;
+    }
+
+    /* Communication Panel */
+    .communication-panel {
+      position: fixed;
+      right: 30px;
+      bottom: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    .comm-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .comm-btn:hover {
+      transform: translateY(-5px) scale(1.1);
+      box-shadow: 0 10px 25px rgba(255, 51, 0, 0.5);
+    }
+
+    .comm-menu {
+      position: absolute;
+      bottom: 70px;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+    }
+
+    .comm-menu.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .comm-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--gradient-dark);
+      padding: 10px 15px;
+      border-radius: 30px;
+      box-shadow: var(--shadow-dark);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 1px solid var(--border-dark);
+    }
+
+    html.light .comm-item {
+      background: var(--gradient-light);
+      box-shadow: var(--shadow-light);
+      border: 1px solid var(--border-light);
+    }
+
+    .comm-item:hover {
+      transform: translateX(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    html.light .comm-item:hover {
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .comm-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .comm-text {
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    html.light .comm-text {
+      color: var(--text-light);
+    }
+
+    /* Footer */
+    .footer {
+      background-color: var(--footer-bg-dark);
+      color: var(--text-dark);
+      padding: 60px 0 30px;
+      margin-top: 60px;
+    }
+
+    html.light .footer {
+      background-color: var(--footer-bg-light);
+      color: var(--text-light);
+    }
+
+    .footer-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+
+    .footer-logo i {
+      font-size: 1.8rem;
+    }
+
+    .footer-description {
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 15px;
+    }
+
+    .social-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+    }
+
+    .social-icon:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
+    }
+
+    .footer-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--primary-color);
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-link {
+      margin-bottom: 10px;
+    }
+
+    .footer-link a {
+      color: var(--text-dark);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    html.light .footer-link a {
+      color: var(--text-light);
+    }
+
+    .footer-link a:hover {
+      color: var(--primary-color);
+      transform: translateX(5px);
+    }
+
+    .footer-contact {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .contact-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .contact-info {
+      flex: 1;
+    }
+
+    .contact-label {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    html.light .contact-label {
+      color: rgba(33, 37, 41, 0.7);
+    }
+
+    .contact-value {
+      font-weight: 600;
+    }
+
+    .contact-value a {
+      color: var(--text-dark);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    html.light .contact-value a {
+      color: var(--text-light);
+    }
+
+    .contact-value a:hover {
+      color: var(--primary-color);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 30px;
+      margin-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    html.light .footer-bottom {
+      border-top: 1px solid rgba(33, 37, 41, 0.1);
+    }
+
+    .copyright {
+      font-size: 0.9rem;
+    }
+
+    /* Loading Indicator */
+    .loading {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-dark);
+    }
+
+    html.light .empty-state {
+      color: var(--text-light);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      opacity: 0.7;
+    }
+
+    .empty-state-text {
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 992px) {
+      .hero-title {
+        font-size: 2.5rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.2rem;
+      }
+
+      .order-container {
+        grid-template-columns: 1fr;
+      }
+
+      .order-image {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-container {
+        padding: 15px 20px;
+      }
+
+      .nav-menu {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 80%;
+        height: 100vh;
+        background: var(--background-dark);
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 80px 40px;
+        transition: all 0.4s ease;
+        z-index: 1001;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+      }
+
+      html.light .nav-menu {
+        background: var(--background-light);
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .nav-menu.active {
+        right: 0;
+      }
+
+      .nav-link {
+        margin: 15px 0;
+        font-size: 1.2rem;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .theme-switch {
+        margin: 20px 0;
+      }
+
+      .hero {
+        padding: 60px 20px;
+      }
+
+      .hero-title {
+        font-size: 2rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .hero-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .section-title {
+        font-size: 1.8rem;
+      }
+
+      .industry-card {
+        padding: 20px;
+      }
+
+      .order-form-container {
+        padding: 30px 20px;
+      }
+
+      .communication-panel {
+        right: 20px;
+        bottom: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo {
+        font-size: 1.2rem;
+      }
+
+      .logo i {
+        font-size: 1.5rem;
+      }
+
+      .hero-title {
+        font-size: 1.8rem;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+      }
+
+      .industry-card {
+        padding: 15px;
+      }
+
+      .industry-icon {
+        font-size: 2.5rem;
+      }
+
+      .order-form-title {
+        font-size: 1.5rem;
+      }
+
+      .footer {
+        padding: 40px 0 20px;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 1s ease forwards;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 10px 25px rgba(255, 51, 0, 0.5);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
+      }
+    }
+
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <a href="index.html" class="logo">
+        <i class="fas fa-tools"></i>
+        ProFix Network Hub
+      </a>
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html" class="nav-link">Головна</a>
+        <a href="#industries" class="nav-link">Галузі</a>
+        <a href="#order" class="nav-link">Замовити</a>
+        <a href="profile.html" class="nav-link">Профіль</a>
+        <button class="nav-button" id="loginBtn">
+          <i class="fas fa-sign-in-alt"></i>
+          Увійти
+        </button>
+        <label class="theme-switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider">
+            <span class="moon">🌙</span>
+            <span class="sun">☀️</span>
+          </span>
+        </label>
+      </div>
+      <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content fade-in">
+        <h1 class="hero-title">Професійні послуги для будь-яких потреб</h1>
+        <p class="hero-subtitle">Знайдіть найкращих майстрів у різних галузях для вирішення ваших завдань</p>
+        <div class="hero-buttons">
+          <button class="hero-btn pulse" id="orderNowBtn">
+            <i class="fas fa-clipboard-list"></i>
+            Замовити послугу
+          </button>
+          <button class="hero-btn secondary" id="findMasterBtn">
+            <i class="fas fa-search"></i>
+            Знайти майстра
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Industries Section -->
+    <section class="industries-section" id="industries">
+      <div class="container">
+        <h2 class="section-title">Галузі</h2>
+        <div class="industries-container" id="industriesContainer">
+          <!-- Industries will be dynamically populated -->
+          <div class="loading"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Order Form Section -->
+    <section class="order-section" id="order">
+      <div class="container">
+        <h2 class="section-title">Замовити послугу</h2>
+        <div class="order-container">
+          <img src="./галузі.png" alt="Замовлення послуги" class="order-image">
+          <div class="order-form-container fade-in">
+            <h3 class="order-form-title">Залишити заявку</h3>
+            <form id="orderForm" class="order-form">
+              <div class="form-group">
+                <label for="orderTitle">Тема заявки*</label>
+                <input type="text" id="orderTitle" name="title" required placeholder="Наприклад: Розробка веб-сайту">
+              </div>
+              <div class="form-group">
+                <label for="industrySelect">Галузь*</label>
+                <select id="industrySelect" name="industry" required>
+                  <option value="" disabled selected>Оберіть галузь</option>
+                  <!-- Industries will be dynamically populated -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="orderDescription">Опис проблеми</label>
+                <textarea id="orderDescription" name="description" placeholder="Детально опишіть ваше завдання"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="orderPhone">Номер телефону*</label>
+                <input type="tel" id="orderPhone" name="phone" required placeholder="+380XXXXXXXXX">
+              </div>
+              <button type="submit" class="submit-btn" id="submitOrderBtn">Відправити заявку</button>
+              <div id="orderFormMessage" class="form-message"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Communication Panel -->
+  <div class="communication-panel">
+    <button class="comm-btn pulse" id="commToggleBtn">
+      <i class="fas fa-comments"></i>
+    </button>
+    <div class="comm-menu" id="commMenu">
+      <div class="comm-item" id="messageBtn">
+        <div class="comm-icon">
+          <i class="fas fa-envelope"></i>
+        </div>
+        <span class="comm-text">Повідомлення</span>
+      </div>
+      <div class="comm-item" id="chatBtn">
+        <div class="comm-icon">
+          <i class="fas fa-comment-dots"></i>
+        </div>
+        <span class="comm-text">Чат</span>
+      </div>
+      <div class="comm-item" id="voiceBtn">
+        <div class="comm-icon">
+          <i class="fas fa-microphone"></i>
+        </div>
+        <span class="comm-text">Голосовий</span>
+      </div>
+      <div class="comm-item" id="videoBtn">
+        <div class="comm-icon">
+          <i class="fas fa-video"></i>
+        </div>
+        <span class="comm-text">Відео</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-section">
+        <div class="footer-logo">
+          <i class="fas fa-tools"></i>
+          ProFix Network Hub
+        </div>
+        <p class="footer-description">
+          ProFix Network Hub — ваш надійний партнер у світі професійних послуг. Ми об'єднуємо досвід і інновації, щоб забезпечити найкращі рішення для ваших потреб у різних галузях.
+        </p>
+        <div class="footer-social">
+          <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h3 class="footer-title">Швидкі посилання</h3>
+        <ul class="footer-links">
+          <li class="footer-link"><a href="index.html"><i class="fas fa-chevron-right"></i> Головна</a></li>
+          <li class="footer-link"><a href="#industries"><i class="fas fa-chevron-right"></i> Галузі</a></li>
+          <li class="footer-link"><a href="#order"><i class="fas fa-chevron-right"></i> Замовити</a></li>
+          <li class="footer-link"><a href="profile.html"><i class="fas fa-chevron-right"></i> Профіль</a></li>
+          <li class="footer-link"><a href="auth.html"><i class="fas fa-chevron-right"></i> Авторизація</a></li>
+          <li class="footer-link"><a href="admin.html"><i class="fas fa-chevron-right"></i> Адмін-панель</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3 class="footer-title">Контакти</h3>
+        <div class="footer-contact">
+          <div class="contact-icon">
+            <i class="fas fa-map-marker-alt"></i>
+          </div>
+          <div class="contact-info">
+            <div class="contact-label">Адреса</div>
+            <div class="contact-value">м. Київ, вул. Технологічна, 24</div>
+          </div>
+        </div>
+        <div class="footer-contact">
+          <div class="contact-icon">
+            <i class="fas fa-phone-alt"></i>
+          </div>
+          <div class="contact-info">
+            <div class="contact-label">Телефон</div>
+            <div class="contact-value"><a href="tel:+380123456789">+380 12 345 6789</a></div>
+          </div>
+        </div>
+        <div class="footer-contact">
+          <div class="contact-icon">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <div class="contact-info">
+            <div class="contact-label">Email</div>
+            <div class="contact-value"><a href="/cdn-cgi/l/email-protection#660f08000926161409000f1e0803121109140d4805090b"><span class="__cf_email__" data-cfemail="d2bbbcb4bd92a2a0bdb4bbaabcb7a6a5bda0b9fcb1bdbf">[email&#160;protected]</span></a></div>
+          </div>
+        </div>
+        <div class="footer-contact">
+          <div class="contact-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="contact-info">
+            <div class="contact-label">Графік роботи</div>
+            <div class="contact-value">Пн-Пт: 9:00 - 18:00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="copyright">&copy; 2024 ProFix Network Hub. Всі права захищені.</p>
+    </div>
+  </footer>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    
+    // Check for saved theme preference
+    if (localStorage.getItem('theme') === 'light') {
+      htmlElement.classList.remove('dark');
+      htmlElement.classList.add('light');
+      themeToggle.checked = true;
+    }
+    
+    // Toggle theme when switch is clicked
+    themeToggle.addEventListener('change', function() {
+      if (this.checked) {
+        htmlElement.classList.remove('dark');
+        htmlElement.classList.add('light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        htmlElement.classList.remove('light');
+        htmlElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+
+    // Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const navMenu = document.getElementById('navMenu');
+    
+    mobileMenuBtn.addEventListener('click', function() {
+      navMenu.classList.toggle('active');
+      
+      // Change icon based on menu state
+      const icon = this.querySelector('i');
+      if (navMenu.classList.contains('active')) {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+      } else {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+      }
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!navMenu.contains(event.target) && !mobileMenuBtn.contains(event.target) && navMenu.classList.contains('active')) {
+        navMenu.classList.remove('active');
+        const icon = mobileMenuBtn.querySelector('i');
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+      }
+    });
+
+    // Communication Panel Toggle
+    const commToggleBtn = document.getElementById('commToggleBtn');
+    const commMenu = document.getElementById('commMenu');
+    
+    commToggleBtn.addEventListener('click', function() {
+      commMenu.classList.toggle('active');
+      
+      // Change icon based on menu state
+      const icon = this.querySelector('i');
+      if (commMenu.classList.contains('active')) {
+        icon.classList.remove('fa-comments');
+        icon.classList.add('fa-times');
+      } else {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-comments');
+      }
+    });
+
+    // Close communication menu when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!commMenu.contains(event.target) && !commToggleBtn.contains(event.target) && commMenu.classList.contains('active')) {
+        commMenu.classList.remove('active');
+        const icon = commToggleBtn.querySelector('i');
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-comments');
+      }
+    });
+
+    // Communication buttons
+    document.getElementById('messageBtn').addEventListener('click', () => {
+      alert('Відкриття повідомлень');
+    });
+    
+    document.getElementById('chatBtn').addEventListener('click', () => {
+      alert('Відкриття чату');
+    });
+    
+    document.getElementById('voiceBtn').addEventListener('click', () => {
+      alert('Голосовий виклик');
+    });
+    
+    document.getElementById('videoBtn').addEventListener('click', () => {
+      alert('Відео виклик');
+    });
+
+    // Navigation buttons
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      window.location.href = 'auth.html';
+    });
+    
+    document.getElementById('orderNowBtn').addEventListener('click', () => {
+      document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
+    });
+    
+    document.getElementById('findMasterBtn').addEventListener('click', () => {
+      document.getElementById('industries').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Industry data with icons
+    const industryData = [
+      { name: 'Інформаційні технології', icon: 'fas fa-laptop-code', description: 'Розробка програмного забезпечення, веб-сайтів, мобільних додатків та IT-консультації' },
+      { name: 'Медицина', icon: 'fas fa-heartbeat', description: 'Медичні консультації, догляд за пацієнтами та медичне обладнання' },
+      { name: 'Енергетика', icon: 'fas fa-bolt', description: 'Енергетичні рішення, відновлювані джерела енергії та енергоефективність' },
+      { name: 'Аграрна галузь', icon: 'fas fa-tractor', description: 'Сільськогосподарські послуги, агрономія та тваринництво' },
+      { name: 'Фінанси та банківська справа', icon: 'fas fa-money-bill-wave', description: 'Фінансові консультації, бухгалтерія та інвестиційні поради' },
+      { name: 'Освіта', icon: 'fas fa-graduation-cap', description: 'Навчання, тренінги та освітні програми' },
+      { name: 'Туризм і гостинність', icon: 'fas fa-plane', description: 'Туристичні послуги, організація подорожей та готельний бізнес' },
+      { name: 'Будівництво та нерухомість', icon: 'fas fa-hard-hat', description: 'Будівельні роботи, ремонт та консультації з нерухомості' },
+      { name: 'Транспорт', icon: 'fas fa-truck', description: 'Транспортні послуги, логістика та доставка' },
+      { name: 'Мистецтво і культура', icon: 'fas fa-palette', description: 'Творчі послуги, дизайн та організація культурних заходів' }
+    ];
+
+    // Render industries
+    function renderIndustries() {
+      const industriesContainer = document.getElementById('industriesContainer');
+      industriesContainer.innerHTML = '';
+      
+      industryData.forEach(industry => {
+        const industryCard = document.createElement('div');
+        industryCard.className = 'industry-card fade-in';
+        
+        industryCard.innerHTML = `
+          <i class="${industry.icon} industry-icon"></i>
+          <div class="industry-name">${industry.name}</div>
+        `;
+        
+        industriesContainer.appendChild(industryCard);
+      });
+    }
+
+    // Render industries for dropdown
+    function renderIndustriesDropdown() {
+      const industrySelect = document.getElementById('industrySelect');
+      
+      // Clear existing options except the first one
+      while (industrySelect.options.length > 1) {
+        industrySelect.remove(1);
+      }
+      
+      // Add industry options
+      industryData.forEach(industry => {
+        const option = document.createElement('option');
+        option.value = industry.name;
+        option.textContent = industry.name;
+        industrySelect.appendChild(option);
+      });
+    }
+
+    // Order Form Submission
+    const orderForm = document.getElementById('orderForm');
+    const orderFormMessage = document.getElementById('orderFormMessage');
+    
+    orderForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitOrderBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Відправка...';
+      
+      const title = document.getElementById('orderTitle').value;
+      const industry = document.getElementById('industrySelect').value;
+      const description = document.getElementById('orderDescription').value;
+      const phone = document.getElementById('orderPhone').value;
+      
+      // Check if user is logged in
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        orderFormMessage.textContent = 'Будь ласка, авторизуйтесь для відправки заявки';
+        orderFormMessage.className = 'form-message error';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Відправити заявку';
+        
+        // Redirect to auth page after 2 seconds
+        setTimeout(() => {
+          window.location.href = 'auth.html';
+        }, 2000);
+        return;
+      }
+      
+      try {
+        const response = await fetch('/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            title,
+            industry,
+            description,
+            phone
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          orderFormMessage.textContent = 'Заявку успішно відправлено! Наші майстри зв\'яжуться з вами найближчим часом.';
+          orderFormMessage.className = 'form-message success';
+          orderForm.reset();
+        } else {
+          orderFormMessage.textContent = data.message || 'Помилка при відправці заявки';
+          orderFormMessage.className = 'form-message error';
+        }
+      } catch (error) {
+        console.error('Помилка:', error);
+        orderFormMessage.textContent = 'Помилка з\'єднання з сервером';
+        orderFormMessage.className = 'form-message error';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Відправити заявку';
+        
+        // Hide message after 5 seconds
+        setTimeout(() => {
+          orderFormMessage.style.display = 'none';
+        }, 5000);
+      }
+    });
+
+    // Scroll Animation
+    function checkScroll() {
+      const elements = document.querySelectorAll('.fade-in');
+      const windowHeight = window.innerHeight;
+      
+      elements.forEach(element => {
+        const elementPosition = element.getBoundingClientRect().top;
+        if (elementPosition < windowHeight - 100) {
+          element.style.opacity = '1';
+          element.style.transform = 'translateY(0)';
+        }
+      });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set initial opacity for fade-in elements
+      document.querySelectorAll('.fade-in').forEach(element => {
+        element.style.opacity = '0';
+        element.style.transform = 'translateY(20px)';
+        element.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+      });
+      
+      // Render industries
+      renderIndustries();
+      renderIndustriesDropdown();
+      
+      // Check scroll position on load
+      checkScroll();
+      
+      // Check scroll position on scroll
+      window.addEventListener('scroll', checkScroll);
+    });
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('Service Worker зареєстровано з обсягом:', registration.scope);
+        })
+        .catch(error => {
+          console.log('Реєстрація Service Worker не вдалася:', error);
+        });
+    }
+  </script>
+</body>
+</html>
