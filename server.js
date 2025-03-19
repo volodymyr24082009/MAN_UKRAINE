@@ -9,7 +9,7 @@ const cors = require("cors");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 30097;
+const port = process.env.PORT || 3000;
 
 // Обслуговування статичних файлів з директорії 'public'
 app.use(express.static(path.join(__dirname, "public")));
@@ -296,7 +296,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// Original login endpoint with admin check added
+// Логін користувача
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -307,14 +307,9 @@ app.post("/login", async (req, res) => {
   }
 
   try {
-    // Check if this is the admin login
-    const isAdmin = (username === "profixnetworkhub@gmail.com" && password === "C24809v");
-    
-    // Regular user authentication
     const result = await pool.query("SELECT * FROM users WHERE username = $1", [
       username,
     ]);
-    
     if (result.rows.length === 0) {
       return res
         .status(401)
@@ -323,7 +318,6 @@ app.post("/login", async (req, res) => {
 
     const user = result.rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
-    
     if (!isMatch) {
       return res
         .status(401)
@@ -331,24 +325,11 @@ app.post("/login", async (req, res) => {
     }
 
     console.log(`${username} успішно увійшов в систему!`);
-    
-    // Generate JWT token with isAdmin flag
-    const token = jwt.sign(
-      { 
-        id: user.id, 
-        username: username,
-        isAdmin: isAdmin 
-      }, 
-      process.env.JWT_SECRET || 'your-secret-key', 
-      { expiresIn: '24h' }
-    );
 
     res.status(200).json({
       success: true,
       message: "Вхід успішний",
       userId: user.id,
-      token: token,
-      isAdmin: isAdmin,
       redirect: "/index.html",
     });
   } catch (err) {
