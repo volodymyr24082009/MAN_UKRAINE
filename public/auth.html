@@ -3,52 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Реєстрація та Логін - ProFix Network Hub</title>
+    <title>Авторизація - ProFix Network Hub</title>
+    <meta
+      name="description"
+      content="Сторінка авторизації ProFix Network Hub - платформи, що з'єднує клієнтів з професійними майстрами"
+    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="manifest" href="/manifest.json" />
     <style>
       :root {
-        --background-dark: #1a1a1a;
-        --background-light: #f5f5f5;
-        --text-dark: #fff;
-        --text-light: #333;
-        --primary-color: #ff3300;
-        --secondary-color: #ff6600;
-        --accent-color: #007bff;
-        --success-color: #28a745;
-        --danger-color: #dc3545;
-        --warning-color: #ffc107;
-        --info-color: #17a2b8;
+        /* Modern color palette */
+        --background-dark: #0f172a;
+        --background-light: #f8fafc;
+        --text-dark: #f1f5f9;
+        --text-light: #1e293b;
+        --primary-color: #3b82f6;
+        --secondary-color: #60a5fa;
+        --accent-color: #8b5cf6;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+        --card-bg-dark: #1e293b;
+        --card-bg-light: #ffffff;
+        --border-dark: #334155;
+        --border-light: #e2e8f0;
+        --footer-bg-dark: #0f172a;
+        --footer-bg-light: #f1f5f9;
+        --shadow-dark: 0 10px 25px rgba(0, 0, 0, 0.5);
+        --shadow-light: 0 10px 25px rgba(0, 0, 0, 0.1);
+        --gradient-dark: linear-gradient(145deg, #1e293b, #334155);
+        --gradient-light: linear-gradient(145deg, #f8fafc, #ffffff);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
 
       html {
         scroll-behavior: smooth;
         height: 100%;
-        perspective: 1000px;
+        font-size: 16px;
       }
 
       body {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
         background: var(--background-dark);
         background-image: radial-gradient(
-            rgba(255, 0, 0, 0.1) 1px,
+            rgba(59, 130, 246, 0.05) 1px,
             transparent 1px
           ),
-          radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+          radial-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px);
         background-size: 50px 50px;
         background-position: 0 0, 25px 25px;
-        padding: 15px;
         color: var(--text-dark);
-        font-family: "Roboto", Arial, sans-serif;
+        font-family: "Montserrat", sans-serif;
         transition: background 0.3s ease, color 0.3s ease;
         margin: 0;
         overflow-x: hidden;
+        line-height: 1.6;
       }
 
       html.light body {
@@ -56,185 +80,50 @@
         color: var(--text-light);
       }
 
-      /* Custom Cursor */
-      .custom-cursor {
-        position: fixed;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background-color: rgba(255, 51, 0, 0.5);
-        pointer-events: none;
-        z-index: 9999;
-        transform: translate(-50%, -50%);
-        transition: width 0.3s, height 0.3s, background-color 0.3s;
-        mix-blend-mode: difference;
-      }
-
-      .custom-cursor-follower {
-        position: fixed;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 2px solid rgba(255, 51, 0, 0.3);
-        pointer-events: none;
-        z-index: 9998;
-        transform: translate(-50%, -50%);
-        transition: width 0.2s, height 0.2s, border-color 0.2s, transform 0.1s;
-      }
-
-      /* Preloader */
-      .preloader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--background-dark);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        transition: opacity 0.5s ease, visibility 0.5s ease;
-      }
-
-      html.light .preloader {
-        background: var(--background-light);
-      }
-
-      .preloader-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-      }
-
-      .preloader-spinner {
-        width: 80px;
-        height: 80px;
-        border: 5px solid rgba(255, 51, 0, 0.3);
-        border-radius: 50%;
-        border-top-color: var(--primary-color);
-        animation: spin 1s linear infinite;
-      }
-
-      .preloader-text {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--primary-color);
-        letter-spacing: 2px;
-        position: relative;
-      }
-
-      .preloader-text::after {
-        content: "...";
-        position: absolute;
-        right: -30px;
-        animation: dots 1.5s infinite;
-      }
-
-      @keyframes dots {
-        0%,
-        20% {
-          content: ".";
-        }
-        40%,
-        60% {
-          content: "..";
-        }
-        80%,
-        100% {
-          content: "...";
-        }
-      }
-
-      /* Floating Particles */
-      .particles-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        z-index: -1;
-        pointer-events: none;
-      }
-
-      .particle {
-        position: absolute;
-        border-radius: 50%;
-        background: rgba(255, 51, 0, 0.2);
-        pointer-events: none;
-        z-index: 0;
-      }
-
       .container {
         width: 100%;
         max-width: 1200px;
         margin: 0 auto;
-        padding: 0 15px;
-        position: relative;
-        z-index: 1;
+        padding: 0 20px;
+        flex: 1;
       }
 
-      header {
+      /* Header Styles */
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
         width: 100%;
-        background: linear-gradient(145deg, #222222, #333333);
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        margin-bottom: 20px;
-        padding: 15px;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-dark);
+        transition: all 0.3s ease;
+      }
+
+      html.light .header {
+        background: rgba(248, 250, 252, 0.95);
+        box-shadow: var(--shadow-light);
+      }
+
+      .header-container {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        transform-style: preserve-3d;
-      }
-
-      header::before {
-        content: "";
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(
-          to right,
-          transparent,
-          rgba(255, 51, 0, 0.1),
-          transparent
-        );
-        transform: rotate(45deg);
-        animation: headerGlow 8s linear infinite;
-        pointer-events: none;
-      }
-
-      @keyframes headerGlow {
-        0% {
-          transform: rotate(45deg) translateX(-100%);
-        }
-        100% {
-          transform: rotate(45deg) translateX(100%);
-        }
-      }
-
-      html.light header {
-        background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 15px 0;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
       }
 
       .logo {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--primary-color);
-        text-decoration: none;
         display: flex;
         align-items: center;
         gap: 10px;
-        position: relative;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        text-decoration: none;
         transition: transform 0.3s ease;
       }
 
@@ -252,7 +141,7 @@
         display: inline-block;
         width: 60px;
         height: 30px;
-        margin: 0 10px;
+        margin-left: 15px;
       }
 
       .theme-switch input {
@@ -268,7 +157,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: #333;
+        background-color: #334155;
         transition: 0.4s;
         border-radius: 30px;
         display: flex;
@@ -279,7 +168,7 @@
       }
 
       html.light .slider {
-        background-color: #ccc;
+        background-color: #cbd5e1;
       }
 
       .slider:before {
@@ -298,9 +187,8 @@
 
       .slider .moon,
       .slider .sun {
-        color: #ffffff;
-        font-size: 14px;
         z-index: 1;
+        font-size: 14px;
         transition: transform 0.4s ease;
       }
 
@@ -330,38 +218,51 @@
         background-color: var(--primary-color);
       }
 
-      main {
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 15px;
+      /* Auth Forms Container */
+      .auth-container {
         display: flex;
-        flex-wrap: wrap;
         justify-content: center;
-        gap: 25px;
+        align-items: center;
+        min-height: calc(100vh - 80px);
+        padding: 40px 20px;
         perspective: 1000px;
       }
 
-      h1 {
+      .auth-card {
         width: 100%;
-        text-align: center;
-        font-size: 2rem;
-        margin-bottom: 20px;
-        color: var(--primary-color);
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        max-width: 450px;
+        background: var(--gradient-dark);
+        border-radius: 15px;
+        box-shadow: var(--shadow-dark);
+        overflow: hidden;
         position: relative;
-        display: inline-block;
-        padding-bottom: 10px;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid var(--border-dark);
+        transform-style: preserve-3d;
       }
 
-      h1::after {
+      html.light .auth-card {
+        background: var(--gradient-light);
+        box-shadow: var(--shadow-light);
+        border: 1px solid var(--border-light);
+      }
+
+      .auth-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      html.light .auth-card:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .auth-card::before {
         content: "";
         position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100px;
-        height: 3px;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
         background: linear-gradient(
           90deg,
           var(--primary-color),
@@ -372,236 +273,260 @@
         animation: gradientMove 5s linear infinite;
       }
 
-      @keyframes gradientMove {
-        0% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
+      .auth-header {
+        padding: 25px 30px 15px;
+        text-align: center;
+        position: relative;
       }
 
-      form {
+      .auth-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        position: relative;
+        display: inline-block;
+      }
+
+      .auth-title::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--primary-color);
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 0.3s ease;
+      }
+
+      .auth-card:hover .auth-title::after {
+        transform: scaleX(1);
+      }
+
+      .auth-subtitle {
+        font-size: 1rem;
+        color: var(--text-dark);
+        margin-bottom: 20px;
+        opacity: 0.8;
+      }
+
+      html.light .auth-subtitle {
+        color: var(--text-light);
+      }
+
+      .auth-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border-dark);
+        margin-bottom: 20px;
+      }
+
+      html.light .auth-tabs {
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .auth-tab {
         flex: 1;
-        min-width: 300px;
-        max-width: 400px;
-        background: linear-gradient(
-          45deg,
-          rgba(40, 40, 40, 0.95),
-          rgba(30, 30, 30, 0.95)
-        );
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        text-align: center;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
-        transition: transform 0.5s ease, box-shadow 0.5s ease;
-        transform-style: preserve-3d;
+        color: var(--text-dark);
+        opacity: 0.7;
       }
 
-      form:hover {
-        transform: translateY(-5px) rotateX(5deg);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+      html.light .auth-tab {
+        color: var(--text-light);
       }
 
-      form:before {
+      .auth-tab.active {
+        color: var(--primary-color);
+        opacity: 1;
+      }
+
+      .auth-tab::after {
         content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--primary-color);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+      }
+
+      .auth-tab.active::after {
+        transform: scaleX(1);
+      }
+
+      .auth-tab:hover {
+        background: rgba(59, 130, 246, 0.05);
+      }
+
+      .auth-forms {
+        position: relative;
+        overflow: hidden;
+        min-height: 350px;
+      }
+
+      .auth-form {
+        padding: 20px 30px 30px;
+        transition: all 0.5s ease;
         position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
-        background: repeating-linear-gradient(
-          45deg,
-          transparent,
-          transparent 10px,
-          rgba(0, 0, 0, 0.1) 10px,
-          rgba(0, 0, 0, 0.1) 20px
-        );
-        z-index: -1;
-      }
-
-      form::after {
-        content: "";
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(
-          to right,
-          transparent,
-          rgba(255, 255, 255, 0.05),
-          transparent
-        );
-        transform: rotate(45deg);
-        animation: formGlow 8s linear infinite;
-        pointer-events: none;
-      }
-
-      @keyframes formGlow {
-        0% {
-          transform: rotate(45deg) translateX(-100%);
-        }
-        100% {
-          transform: rotate(45deg) translateX(100%);
-        }
-      }
-
-      html.light form {
-        background: linear-gradient(
-          45deg,
-          rgba(240, 240, 240, 0.95),
-          rgba(250, 250, 250, 0.95)
-        );
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      }
-
-      form h2 {
-        font-size: 1.6rem;
-        margin-bottom: 20px;
-        color: var(--primary-color);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        position: relative;
-        padding-bottom: 8px;
-      }
-
-      form h2::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 50px;
-        height: 2px;
-        background: var(--primary-color);
-        transition: width 0.3s ease;
-      }
-
-      form:hover h2::after {
         width: 100%;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(50px);
       }
 
-      form h2 i {
-        animation: bounce 2s infinite;
-        font-size: 1.4rem;
-      }
-
-      @keyframes bounce {
-        0%,
-        20%,
-        50%,
-        80%,
-        100% {
-          transform: translateY(0);
-        }
-        40% {
-          transform: translateY(-10px);
-        }
-        60% {
-          transform: translateY(-5px);
-        }
-      }
-
-      label {
-        display: block;
-        margin-bottom: 10px;
-        color: var(--text-dark);
-        font-size: 0.95rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: transform 0.3s ease, color 0.3s ease;
-      }
-
-      html.light label {
-        color: var(--text-light);
-      }
-
-      .input-group {
+      .auth-form.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
         position: relative;
+      }
+
+      .form-group {
         margin-bottom: 20px;
+        position: relative;
         transition: transform 0.3s ease;
       }
 
-      .input-group:hover {
+      .form-group:hover {
         transform: translateX(5px);
       }
 
-      .input-group i {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--primary-color);
-        transition: transform 0.3s ease;
-        font-size: 1.1rem;
-      }
-
-      .input-group:hover i {
-        transform: translateY(-50%) scale(1.2);
-      }
-
-      input {
-        width: 100%;
-        padding: 12px 12px 12px 35px;
-        border: none;
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.1);
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
         color: var(--text-dark);
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) inset;
+        transition: color 0.3s ease;
       }
 
-      html.light input {
-        background: rgba(0, 0, 0, 0.1);
+      html.light .form-group label {
         color: var(--text-light);
       }
 
-      input:focus {
+      .form-group:hover label {
+        color: var(--primary-color);
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px 15px 12px 40px;
+        border-radius: 8px;
+        border: 1px solid var(--border-dark);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-dark);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: "Montserrat", sans-serif;
+      }
+
+      html.light .form-input {
+        border: 1px solid var(--border-light);
+        background: rgba(255, 255, 255, 0.8);
+        color: var(--text-light);
+      }
+
+      .form-input:focus {
         outline: none;
-        box-shadow: 0 0 0 2px var(--primary-color),
-          0 4px 10px rgba(255, 51, 0, 0.3);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
         transform: translateY(-3px);
+      }
+
+      .form-icon {
+        position: absolute;
+        left: 15px;
+        top: 40px;
+        color: var(--primary-color);
+        transition: transform 0.3s ease;
+      }
+
+      .form-group:hover .form-icon {
+        transform: scale(1.2);
       }
 
       .password-toggle {
         position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        cursor: pointer;
+        right: 15px;
+        top: 40px;
         color: var(--text-dark);
-        transition: transform 0.3s ease, color 0.3s ease;
-        font-size: 1.1rem;
-      }
-
-      .password-toggle:hover {
-        transform: translateY(-50%) rotate(15deg);
-        color: var(--primary-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
       }
 
       html.light .password-toggle {
         color: var(--text-light);
       }
 
-      form button {
+      .password-toggle:hover {
+        color: var(--primary-color);
+        transform: scale(1.2);
+      }
+
+      .password-strength {
+        height: 4px;
+        background: #4b5563;
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+
+      .password-strength-meter {
+        height: 100%;
+        width: 0;
+        border-radius: 2px;
+        transition: width 0.3s ease, background-color 0.3s ease;
+      }
+
+      .password-strength-text {
+        font-size: 0.8rem;
+        text-align: right;
+        margin-top: 5px;
+        transition: color 0.3s ease;
+      }
+
+      .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+      }
+
+      .remember-me:hover {
+        transform: translateX(5px);
+      }
+
+      .remember-me input {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+
+      .remember-me label {
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+      }
+
+      html.light .remember-me label {
+        color: var(--text-light);
+      }
+
+      .auth-btn {
         width: 100%;
         padding: 12px;
-        margin-top: 20px;
-        font-size: 1rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
         background: linear-gradient(
           90deg,
           var(--primary-color),
@@ -609,18 +534,23 @@
         );
         color: white;
         border: none;
-        border-radius: 6px;
+        border-radius: 8px;
+        font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
         text-transform: uppercase;
         letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
         position: relative;
         overflow: hidden;
         z-index: 1;
       }
 
-      form button::before {
+      .auth-btn::before {
         content: "";
         position: absolute;
         top: 0;
@@ -636,75 +566,49 @@
         z-index: -1;
       }
 
-      form button:hover::before {
+      .auth-btn:hover::before {
         left: 0;
       }
 
-      form button:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(255, 51, 0, 0.4);
+      .auth-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
       }
 
-      form button:active {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 10px rgba(255, 51, 0, 0.4);
+      .auth-btn:active {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 10px rgba(59, 130, 246, 0.4);
       }
 
-      form button i {
+      .auth-btn i {
         transition: transform 0.3s ease;
-        font-size: 1.1rem;
       }
 
-      form button:hover i {
+      .auth-btn:hover i {
         transform: translateX(5px);
       }
 
-      #registerForm {
-        border-left: 4px solid var(--primary-color);
-        transform: perspective(1000px) rotateY(0deg);
-        transition: transform 0.6s ease;
-      }
-
-      #loginForm {
-        border-left: 4px solid var(--accent-color);
-        display: none;
-        transform: perspective(1000px) rotateY(0deg);
-        transition: transform 0.6s ease;
-      }
-
-      #loginForm button {
-        background: linear-gradient(90deg, var(--accent-color), #0056b3);
-      }
-
-      #loginForm button::before {
-        background: linear-gradient(90deg, #0056b3, var(--accent-color));
-      }
-
-      .form-footer {
-        margin-top: 20px;
+      .auth-footer {
         text-align: center;
-        font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.7);
-        position: relative;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        opacity: 0.8;
       }
 
-      html.light .form-footer {
-        color: rgba(0, 0, 0, 0.7);
-        border-top: 1px solid rgba(0, 0, 0, 0.1);
+      html.light .auth-footer {
+        color: var(--text-light);
       }
 
-      .form-footer a {
+      .auth-link {
         color: var(--primary-color);
         text-decoration: none;
-        font-weight: bold;
+        font-weight: 600;
+        transition: all 0.3s ease;
         position: relative;
-        transition: color 0.3s ease;
-        margin-left: 5px;
       }
 
-      .form-footer a::after {
+      .auth-link::after {
         content: "";
         position: absolute;
         bottom: -2px;
@@ -715,108 +619,12 @@
         transition: width 0.3s ease;
       }
 
-      .form-footer a:hover {
+      .auth-link:hover {
         color: var(--secondary-color);
       }
 
-      .form-footer a:hover::after {
+      .auth-link:hover::after {
         width: 100%;
-      }
-
-      .password-strength {
-        height: 5px;
-        margin-top: 8px;
-        border-radius: 3px;
-        background: #ddd;
-        overflow: hidden;
-        position: relative;
-      }
-
-      .password-strength-meter {
-        height: 100%;
-        width: 0;
-        transition: width 0.5s ease, background-color 0.5s ease;
-        position: relative;
-      }
-
-      .password-strength-meter::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.4),
-          transparent
-        );
-        animation: shimmer 2s infinite;
-        transform: translateX(-100%);
-      }
-
-      @keyframes shimmer {
-        100% {
-          transform: translateX(100%);
-        }
-      }
-
-      .password-strength-text {
-        font-size: 0.85rem;
-        margin-top: 5px;
-        text-align: right;
-        transition: color 0.3s ease;
-        margin-bottom: 10px;
-      }
-
-      .strength-weak {
-        background-color: var(--danger-color);
-        width: 25%;
-      }
-
-      .strength-medium {
-        background-color: var(--warning-color);
-        width: 50%;
-      }
-
-      .strength-good {
-        background-color: var(--info-color);
-        width: 75%;
-      }
-
-      .strength-strong {
-        background-color: var(--success-color);
-        width: 100%;
-      }
-
-      .remember-me {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 15px;
-        transition: transform 0.3s ease;
-        padding: 3px 0;
-      }
-
-      .remember-me:hover {
-        transform: translateX(5px);
-      }
-
-      .remember-me input {
-        width: auto;
-        margin: 0;
-        cursor: pointer;
-        height: 16px;
-        width: 16px;
-      }
-
-      .remember-me label {
-        margin: 0;
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.95rem;
-        cursor: pointer;
       }
 
       /* Toast Notifications */
@@ -831,15 +639,11 @@
       }
 
       .toast {
-        background: linear-gradient(
-          45deg,
-          rgba(40, 40, 40, 0.95),
-          rgba(30, 30, 30, 0.95)
-        );
+        background: var(--gradient-dark);
         color: var(--text-dark);
         padding: 15px 20px;
         border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        box-shadow: var(--shadow-dark);
         display: flex;
         align-items: center;
         gap: 10px;
@@ -853,13 +657,9 @@
       }
 
       html.light .toast {
-        background: linear-gradient(
-          45deg,
-          rgba(240, 240, 240, 0.95),
-          rgba(250, 250, 250, 0.95)
-        );
+        background: var(--gradient-light);
         color: var(--text-light);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--shadow-light);
       }
 
       .toast.show {
@@ -920,240 +720,133 @@
         }
       }
 
-      /* Modal styles */
-      .modal-overlay {
-        display: none;
-        position: fixed;
+      /* Footer */
+      .footer {
+        background-color: var(--footer-bg-dark);
+        color: var(--text-dark);
+        padding: 20px 0;
+        text-align: center;
+        font-size: 0.9rem;
+        position: relative;
+      }
+
+      html.light .footer {
+        background-color: var(--footer-bg-light);
+        color: var(--text-light);
+      }
+
+      .footer::before {
+        content: "";
+        position: absolute;
         top: 0;
         left: 0;
         width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(5px);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-        animation: fadeIn 0.3s ease-out;
-      }
-
-      .modal-content {
+        height: 1px;
         background: linear-gradient(
-          45deg,
-          rgba(40, 40, 40, 0.95),
-          rgba(30, 30, 30, 0.95)
-        );
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-        width: 90%;
-        max-width: 500px;
-        overflow: hidden;
-        animation: modalAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border-left: 4px solid var(--primary-color);
-        transform-style: preserve-3d;
-        perspective: 1000px;
-      }
-
-      @keyframes modalAppear {
-        0% {
-          transform: translateY(-50px) scale(0.9) rotateX(10deg);
-          opacity: 0;
-        }
-        100% {
-          transform: translateY(0) scale(1) rotateX(0);
-          opacity: 1;
-        }
-      }
-
-      html.light .modal-content {
-        background: linear-gradient(
-          45deg,
-          rgba(240, 240, 240, 0.95),
-          rgba(250, 250, 250, 0.95)
-        );
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      }
-
-      .modal-header {
-        padding: 15px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .modal-header::after {
-        content: "";
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(
-          to right,
+          90deg,
           transparent,
-          rgba(255, 255, 255, 0.1),
+          var(--primary-color),
           transparent
         );
-        transform: rotate(45deg);
-        animation: headerGlow 8s linear infinite;
-        pointer-events: none;
-      }
-
-      html.light .modal-header {
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-      }
-
-      #modalTitle {
-        font-size: 1.3rem;
-        font-weight: bold;
-        color: var(--primary-color);
-        position: relative;
-      }
-
-      #modalTitle::after {
-        content: "";
-        position: absolute;
-        bottom: -5px;
-        left: 0;
-        width: 0;
-        height: 2px;
-        background: var(--primary-color);
-        transition: width 0.3s ease;
-      }
-
-      .modal-content:hover #modalTitle::after {
-        width: 100%;
-      }
-
-      .modal-close {
-        font-size: 1.5rem;
-        cursor: pointer;
-        color: var(--text-dark);
-        transition: transform 0.3s ease, color 0.3s ease;
-      }
-
-      .modal-close:hover {
-        transform: rotate(90deg);
-        color: var(--primary-color);
-      }
-
-      html.light .modal-close {
-        color: var(--text-light);
-      }
-
-      .modal-body {
-        padding: 20px;
-        color: var(--text-dark);
-        line-height: 1.6;
-        font-size: 1rem;
-      }
-
-      html.light .modal-body {
-        color: var(--text-light);
-      }
-
-      .modal-footer {
-        padding: 15px 20px;
-        display: flex;
-        justify-content: flex-end;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      html.light .modal-footer {
-        border-top: 1px solid rgba(0, 0, 0, 0.1);
-      }
-
-      .modal-button {
-        padding: 10px 20px;
-        background: linear-gradient(
-          90deg,
-          var(--primary-color),
-          var(--secondary-color)
-        );
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-weight: 600;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        z-index: 1;
-      }
-
-      .modal-button::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          var(--secondary-color),
-          var(--primary-color)
-        );
-        transition: all 0.5s ease;
-        z-index: -1;
-      }
-
-      .modal-button:hover::before {
-        left: 0;
-      }
-
-      .modal-button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
-      }
-
-      .modal-button:active {
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(255, 51, 0, 0.4);
-      }
-
-      .modal-success #modalTitle {
-        color: var(--success-color);
-      }
-
-      .modal-error #modalTitle {
-        color: var(--danger-color);
-      }
-
-      .modal-warning #modalTitle {
-        color: var(--warning-color);
-      }
-
-      .modal-info #modalTitle {
-        color: var(--info-color);
       }
 
       /* Animations */
       @keyframes fadeIn {
         from {
           opacity: 0;
+          transform: translateY(20px);
         }
         to {
           opacity: 1;
+          transform: translateY(0);
         }
       }
 
-      @keyframes slideIn {
+      @keyframes slideUp {
         from {
-          transform: translateY(-50px);
           opacity: 0;
+          transform: translateY(30px);
         }
         to {
-          transform: translateY(0);
           opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slideLeft {
+        from {
+          opacity: 0;
+          transform: translateX(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes slideRight {
+        from {
+          opacity: 0;
+          transform: translateX(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
         }
       }
 
       @keyframes spin {
         to {
           transform: rotate(360deg);
+        }
+      }
+
+      @keyframes textFocus {
+        0% {
+          filter: blur(12px);
+          opacity: 0;
+        }
+        100% {
+          filter: blur(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes gradientMove {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
         }
       }
 
@@ -1166,21 +859,6 @@
         }
         100% {
           transform: translateY(0px);
-        }
-      }
-
-      @keyframes pulse {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
-        }
-        50% {
-          transform: scale(1.05);
-          box-shadow: 0 10px 25px rgba(255, 51, 0, 0.5);
-        }
-        100% {
-          transform: scale(1);
-          box-shadow: 0 5px 15px rgba(255, 51, 0, 0.4);
         }
       }
 
@@ -1204,359 +882,380 @@
         }
       }
 
-      @keyframes jello {
-        0%,
-        11.1%,
-        100% {
-          transform: none;
-        }
-        22.2% {
-          transform: skewX(-12.5deg) skewY(-12.5deg);
-        }
-        33.3% {
-          transform: skewX(6.25deg) skewY(6.25deg);
-        }
-        44.4% {
-          transform: skewX(-3.125deg) skewY(-3.125deg);
-        }
-        55.5% {
-          transform: skewX(1.5625deg) skewY(1.5625deg);
-        }
-        66.6% {
-          transform: skewX(-0.78125deg) skewY(-0.78125deg);
-        }
-        77.7% {
-          transform: skewX(0.390625deg) skewY(0.390625deg);
-        }
-        88.8% {
-          transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
-        }
-      }
-
-      /* Form switching animations */
-      @keyframes flipOut {
-        from {
-          transform: perspective(1000px) rotateY(0deg);
-        }
-        to {
-          transform: perspective(1000px) rotateY(-90deg);
-        }
-      }
-
-      @keyframes flipIn {
-        from {
-          transform: perspective(1000px) rotateY(90deg);
-        }
-        to {
-          transform: perspective(1000px) rotateY(0deg);
-        }
-      }
-
       /* Responsive Styles */
       @media (max-width: 768px) {
-        header {
-          flex-direction: column;
-          align-items: stretch;
-        }
-
-        .theme-switch-container {
-          display: flex;
-          justify-content: center;
-          margin-top: 10px;
-        }
-
-        main {
-          flex-direction: column;
-          align-items: center;
-        }
-
-        form {
-          width: 100%;
+        .auth-container {
           padding: 20px;
+        }
+
+        .auth-card {
+          max-width: 100%;
+        }
+
+        .auth-title {
+          font-size: 1.8rem;
+        }
+
+        .auth-form {
+          padding: 15px 20px 25px;
         }
       }
 
       @media (max-width: 480px) {
-        body {
+        .auth-title {
+          font-size: 1.5rem;
+        }
+
+        .auth-subtitle {
+          font-size: 0.9rem;
+        }
+
+        .auth-tab {
+          padding: 12px 10px;
+          font-size: 0.9rem;
+        }
+
+        .form-input {
+          padding: 10px 15px 10px 35px;
+        }
+
+        .form-icon {
+          left: 12px;
+          top: 38px;
+        }
+
+        .password-toggle {
+          right: 12px;
+          top: 38px;
+        }
+
+        .auth-btn {
           padding: 10px;
-        }
-
-        header {
-          padding: 12px;
-        }
-
-        .logo {
-          font-size: 1.2rem;
-        }
-
-        h1 {
-          font-size: 1.6rem;
-        }
-
-        form {
-          padding: 20px;
-        }
-
-        form h2 {
-          font-size: 1.4rem;
-        }
-
-        .input-group {
-          margin-bottom: 15px;
-        }
-
-        input {
-          padding: 10px 10px 10px 35px;
-          font-size: 0.95rem;
+          font-size: 0.9rem;
         }
       }
     </style>
   </head>
   <body>
-    <!-- Preloader -->
-    <div class="preloader" id="preloader">
-      <div class="preloader-content">
-        <div class="preloader-spinner"></div>
-        <div class="preloader-text">Завантаження</div>
-      </div>
-    </div>
-
-    <!-- Custom Cursor -->
-    <div class="custom-cursor" id="customCursor"></div>
-    <div class="custom-cursor-follower" id="customCursorFollower"></div>
-
-    <!-- Particles Container -->
-    <div class="particles-container" id="particlesContainer"></div>
-
     <!-- Toast Notifications Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <div class="container">
-      <header>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
         <a href="index.html" class="logo">
           <i class="fas fa-tools"></i>
           ProFix Network Hub
         </a>
-        <div class="theme-switch-container">
-          <label class="theme-switch">
-            <input type="checkbox" id="themeToggle" />
-            <span class="slider">
-              <span class="moon">🌙</span>
-              <span class="sun">☀️</span>
-            </span>
-          </label>
-        </div>
-      </header>
+        <label class="theme-switch">
+          <input type="checkbox" id="themeToggle" />
+          <span class="slider">
+            <span class="moon">🌙</span>
+            <span class="sun">☀️</span>
+          </span>
+        </label>
+      </div>
+    </header>
 
-      <main>
-        <h1>Реєстрація та Логін</h1>
-
-        <form id="registerForm">
-          <h2><i class="fas fa-user-plus"></i> Реєстрація</h2>
-
-          <div class="input-group">
-            <i class="fas fa-user"></i>
-            <input
-              type="text"
-              id="regUsername"
-              required
-              placeholder="Ім'я користувача або email"
-            />
+    <!-- Main Content -->
+    <main>
+      <div class="auth-container">
+        <div class="auth-card">
+          <div class="auth-header">
+            <h1 class="auth-title">Авторизація</h1>
+            <p class="auth-subtitle">
+              Увійдіть або зареєструйтесь для доступу до всіх функцій платформи
+            </p>
           </div>
 
-          <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input
-              type="password"
-              id="regPassword"
-              required
-              placeholder="Пароль"
-            />
-            <i class="fas fa-eye password-toggle" id="regPasswordToggle"></i>
+          <div class="auth-tabs">
+            <div class="auth-tab active" id="loginTab">Вхід</div>
+            <div class="auth-tab" id="registerTab">Реєстрація</div>
           </div>
 
-          <div class="password-strength">
-            <div
-              class="password-strength-meter"
-              id="passwordStrengthMeter"
-            ></div>
+          <div class="auth-forms">
+            <!-- Login Form -->
+            <form class="auth-form active" id="loginForm">
+              <div class="form-group">
+                <label for="loginEmail">Email або логін</label>
+                <i class="fas fa-user form-icon"></i>
+                <input
+                  type="text"
+                  id="loginEmail"
+                  class="form-input"
+                  placeholder="Введіть email або логін"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="loginPassword">Пароль</label>
+                <i class="fas fa-lock form-icon"></i>
+                <input
+                  type="password"
+                  id="loginPassword"
+                  class="form-input"
+                  placeholder="Введіть пароль"
+                  required
+                />
+                <i
+                  class="fas fa-eye password-toggle"
+                  id="loginPasswordToggle"
+                ></i>
+              </div>
+
+              <div class="remember-me">
+                <input type="checkbox" id="rememberMe" />
+                <label for="rememberMe">Запам'ятати мене</label>
+              </div>
+
+              <button type="submit" class="auth-btn" id="loginButton">
+                <i class="fas fa-sign-in-alt"></i> Увійти
+              </button>
+
+              <div class="auth-footer">
+                <a href="#" class="auth-link">Забули пароль?</a>
+              </div>
+            </form>
+
+            <!-- Register Form -->
+            <form class="auth-form" id="registerForm">
+              <div class="form-group">
+                <label for="registerEmail">Email</label>
+                <i class="fas fa-envelope form-icon"></i>
+                <input
+                  type="email"
+                  id="registerEmail"
+                  class="form-input"
+                  placeholder="Введіть email"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="registerUsername">Ім'я користувача</label>
+                <i class="fas fa-user form-icon"></i>
+                <input
+                  type="text"
+                  id="registerUsername"
+                  class="form-input"
+                  placeholder="Введіть ім'я користувача"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="registerPassword">Пароль</label>
+                <i class="fas fa-lock form-icon"></i>
+                <input
+                  type="password"
+                  id="registerPassword"
+                  class="form-input"
+                  placeholder="Введіть пароль"
+                  required
+                />
+                <i
+                  class="fas fa-eye password-toggle"
+                  id="registerPasswordToggle"
+                ></i>
+                <div class="password-strength">
+                  <div
+                    class="password-strength-meter"
+                    id="passwordStrengthMeter"
+                  ></div>
+                </div>
+                <div
+                  class="password-strength-text"
+                  id="passwordStrengthText"
+                ></div>
+              </div>
+
+              <div class="form-group">
+                <label for="registerPasswordConfirm"
+                  >Підтвердження паролю</label
+                >
+                <i class="fas fa-lock form-icon"></i>
+                <input
+                  type="password"
+                  id="registerPasswordConfirm"
+                  class="form-input"
+                  placeholder="Підтвердіть пароль"
+                  required
+                />
+                <i
+                  class="fas fa-eye password-toggle"
+                  id="registerPasswordConfirmToggle"
+                ></i>
+              </div>
+
+              <button type="submit" class="auth-btn" id="registerButton">
+                <i class="fas fa-user-plus"></i> Зареєструватися
+              </button>
+            </form>
           </div>
-          <div class="password-strength-text" id="passwordStrengthText"></div>
-
-          <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input
-              type="password"
-              id="regPasswordConfirm"
-              required
-              placeholder="Підтвердіть пароль"
-            />
-            <i
-              class="fas fa-eye password-toggle"
-              id="regPasswordConfirmToggle"
-            ></i>
-          </div>
-
-          <button type="submit">
-            <i class="fas fa-user-plus"></i> ЗАРЕЄСТРУВАТИСЯ
-          </button>
-
-          <div class="form-footer">
-            Вже маєте акаунт? <a href="#" id="showLoginForm">Увійти</a>
-          </div>
-        </form>
-
-        <form id="loginForm">
-          <h2><i class="fas fa-sign-in-alt"></i> Логін</h2>
-
-          <div class="input-group">
-            <i class="fas fa-user"></i>
-            <input
-              type="text"
-              id="loginUsername"
-              required
-              placeholder="Ім'я користувача або email"
-            />
-          </div>
-
-          <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input
-              type="password"
-              id="loginPassword"
-              required
-              placeholder="Пароль"
-            />
-            <i class="fas fa-eye password-toggle" id="loginPasswordToggle"></i>
-          </div>
-
-          <div class="remember-me">
-            <input type="checkbox" id="rememberMe" />
-            <label for="rememberMe">Запам'ятати мене</label>
-          </div>
-
-          <button type="submit">
-            <i class="fas fa-sign-in-alt"></i> УВІЙТИ
-          </button>
-
-          <div class="form-footer">
-            Немає акаунту? <a href="#" id="showRegisterForm">Зареєструватися</a>
-          </div>
-        </form>
-      </main>
-    </div>
-
-    <div id="modalOverlay" class="modal-overlay">
-      <div id="modalContent" class="modal-content">
-        <div class="modal-header">
-          <span id="modalTitle">Повідомлення</span>
-          <span class="modal-close">&times;</span>
-        </div>
-        <div id="modalBody" class="modal-body">
-          <p id="modalMessage"></p>
-        </div>
-        <div class="modal-footer">
-          <button id="modalOkButton" class="modal-button">OK</button>
         </div>
       </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <p>&copy; 2024 ProFix Network Hub. Всі права захищені.</p>
+      </div>
+    </footer>
 
     <script>
-      // Preloader
-      window.addEventListener("load", function () {
-        const preloader = document.getElementById("preloader");
-        setTimeout(() => {
-          preloader.style.opacity = "0";
-          setTimeout(() => {
-            preloader.style.display = "none";
-          }, 500);
-        }, 1000);
-      });
+      // Theme Toggle
+      const themeToggle = document.getElementById("themeToggle");
+      const htmlElement = document.documentElement;
 
-      // Custom Cursor
-      const customCursor = document.getElementById("customCursor");
-      const customCursorFollower = document.getElementById(
-        "customCursorFollower"
-      );
-
-      document.addEventListener("mousemove", (e) => {
-        customCursor.style.left = e.clientX + "px";
-        customCursor.style.top = e.clientY + "px";
-
-        setTimeout(() => {
-          customCursorFollower.style.left = e.clientX + "px";
-          customCursorFollower.style.top = e.clientY + "px";
-        }, 100);
-      });
-
-      document.addEventListener("mousedown", () => {
-        customCursor.style.transform = "translate(-50%, -50%) scale(0.8)";
-        customCursorFollower.style.transform =
-          "translate(-50%, -50%) scale(0.8)";
-      });
-
-      document.addEventListener("mouseup", () => {
-        customCursor.style.transform = "translate(-50%, -50%) scale(1)";
-        customCursorFollower.style.transform = "translate(-50%, -50%) scale(1)";
-      });
-
-      // Add hover effect for interactive elements
-      const interactiveElements = document.querySelectorAll(
-        "a, button, input, .password-toggle, .remember-me"
-      );
-
-      interactiveElements.forEach((element) => {
-        element.addEventListener("mouseenter", () => {
-          customCursor.style.width = "15px";
-          customCursor.style.height = "15px";
-          customCursor.style.backgroundColor = "rgba(255, 51, 0, 0.8)";
-          customCursorFollower.style.width = "50px";
-          customCursorFollower.style.height = "50px";
-          customCursorFollower.style.borderColor = "rgba(255, 51, 0, 0.6)";
-        });
-
-        element.addEventListener("mouseleave", () => {
-          customCursor.style.width = "20px";
-          customCursor.style.height = "20px";
-          customCursor.style.backgroundColor = "rgba(255, 51, 0, 0.5)";
-          customCursorFollower.style.width = "40px";
-          customCursorFollower.style.height = "40px";
-          customCursorFollower.style.borderColor = "rgba(255, 51, 0, 0.3)";
-        });
-      });
-
-      // Particles Animation
-      function createParticles() {
-        const particlesContainer =
-          document.getElementById("particlesContainer");
-        const particleCount = 30;
-
-        for (let i = 0; i < particleCount; i++) {
-          const particle = document.createElement("div");
-          particle.classList.add("particle");
-
-          // Random size between 3 and 8px
-          const size = Math.random() * 5 + 3;
-          particle.style.width = `${size}px`;
-          particle.style.height = `${size}px`;
-
-          // Random position
-          const posX = Math.random() * 100;
-          const posY = Math.random() * 100;
-          particle.style.left = `${posX}%`;
-          particle.style.top = `${posY}%`;
-
-          // Random opacity
-          particle.style.opacity = Math.random() * 0.3 + 0.1;
-
-          // Animation
-          const animDuration = Math.random() * 10 + 5;
-          particle.style.animation = `float ${animDuration}s infinite ease-in-out`;
-          particle.style.animationDelay = `${Math.random() * 5}s`;
-
-          particlesContainer.appendChild(particle);
-        }
+      // Check for saved theme preference
+      if (localStorage.getItem("theme") === "light") {
+        htmlElement.classList.remove("dark");
+        htmlElement.classList.add("light");
+        themeToggle.checked = true;
       }
+
+      // Toggle theme when switch is clicked
+      themeToggle.addEventListener("change", function () {
+        if (this.checked) {
+          htmlElement.classList.remove("dark");
+          htmlElement.classList.add("light");
+          localStorage.setItem("theme", "light");
+        } else {
+          htmlElement.classList.remove("light");
+          htmlElement.classList.add("dark");
+          localStorage.setItem("theme", "dark");
+        }
+      });
+
+      // Tab Switching
+      const loginTab = document.getElementById("loginTab");
+      const registerTab = document.getElementById("registerTab");
+      const loginForm = document.getElementById("loginForm");
+      const registerForm = document.getElementById("registerForm");
+
+      loginTab.addEventListener("click", function () {
+        loginTab.classList.add("active");
+        registerTab.classList.remove("active");
+        loginForm.classList.add("active");
+        registerForm.classList.remove("active");
+      });
+
+      registerTab.addEventListener("click", function () {
+        registerTab.classList.add("active");
+        loginTab.classList.remove("active");
+        registerForm.classList.add("active");
+        loginForm.classList.remove("active");
+      });
+
+      // Password Visibility Toggle
+      const loginPasswordToggle = document.getElementById(
+        "loginPasswordToggle"
+      );
+      const registerPasswordToggle = document.getElementById(
+        "registerPasswordToggle"
+      );
+      const registerPasswordConfirmToggle = document.getElementById(
+        "registerPasswordConfirmToggle"
+      );
+
+      loginPasswordToggle.addEventListener("click", function () {
+        togglePasswordVisibility("loginPassword", this);
+      });
+
+      registerPasswordToggle.addEventListener("click", function () {
+        togglePasswordVisibility("registerPassword", this);
+      });
+
+      registerPasswordConfirmToggle.addEventListener("click", function () {
+        togglePasswordVisibility("registerPasswordConfirm", this);
+      });
+
+      function togglePasswordVisibility(inputId, toggleIcon) {
+        const passwordInput = document.getElementById(inputId);
+        const type =
+          passwordInput.getAttribute("type") === "password"
+            ? "text"
+            : "password";
+        passwordInput.setAttribute("type", type);
+
+        toggleIcon.classList.toggle("fa-eye");
+        toggleIcon.classList.toggle("fa-eye-slash");
+      }
+
+      // Password Strength Meter
+      const registerPassword = document.getElementById("registerPassword");
+      const passwordStrengthMeter = document.getElementById(
+        "passwordStrengthMeter"
+      );
+      const passwordStrengthText = document.getElementById(
+        "passwordStrengthText"
+      );
+
+      registerPassword.addEventListener("input", function () {
+        const password = this.value;
+        let strength = 0;
+        let feedback = "";
+
+        // Check password strength
+        if (password.length > 0) {
+          // Length check
+          if (password.length >= 8) {
+            strength += 1;
+          }
+
+          // Contains lowercase
+          if (/[a-z]/.test(password)) {
+            strength += 1;
+          }
+
+          // Contains uppercase
+          if (/[A-Z]/.test(password)) {
+            strength += 1;
+          }
+
+          // Contains number
+          if (/[0-9]/.test(password)) {
+            strength += 1;
+          }
+
+          // Contains special character
+          if (/[^A-Za-z0-9]/.test(password)) {
+            strength += 1;
+          }
+
+          // Update UI based on strength
+          if (strength < 2) {
+            passwordStrengthMeter.style.width = "25%";
+            passwordStrengthMeter.style.backgroundColor = "var(--danger-color)";
+            feedback = "Слабкий";
+            passwordStrengthText.style.color = "var(--danger-color)";
+          } else if (strength < 3) {
+            passwordStrengthMeter.style.width = "50%";
+            passwordStrengthMeter.style.backgroundColor =
+              "var(--warning-color)";
+            feedback = "Середній";
+            passwordStrengthText.style.color = "var(--warning-color)";
+          } else if (strength < 5) {
+            passwordStrengthMeter.style.width = "75%";
+            passwordStrengthMeter.style.backgroundColor = "var(--info-color)";
+            feedback = "Хороший";
+            passwordStrengthText.style.color = "var(--info-color)";
+          } else {
+            passwordStrengthMeter.style.width = "100%";
+            passwordStrengthMeter.style.backgroundColor =
+              "var(--success-color)";
+            feedback = "Сильний";
+            passwordStrengthText.style.color = "var(--success-color)";
+          }
+        } else {
+          passwordStrengthMeter.style.width = "0";
+          feedback = "";
+        }
+
+        passwordStrengthText.textContent = feedback;
+      });
 
       // Toast Notification System
       function showToast(title, message, type = "info", duration = 5000) {
@@ -1571,14 +1270,14 @@
         if (type === "warning") iconClass = "fa-exclamation-triangle";
 
         toast.innerHTML = `
-              <div class="toast-icon"><i class="fas ${iconClass}"></i></div>
-              <div class="toast-content">
-                  <div class="toast-title">${title}</div>
-                  <div class="toast-message">${message}</div>
-              </div>
-              <button class="toast-close"><i class="fas fa-times"></i></button>
-              <div class="toast-progress"></div>
-          `;
+          <div class="toast-icon"><i class="fas ${iconClass}"></i></div>
+          <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+          </div>
+          <button class="toast-close"><i class="fas fa-times"></i></button>
+          <div class="toast-progress"></div>
+        `;
 
         toastContainer.appendChild(toast);
 
@@ -1607,590 +1306,126 @@
         }, duration);
       }
 
-      // Theme Toggle
-      const themeToggle = document.getElementById("themeToggle");
-      const htmlElement = document.documentElement;
+      // Form Validation and Submission
+      const loginFormElement = document.getElementById("loginForm");
+      const registerFormElement = document.getElementById("registerForm");
 
-      // Check for saved theme preference
-      if (localStorage.getItem("theme") === "light") {
-        htmlElement.classList.remove("dark");
-        htmlElement.classList.add("light");
-        themeToggle.checked = true;
-      }
+      loginFormElement.addEventListener("submit", function (e) {
+        e.preventDefault();
 
-      // Toggle theme when switch is clicked
-      themeToggle.addEventListener("change", function () {
-        if (this.checked) {
-          htmlElement.classList.remove("dark");
-          htmlElement.classList.add("light");
-          localStorage.setItem("theme", "light");
-          showToast("Тема змінена", "Увімкнено світлу тему", "info");
-        } else {
-          htmlElement.classList.remove("light");
-          htmlElement.classList.add("dark");
-          localStorage.setItem("theme", "dark");
-          showToast("Тема змінена", "Увімкнено темну тему", "info");
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+        const rememberMe = document.getElementById("rememberMe").checked;
+
+        // Simple validation
+        if (!email || !password) {
+          showToast("Помилка", "Будь ласка, заповніть всі поля", "error");
+          return;
         }
+
+        // Simulate API call
+        const loginButton = document.getElementById("loginButton");
+        loginButton.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
+        loginButton.disabled = true;
+
+        setTimeout(() => {
+          // Simulate successful login
+          localStorage.setItem("userId", "12345");
+          if (rememberMe) {
+            localStorage.setItem("username", email);
+          }
+
+          showToast("Успіх", "Ви успішно увійшли в систему", "success");
+
+          loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Увійти';
+          loginButton.disabled = false;
+
+          // Redirect after delay
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1500);
+        }, 1500);
       });
 
-      // Password visibility toggle with animation
-      document.querySelectorAll(".password-toggle").forEach((toggle) => {
-        toggle.addEventListener("click", function () {
-          const passwordField = this.previousElementSibling;
-          const type =
-            passwordField.getAttribute("type") === "password"
-              ? "text"
-              : "password";
-          passwordField.setAttribute("type", type);
+      registerFormElement.addEventListener("submit", function (e) {
+        e.preventDefault();
 
-          // Animate icon
-          this.style.animation = "jello 0.8s";
-          this.addEventListener("animationend", () => {
-            this.style.animation = "";
-          });
+        const email = document.getElementById("registerEmail").value;
+        const username = document.getElementById("registerUsername").value;
+        const password = document.getElementById("registerPassword").value;
+        const passwordConfirm = document.getElementById(
+          "registerPasswordConfirm"
+        ).value;
 
-          this.classList.toggle("fa-eye");
-          this.classList.toggle("fa-eye-slash");
+        // Validation
+        if (!email || !username || !password || !passwordConfirm) {
+          showToast("Помилка", "Будь ласка, заповніть всі поля", "error");
+          return;
+        }
 
-          // Show toast
-          const action = type === "text" ? "показано" : "приховано";
-          showToast("Пароль", `Пароль ${action}`, "info", 2000);
-        });
-      });
+        if (password !== passwordConfirm) {
+          showToast("Помилка", "Паролі не співпадають", "error");
+          return;
+        }
 
-      // Form switching with 3D flip animation
-      document
-        .getElementById("showLoginForm")
-        .addEventListener("click", function (e) {
-          e.preventDefault();
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          showToast("Помилка", "Введіть коректний email", "error");
+          return;
+        }
 
-          const registerForm = document.getElementById("registerForm");
-          const loginForm = document.getElementById("loginForm");
-
-          // Flip out register form
-          registerForm.style.animation = "flipOut 0.5s forwards";
-
-          setTimeout(() => {
-            registerForm.style.display = "none";
-            loginForm.style.display = "block";
-            // Flip in login form
-            loginForm.style.animation = "flipIn 0.5s forwards";
-          }, 500);
-
-          showToast("Форма входу", "Перехід до форми входу", "info", 2000);
-        });
-
-      document
-        .getElementById("showRegisterForm")
-        .addEventListener("click", function (e) {
-          e.preventDefault();
-
-          const registerForm = document.getElementById("registerForm");
-          const loginForm = document.getElementById("loginForm");
-
-          // Flip out login form
-          loginForm.style.animation = "flipOut 0.5s forwards";
-
-          setTimeout(() => {
-            loginForm.style.display = "none";
-            registerForm.style.display = "block";
-            // Flip in register form
-            registerForm.style.animation = "flipIn 0.5s forwards";
-          }, 500);
-
+        // Password strength validation
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(password)) {
           showToast(
-            "Форма реєстрації",
-            "Перехід до форми реєстрації",
-            "info",
-            2000
+            "Помилка",
+            "Пароль повинен містити мінімум 8 символів, 1 велику літеру, 1 малу літеру та 1 цифру",
+            "warning"
           );
-        });
-
-      // Password strength meter with enhanced animation
-      const passwordInput = document.getElementById("regPassword");
-      const strengthMeter = document.getElementById("passwordStrengthMeter");
-      const strengthText = document.getElementById("passwordStrengthText");
-
-      passwordInput.addEventListener("input", function () {
-        const password = this.value;
-        let strength = 0;
-        let feedback = "";
-
-        // Length check
-        if (password.length >= 8) {
-          strength += 1;
+          return;
         }
 
-        // Contains lowercase
-        if (/[a-z]/.test(password)) {
-          strength += 1;
-        }
+        // Simulate API call
+        const registerButton = document.getElementById("registerButton");
+        registerButton.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
+        registerButton.disabled = true;
 
-        // Contains uppercase
-        if (/[A-Z]/.test(password)) {
-          strength += 1;
-        }
+        setTimeout(() => {
+          // Simulate successful registration
+          localStorage.setItem("userId", "12345");
 
-        // Contains number
-        if (/[0-9]/.test(password)) {
-          strength += 1;
-        }
+          showToast("Успіх", "Ви успішно зареєструвались", "success");
 
-        // Contains special character
-        if (/[^A-Za-z0-9]/.test(password)) {
-          strength += 1;
-        }
+          registerButton.innerHTML =
+            '<i class="fas fa-user-plus"></i> Зареєструватися';
+          registerButton.disabled = false;
 
-        // Update UI based on strength
-        strengthMeter.className = "password-strength-meter";
-
-        if (password.length === 0) {
-          strengthMeter.style.width = "0";
-          strengthText.textContent = "";
-        } else if (strength < 2) {
-          strengthMeter.classList.add("strength-weak");
-          feedback = "Слабкий";
-          strengthText.style.color = "var(--danger-color)";
-        } else if (strength < 3) {
-          strengthMeter.classList.add("strength-medium");
-          feedback = "Середній";
-          strengthText.style.color = "var(--warning-color)";
-        } else if (strength < 5) {
-          strengthMeter.classList.add("strength-good");
-          feedback = "Хороший";
-          strengthText.style.color = "var(--info-color)";
-        } else {
-          strengthMeter.classList.add("strength-strong");
-          feedback = "Сильний";
-          strengthText.style.color = "var(--success-color)";
-        }
-
-        strengthText.textContent = feedback;
-
-        // Add animation to strength text
-        strengthText.style.animation = "fadeIn 0.5s";
-        strengthText.addEventListener("animationend", () => {
-          strengthText.style.animation = "";
-        });
+          // Redirect after delay
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1500);
+        }, 1500);
       });
 
-      // Enhanced Modal notification system
-      function showModal(message, type = "success") {
-        const modalOverlay = document.getElementById("modalOverlay");
-        const modalContent = document.getElementById("modalContent");
-        const modalTitle = document.getElementById("modalTitle");
-        const modalMessage = document.getElementById("modalMessage");
-        const modalClose = document.querySelector(".modal-close");
-        const modalOkButton = document.getElementById("modalOkButton");
-
-        // Set modal content
-        modalMessage.textContent = message;
-
-        // Set title and class based on type
-        modalContent.className = "modal-content";
-        modalContent.classList.add("modal-" + type);
-
-        switch (type) {
-          case "success":
-            modalTitle.textContent = "Успіх";
-            modalOkButton.style.background =
-              "linear-gradient(90deg, var(--success-color), #1e7e34)";
-            break;
-          case "error":
-            modalTitle.textContent = "Помилка";
-            modalOkButton.style.background =
-              "linear-gradient(90deg, var(--danger-color), #bd2130)";
-            break;
-          case "warning":
-            modalTitle.textContent = "Попередження";
-            modalOkButton.style.background =
-              "linear-gradient(90deg, var(--warning-color), #d39e00)";
-            break;
-          case "info":
-            modalTitle.textContent = "Інформація";
-            modalOkButton.style.background =
-              "linear-gradient(90deg, var(--info-color), #138496)";
-            break;
-        }
-
-        // Show modal with animation
-        modalOverlay.style.display = "flex";
-        modalContent.style.animation =
-          "modalAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
-
-        // Add animation to modal message
-        modalMessage.style.animation = "fadeIn 0.5s";
-
-        // Close modal when clicking the close button
-        modalClose.onclick = function () {
-          closeModal();
-        };
-
-        // Close modal when clicking the OK button
-        modalOkButton.onclick = function () {
-          closeModal();
-        };
-
-        // Close modal when clicking outside the modal
-        modalOverlay.onclick = function (event) {
-          if (event.target === modalOverlay) {
-            closeModal();
-          }
-        };
-
-        function closeModal() {
-          modalContent.style.animation = "fadeIn 0.3s reverse forwards";
-          setTimeout(() => {
-            modalOverlay.style.display = "none";
-          }, 300);
-        }
-      }
-
-      // Form validation with enhanced feedback
-      function validatePassword(password) {
-        // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
-        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-        return regex.test(password);
-      }
-
-      function validateEmail(email) {
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return regex.test(email);
-      }
-
-      // Form handling with animations
-      // Функція обробки форми з анімаціями
-      async function handleFormSubmit(
-        endpoint,
-        username,
-        password,
-        confirmPassword = null
-      ) {
-        try {
-          // Перевірка заповнення полів
-          if (!username || !password) {
-            showToast("Помилка", "Усі поля повинні бути заповнені!", "error");
-
-            const emptyFields = [];
-            if (!username)
-              emptyFields.push(
-                endpoint === "/register" ? "regUsername" : "loginUsername"
-              );
-            if (!password)
-              emptyFields.push(
-                endpoint === "/register" ? "regPassword" : "loginPassword"
-              );
-
-            emptyFields.forEach((fieldId) => {
-              const field = document.getElementById(fieldId);
-              if (field) {
-                field.style.animation = "shake 0.5s";
-                field.addEventListener("animationend", () => {
-                  field.style.animation = "";
-                });
-              }
-            });
-
-            return;
-          }
-
-          // Додаткові перевірки для реєстрації
-          if (endpoint === "/register") {
-            if (password !== confirmPassword) {
-              showToast("Помилка", "Паролі не співпадають!", "error");
-
-              ["regPassword", "regPasswordConfirm"].forEach((fieldId) => {
-                const field = document.getElementById(fieldId);
-                if (field) {
-                  field.style.animation = "shake 0.5s";
-                  field.addEventListener("animationend", () => {
-                    field.style.animation = "";
-                  });
-                }
-              });
-
-              return;
-            }
-
-            if (!validatePassword(password)) {
-              showToast(
-                "Попередження",
-                "Пароль має містити мінімум 8 символів, 1 велику літеру, 1 малу літеру та 1 цифру",
-                "warning"
-              );
-
-              const passwordField = document.getElementById("regPassword");
-              if (passwordField) {
-                passwordField.style.animation = "pulse 1s";
-                passwordField.addEventListener("animationend", () => {
-                  passwordField.style.animation = "";
-                });
-              }
-
-              return;
-            }
-          }
-
-          // Перевірка валідності email (якщо це email)
-          if (username.includes("@") && !validateEmail(username)) {
-            showToast("Помилка", "Введіть коректний email!", "error");
-
-            const usernameField = document.getElementById(
-              endpoint === "/register" ? "regUsername" : "loginUsername"
-            );
-            if (usernameField) {
-              usernameField.style.animation = "shake 0.5s";
-              usernameField.addEventListener("animationend", () => {
-                usernameField.style.animation = "";
-              });
-            }
-
-            return;
-          }
-
-          // Візуальний стан кнопки
-          const form = document.getElementById(
-            endpoint === "/register" ? "registerForm" : "loginForm"
-          );
-          const submitButton = form
-            ? form.querySelector('button[type="submit"]')
-            : null;
-          if (submitButton) {
-            const originalText = submitButton.innerHTML;
-            submitButton.innerHTML =
-              '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-            submitButton.disabled = true;
-          }
-
-          const requestBody = { username, password };
-          if (username.includes("@") && validateEmail(username)) {
-            requestBody.email = username;
-          }
-
-          // Імітація запиту до API
-          await new Promise((resolve) => setTimeout(resolve, 1500));
-
-          // Фейковий успішний запит
-          const response = { ok: true };
-          const data = {
-            userId: "12345",
-            token: "sample-token",
-            message:
-              endpoint === "/register"
-                ? "Реєстрація успішна!"
-                : "Вхід успішний!",
-            redirect: "index.html",
-          };
-
-          if (submitButton) {
-            submitButton.innerHTML = "Увійти";
-            submitButton.disabled = false;
-          }
-
-          if (response.ok) {
-            localStorage.setItem("userId", data.userId);
-            localStorage.setItem("token", data.token);
-
-            if (document.getElementById("rememberMe")?.checked) {
-              localStorage.setItem("username", username);
-            } else {
-              sessionStorage.setItem("username", username);
-            }
-
-            showModal(data.message, "success");
-            if (form) form.style.animation = "pulse 1s";
-
-            setTimeout(() => {
-              showToast(
-                "Перенаправлення",
-                "Переходимо на головну сторінку...",
-                "info"
-              );
-              setTimeout(() => {
-                window.location.href = data.redirect;
-              }, 1500);
-            }, 1500);
-          } else {
-            showModal(data.message || "Помилка з'єднання з сервером", "error");
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          showModal(
-            "Помилка з'єднання з сервером. Перевірте підключення до бази даних.",
-            "error"
-          );
-        }
-      }
-
-      // Додавання обробників подій для форм
-      document
-        .getElementById("registerForm")
-        ?.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const username = document.getElementById("regUsername")?.value.trim();
-          const password = document.getElementById("regPassword")?.value.trim();
-          const confirmPassword = document
-            .getElementById("regPasswordConfirm")
-            ?.value.trim();
-          await handleFormSubmit(
-            "/register",
-            username,
-            password,
-            confirmPassword
-          );
-        });
-
-      document
-        .getElementById("loginForm")
-        ?.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const username = document
-            .getElementById("loginUsername")
-            ?.value.trim();
-          const password = document
-            .getElementById("loginPassword")
-            ?.value.trim();
-          await handleFormSubmit("/login", username, password);
-        });
-
-      // Перевірка збережених даних
-      window.addEventListener("DOMContentLoaded", () => {
-        const rememberedUsername = localStorage.getItem("username");
-        if (rememberedUsername) {
-          const loginUsernameField = document.getElementById("loginUsername");
-          const rememberMeCheckbox = document.getElementById("rememberMe");
-
-          if (loginUsernameField) loginUsernameField.value = rememberedUsername;
-          if (rememberMeCheckbox) rememberMeCheckbox.checked = true;
-
-          setTimeout(() => {
-            showToast("Вітаємо", "Ваш логін було збережено", "info");
-          }, 1000);
-        }
-      });
-
-      // Ініціалізація UI
+      // Check if user is already logged in
       document.addEventListener("DOMContentLoaded", function () {
-        createParticles();
-
         const userId = localStorage.getItem("userId");
         if (userId) {
-          showModal("Ви вже увійшли в систему. Перенаправлення...", "info");
+          showToast("Інформація", "Ви вже увійшли в систему", "info");
           setTimeout(() => {
             window.location.href = "index.html";
           }, 2000);
-        } else {
-          setTimeout(() => {
-            showToast(
-              "Вітаємо",
-              "Ласкаво просимо на сторінку авторизації",
-              "success"
-            );
-          }, 1500);
         }
-      });
 
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const username = document.getElementById("loginUsername").value;
-          const password = document.getElementById("loginPassword").value;
-          await handleFormSubmit("/login", username, password);
-        });
-
-      // Check for remembered username
-      window.addEventListener("DOMContentLoaded", () => {
+        // Check for remembered username
         const rememberedUsername = localStorage.getItem("username");
         if (rememberedUsername) {
-          const loginUsernameField = document.getElementById("loginUsername");
-          const rememberMeCheckbox = document.getElementById("rememberMe");
-
-          if (loginUsernameField) loginUsernameField.value = rememberedUsername;
-          if (rememberMeCheckbox) rememberMeCheckbox.checked = true;
-
-          // Show toast
-          setTimeout(() => {
-            showToast("Вітаємо", "Ваш логін було збережено", "info");
-          }, 1000);
+          document.getElementById("loginEmail").value = rememberedUsername;
+          document.getElementById("rememberMe").checked = true;
         }
-      });
-
-      // Initialize UI state
-      document.addEventListener("DOMContentLoaded", function () {
-        // Create particles
-        createParticles();
-
-        // Check if user is already logged in
-        const userId = localStorage.getItem("userId");
-        if (userId) {
-          showModal("Ви вже увійшли в систему. Перенаправлення...", "info");
-          setTimeout(() => {
-            window.location.href = "index.html";
-          }, 2000);
-        } else {
-          // Show welcome toast
-          setTimeout(() => {
-            showToast(
-              "Вітаємо",
-              "Ласкаво просимо на сторінку авторизації",
-              "success"
-            );
-          }, 1500);
-        }
-
-        // Add 3D tilt effect to forms
-        const forms = document.querySelectorAll("form");
-
-        forms.forEach((form) => {
-          form.addEventListener("mousemove", (e) => {
-            const rect = form.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const xPercent = x / rect.width;
-            const yPercent = y / rect.height;
-
-            const maxRotate = 5; // Maximum rotation in degrees
-            const rotateX = (0.5 - yPercent) * maxRotate;
-            const rotateY = (xPercent - 0.5) * maxRotate;
-
-            form.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
-          });
-
-          form.addEventListener("mouseleave", () => {
-            form.style.transform = "translateY(-5px)";
-            form.style.transition = "transform 0.5s ease";
-          });
-        });
-
-        // Add button press effect
-        const buttons = document.querySelectorAll("button");
-        buttons.forEach((button) => {
-          button.addEventListener("mousedown", () => {
-            button.style.transform = "scale(0.95)";
-          });
-
-          button.addEventListener("mouseup", () => {
-            button.style.transform = "";
-          });
-
-          button.addEventListener("mouseleave", () => {
-            button.style.transform = "";
-          });
-        });
-
-        // Add input focus effects
-        const inputs = document.querySelectorAll("input");
-        inputs.forEach((input) => {
-          input.addEventListener("focus", () => {
-            input.parentElement.style.transform = "translateX(5px)";
-          });
-
-          input.addEventListener("blur", () => {
-            input.parentElement.style.transform = "";
-          });
-        });
       });
     </script>
   </body>

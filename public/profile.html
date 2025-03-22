@@ -1,2591 +1,2560 @@
 <!DOCTYPE html>
 <html lang="uk" class="dark">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Мій профіль - ProFix Network Hub</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <meta
+      name="description"
+      content="Профіль користувача ProFix Network Hub - платформи, що з'єднує клієнтів з професійними майстрами"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="manifest" href="/manifest.json" />
     <style>
-        :root {
-            --background-dark: #1a1a1a;
-            --background-light: #f5f5f5;
-            --text-dark: #fff;
-            --text-light: #333;
-            --primary-color: #ff3300;
-            --secondary-color: #ff6600;
-            --accent-color: #007bff;
-            --success-color: #00cc66;
-            --warning-color: #ffcc00;
-            --danger-color: #ff3333;
-            --card-bg-dark: #2a2a2a;
-            --card-bg-light: #ffffff;
-            --transition-speed: 0.4s;
-            --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
-        }
+      :root {
+        /* Modern color palette */
+        --background-dark: #0f172a;
+        --background-light: #f8fafc;
+        --text-dark: #f1f5f9;
+        --text-light: #1e293b;
+        --primary-color: #3b82f6;
+        --secondary-color: #60a5fa;
+        --accent-color: #8b5cf6;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+        --card-bg-dark: #1e293b;
+        --card-bg-light: #ffffff;
+        --border-dark: #334155;
+        --border-light: #e2e8f0;
+        --footer-bg-dark: #0f172a;
+        --footer-bg-light: #f1f5f9;
+        --shadow-dark: 0 10px 25px rgba(0, 0, 0, 0.5);
+        --shadow-light: 0 10px 25px rgba(0, 0, 0, 0.1);
+        --gradient-dark: linear-gradient(145deg, #1e293b, #334155);
+        --gradient-light: linear-gradient(145deg, #f8fafc, #ffffff);
+      }
 
-        html {
-            scroll-behavior: smooth;
-            height: 100%;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            background: var(--background-dark);
-            background-image: radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px),
-                radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            background-position: 0 0, 25px 25px;
-            padding: 20px;
-            color: var(--text-dark);
-            font-family: 'Roboto', Arial, sans-serif;
-            transition: background var(--transition-speed) var(--transition-timing), 
-                        color var(--transition-speed) var(--transition-timing);
-            margin: 0;
-            overflow-x: hidden;
-        }
+      html {
+        scroll-behavior: smooth;
+        height: 100%;
+        font-size: 16px;
+      }
 
-        html.light body {
-            background: var(--background-light);
-            color: var(--text-light);
-        }
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--background-dark);
+        background-image: radial-gradient(
+            rgba(59, 130, 246, 0.05) 1px,
+            transparent 1px
+          ),
+          radial-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+        background-size: 50px 50px;
+        background-position: 0 0, 25px 25px;
+        color: var(--text-dark);
+        font-family: "Montserrat", sans-serif;
+        transition: background 0.3s ease, color 0.3s ease;
+        margin: 0;
+        overflow-x: hidden;
+        line-height: 1.6;
+      }
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+      html.light body {
+        background: var(--background-light);
+        color: var(--text-light);
+      }
 
-        header {
-            width: 100%;
-            background: linear-gradient(145deg, #222222, #333333);
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            margin-bottom: 20px;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            transition: all var(--transition-speed) var(--transition-timing);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+      .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        flex: 1;
+      }
 
-        html.light header {
-            background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
+      /* Header Styles */
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        width: 100%;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-dark);
+        transition: all 0.3s ease;
+      }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+      html.light .header {
+        background: rgba(248, 250, 252, 0.95);
+        box-shadow: var(--shadow-light);
+      }
 
-        .logo i {
-            font-size: 1.8rem;
-        }
+      .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
 
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: transform 0.3s ease;
+      }
 
-        button {
-            padding: 10px 15px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition-speed) var(--transition-timing);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+      .logo:hover {
+        transform: scale(1.05);
+      }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
+      .logo i {
+        font-size: 1.8rem;
+        animation: spin 5s linear infinite;
+      }
 
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        }
+      .nav-buttons {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
 
-        button i {
-            font-size: 1rem;
-        }
+      .nav-button {
+        padding: 10px 15px;
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+      }
 
-        .theme-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 30px;
-            margin: 0 10px;
-        }
+      .nav-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--secondary-color),
+          var(--primary-color)
+        );
+        transition: all 0.5s ease;
+        z-index: -1;
+      }
 
-        .theme-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+      .nav-button:hover::before {
+        left: 0;
+      }
 
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #333;
-            transition: .4s;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 5px;
-        }
+      .nav-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+      }
 
-        html.light .slider {
-            background-color: #ccc;
-        }
+      .theme-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+        margin-left: 15px;
+      }
 
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 22px;
-            width: 22px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
+      .theme-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
 
-        input:checked + .slider {
-            background-color: var(--primary-color);
-        }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #334155;
+        transition: 0.4s;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 5px;
+        overflow: hidden;
+      }
 
-        input:checked + .slider:before {
-            transform: translateX(30px);
-        }
+      html.light .slider {
+        background-color: #cbd5e1;
+      }
 
-        .slider .sun, .slider .moon {
-            color: #ffffff;
-            font-size: 14px;
-        }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+        z-index: 2;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
 
-        /* Enhanced animations */
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
+      .slider .moon,
+      .slider .sun {
+        z-index: 1;
+        font-size: 14px;
+        transition: transform 0.4s ease;
+      }
 
-        @keyframes slideInFromRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
+      .slider .moon {
+        margin-right: 5px;
+        transform: translateX(30px);
+      }
 
-        @keyframes slideInFromLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
+      .slider .sun {
+        margin-left: 5px;
+        transform: translateX(-30px);
+      }
 
-        @keyframes slideInFromTop {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+      input:checked + .slider:before {
+        transform: translateX(30px);
+      }
 
-        @keyframes slideInFromBottom {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+      input:checked + .slider .moon {
+        transform: translateX(0);
+      }
 
-        @keyframes glowPulse {
-            0% {
-                box-shadow: 0 0 5px rgba(255, 51, 0, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 20px rgba(255, 51, 0, 0.5);
-            }
-            100% {
-                box-shadow: 0 0 5px rgba(255, 51, 0, 0.5);
-            }
-        }
+      input:checked + .slider .sun {
+        transform: translateX(0);
+      }
 
-        @keyframes borderGlow {
-            0% {
-                border-color: var(--primary-color);
-            }
-            50% {
-                border-color: var(--secondary-color);
-            }
-            100% {
-                border-color: var(--primary-color);
-            }
-        }
+      input:checked + .slider {
+        background-color: var(--primary-color);
+      }
 
-        /* Enhanced main content styling */
-        main {
-            animation: fadeInScale 0.6s ease-out;
-            background: linear-gradient(145deg, #222222, #333333);
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-        }
+      .mobile-menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: var(--text-dark);
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+      }
 
-        html.light main {
-            background: linear-gradient(145deg, #f0f0f0, #ffffff);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
+      .mobile-menu-btn:hover {
+        transform: rotate(90deg);
+      }
 
-        main::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--primary-color));
-            animation: borderGlow 3s infinite;
-        }
+      html.light .mobile-menu-btn {
+        color: var(--text-light);
+      }
 
+      /* Main Content */
+      .main-content {
+        padding: 40px 0;
+      }
+
+      /* Profile Card */
+      .profile-card {
+        background: var(--gradient-dark);
+        border-radius: 15px;
+        box-shadow: var(--shadow-dark);
+        overflow: hidden;
+        margin-bottom: 30px;
+        border: 1px solid var(--border-dark);
+        transition: all 0.3s ease;
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      html.light .profile-card {
+        background: var(--gradient-light);
+        box-shadow: var(--shadow-light);
+        border: 1px solid var(--border-light);
+      }
+
+      .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      html.light .profile-card:hover {
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .profile-header {
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        border-bottom: 1px solid var(--border-dark);
+        position: relative;
+      }
+
+      html.light .profile-header {
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+      }
+
+      .profile-avatar:hover {
+        transform: scale(1.05);
+      }
+
+      .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .profile-avatar-upload {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        text-align: center;
+        padding: 5px 0;
+        font-size: 0.8rem;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .profile-avatar:hover .profile-avatar-upload {
+        opacity: 1;
+      }
+
+      .profile-info {
+        flex: 1;
+      }
+
+      .profile-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+        animation: slideUp 0.5s ease-out forwards;
+      }
+
+      .profile-username {
+        font-size: 1rem;
+        opacity: 0.8;
+        margin-bottom: 10px;
+        animation: slideUp 0.5s ease-out forwards;
+        animation-delay: 0.1s;
+      }
+
+      .profile-stats {
+        display: flex;
+        gap: 20px;
+        margin-top: 15px;
+        animation: slideUp 0.5s ease-out forwards;
+        animation-delay: 0.2s;
+      }
+
+      .stat-item {
+        text-align: center;
+        background: rgba(59, 130, 246, 0.1);
+        padding: 10px 15px;
+        border-radius: 8px;
+        min-width: 80px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .stat-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+      }
+
+      .stat-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+      }
+
+      .stat-label {
+        font-size: 0.8rem;
+        opacity: 0.8;
+      }
+
+      /* Tabs */
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border-dark);
+        background: var(--card-bg-dark);
+      }
+
+      html.light .tabs {
+        border-bottom: 1px solid var(--border-light);
+        background: var(--card-bg-light);
+      }
+
+      .tab {
+        padding: 15px 20px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+        text-align: center;
+        flex: 1;
+      }
+
+      .tab:hover {
+        color: var(--primary-color);
+        background: rgba(59, 130, 246, 0.05);
+      }
+
+      .tab.active {
+        color: var(--primary-color);
+      }
+
+      .tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--primary-color);
+      }
+
+      /* Tab Content */
+      .tab-content {
+        display: none;
+        padding: 30px;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      /* Form Styles */
+      .form-group {
+        margin-bottom: 20px;
+        animation: slideUp 0.5s ease-out forwards;
+        opacity: 0;
+      }
+
+      .form-group:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .form-group:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+      .form-group:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .form-group:nth-child(4) {
+        animation-delay: 0.25s;
+      }
+      .form-group:nth-child(5) {
+        animation-delay: 0.3s;
+      }
+      .form-group:nth-child(6) {
+        animation-delay: 0.35s;
+      }
+      .form-group:nth-child(7) {
+        animation-delay: 0.4s;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border-dark);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-dark);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: "Montserrat", sans-serif;
+      }
+
+      html.light .form-input {
+        border: 1px solid var(--border-light);
+        background: rgba(255, 255, 255, 0.8);
+        color: var(--text-light);
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        transform: translateY(-3px);
+      }
+
+      textarea.form-input {
+        min-height: 100px;
+        resize: vertical;
+      }
+
+      .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        cursor: pointer;
+        animation: slideUp 0.5s ease-out forwards;
+        opacity: 0;
+        animation-delay: 0.45s;
+      }
+
+      .checkbox-wrapper input {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .form-button {
+        padding: 12px 20px;
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        animation: slideUp 0.5s ease-out forwards;
+        opacity: 0;
+        animation-delay: 0.5s;
+      }
+
+      .form-button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--secondary-color),
+          var(--primary-color)
+        );
+        transition: all 0.5s ease;
+        z-index: -1;
+      }
+
+      .form-button:hover::before {
+        left: 0;
+      }
+
+      .form-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+      }
+
+      /* Services Section */
+      .services-container {
+        margin-top: 20px;
+      }
+
+      .service-option {
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        animation: slideLeft 0.5s ease-out forwards;
+        opacity: 0;
+      }
+
+      .service-option:nth-child(odd) {
+        animation-delay: 0.1s;
+      }
+      .service-option:nth-child(even) {
+        animation-delay: 0.2s;
+      }
+
+      .service-option:hover {
+        background: rgba(59, 130, 246, 0.05);
+        transform: translateX(5px);
+      }
+
+      .industry-skills {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 8px;
+        background: rgba(59, 130, 246, 0.05);
+        border-left: 3px solid var(--primary-color);
+        display: none;
+        animation: slideIn 0.3s ease;
+      }
+
+      .industry-skills.visible {
+        display: block;
+      }
+
+      /* Orders Section */
+      .orders-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+
+      .order-card {
+        background: var(--card-bg-dark);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        animation: fadeIn 0.5s ease;
+        animation-fill-mode: both;
+      }
+
+      html.light .order-card {
+        background: var(--card-bg-light);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .order-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .order-header {
+        padding: 15px;
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: white;
+        position: relative;
+      }
+
+      .order-number {
+        font-size: 0.8rem;
+        opacity: 0.8;
+        margin-bottom: 5px;
+      }
+
+      .order-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin: 0;
+      }
+
+      .order-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .status-pending {
+        background-color: var(--warning-color);
+        color: #333;
+      }
+
+      .status-approved {
+        background-color: var(--success-color);
+        color: white;
+      }
+
+      .status-completed {
+        background-color: var(--accent-color);
+        color: white;
+      }
+
+      .status-cancelled {
+        background-color: var(--danger-color);
+        color: white;
+      }
+
+      .order-body {
+        padding: 15px;
+      }
+
+      .order-info {
+        margin-bottom: 15px;
+      }
+
+      .order-info-item {
+        display: flex;
+        margin-bottom: 8px;
+      }
+
+      .order-info-label {
+        font-weight: bold;
+        width: 120px;
+        color: var(--primary-color);
+      }
+
+      .order-info-value {
+        flex: 1;
+      }
+
+      .order-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .order-actions button {
+        flex: 1;
+        padding: 8px;
+        font-size: 0.8rem;
+      }
+
+      /* Reviews Section */
+      .reviews-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+
+      .review-card {
+        background: var(--card-bg-dark);
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        animation: fadeIn 0.5s ease;
+        animation-fill-mode: both;
+      }
+
+      html.light .review-card {
+        background: var(--card-bg-light);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .review-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .reviewer-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .reviewer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      .reviewer-name {
+        font-weight: bold;
+      }
+
+      .review-date {
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+
+      .review-rating {
+        display: flex;
+        gap: 2px;
+        color: var(--warning-color);
+      }
+
+      .review-content {
+        margin-top: 10px;
+        line-height: 1.5;
+      }
+
+      .review-order {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      /* Settings Section */
+      .settings-section {
+        margin-bottom: 30px;
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      .settings-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid var(--border-dark);
+      }
+
+      html.light .settings-title {
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .password-strength {
+        height: 5px;
+        margin-top: 8px;
+        border-radius: 3px;
+        background: #4b5563;
+        overflow: hidden;
+      }
+
+      .password-strength-meter {
+        height: 100%;
+        width: 0;
+        transition: width 0.3s ease, background-color 0.3s ease;
+      }
+
+      .password-requirements {
+        margin-top: 10px;
+        font-size: 0.8rem;
+      }
+
+      .requirement {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 3px;
+      }
+
+      .requirement i {
+        font-size: 0.7rem;
+      }
+
+      .requirement-met {
+        color: var(--success-color);
+      }
+
+      .requirement-unmet {
+        color: var(--danger-color);
+      }
+
+      /* Toast Notifications */
+      .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .toast {
+        background: var(--gradient-dark);
+        color: var(--text-dark);
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: var(--shadow-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 300px;
+        max-width: 400px;
+        transform: translateX(120%);
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-left: 4px solid var(--primary-color);
+        position: relative;
+        overflow: hidden;
+      }
+
+      html.light .toast {
+        background: var(--gradient-light);
+        color: var(--text-light);
+        box-shadow: var(--shadow-light);
+      }
+
+      .toast.show {
+        transform: translateX(0);
+      }
+
+      .toast-icon {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+      }
+
+      .toast-content {
+        flex: 1;
+      }
+
+      .toast-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+
+      .toast-message {
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      .toast-close {
+        background: none;
+        border: none;
+        color: var(--text-dark);
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+      }
+
+      html.light .toast-close {
+        color: var(--text-light);
+      }
+
+      .toast-close:hover {
+        transform: rotate(90deg);
+        color: var(--primary-color);
+      }
+
+      .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: var(--primary-color);
+        width: 100%;
+        transform-origin: left;
+        animation: progress 5s linear forwards;
+      }
+
+      @keyframes progress {
+        to {
+          transform: scaleX(0);
+        }
+      }
+
+      /* Loading Spinner */
+      .loading-spinner {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(59, 130, 246, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--primary-color);
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 50px 0;
+      }
+
+      /* Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes slideLeft {
+        from {
+          opacity: 0;
+          transform: translateX(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Responsive Styles */
+      @media (max-width: 992px) {
         .profile-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        html.light .profile-header {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: white;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .profile-avatar-upload {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            text-align: center;
-            padding: 4px 0;
-            font-size: 0.7rem;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .profile-avatar:hover .profile-avatar-upload {
-            opacity: 1;
-        }
-
-        .profile-info h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            color: var(--primary-color);
-        }
-
-        .profile-info p {
-            margin: 5px 0 0;
-            font-size: 0.9rem;
-            opacity: 0.8;
+          flex-direction: column;
+          text-align: center;
         }
 
         .profile-stats {
-            display: flex;
-            gap: 15px;
+          justify-content: center;
         }
+      }
 
-        .stat-item {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 15px;
-            border-radius: 8px;
-            min-width: 80px;
-        }
-
-        html.light .stat-item {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            padding-bottom: 15px;
-            position: relative;
-            color: var(--primary-color);
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        html.light h1 {
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        h1::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
-        }
-
+      @media (max-width: 768px) {
         .tabs {
-            display: flex;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 20px;
-        }
-
-        html.light .tabs {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+          flex-wrap: wrap;
         }
 
         .tab {
-            padding: 15px 20px;
-            cursor: pointer;
-            position: relative;
-            font-weight: 500;
-            transition: all 0.3s ease;
+          flex-basis: 33.333%;
         }
 
-        .tab:hover {
-            color: var(--primary-color);
+        .orders-container,
+        .reviews-container {
+          grid-template-columns: 1fr;
         }
 
-        .tab.active {
-            color: var(--primary-color);
+        .header-container {
+          padding: 15px 20px;
         }
 
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--primary-color);
+        .nav-buttons {
+          position: fixed;
+          top: 0;
+          right: -100%;
+          width: 80%;
+          height: 100vh;
+          background: var(--background-dark);
+          flex-direction: column;
+          justify-content: flex-start;
+          align-items: center;
+          padding: 80px 40px;
+          transition: all 0.4s ease;
+          z-index: 1001;
+          box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        html.light .nav-buttons {
+          background: var(--background-light);
+          box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-buttons.active {
+          right: 0;
+        }
+
+        .mobile-menu-btn {
+          display: block;
+        }
+
+        .theme-switch {
+          margin: 20px 0;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .profile-avatar {
+          width: 80px;
+          height: 80px;
+          font-size: 2rem;
+        }
+
+        .profile-name {
+          font-size: 1.5rem;
+        }
+
+        .tab {
+          flex-basis: 50%;
+          padding: 10px;
         }
 
         .tab-content {
-            display: none;
-            padding: 20px;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeInScale 0.4s ease-out;
-        }
-
-        /* Enhanced form styling */
-        #profile-form {
-            display: grid;
-            gap: 1.5rem;
-            padding: 20px;
-        }
-
-        .form-group {
-            animation: slideInFromRight 0.6s ease-out;
-            animation-fill-mode: both;
-        }
-
-        .form-group:nth-child(1) { animation-delay: 0.1s; }
-        .form-group:nth-child(2) { animation-delay: 0.2s; }
-        .form-group:nth-child(3) { animation-delay: 0.3s; }
-        .form-group:nth-child(4) { animation-delay: 0.4s; }
-        .form-group:nth-child(5) { animation-delay: 0.5s; }
-        .form-group:nth-child(6) { animation-delay: 0.6s; }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="date"],
-        input[type="password"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: var(--text-dark);
-            font-size: 1rem;
-            transition: all var(--transition-speed) var(--transition-timing);
-        }
-
-        html.light input[type="text"],
-        html.light input[type="email"],
-        html.light input[type="date"],
-        html.light input[type="password"],
-        html.light textarea,
-        html.light select {
-            background: rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            color: var(--text-light);
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 15px rgba(255, 51, 0, 0.3);
-            transform: translateY(-2px);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--text-dark);
-            transition: color var(--transition-speed) var(--transition-timing);
-        }
-
-        html.light label {
-            color: var(--text-light);
-        }
-
-        input:focus + label,
-        textarea:focus + label {
-            color: var(--primary-color);
-        }
-
-        /* Enhanced services section */
-        #services {
-            background: linear-gradient(145deg, rgba(34, 34, 34, 0.9), rgba(51, 51, 51, 0.9));
-            border: 1px solid rgba(255, 51, 0, 0.2);
-            border-radius: 12px;
-            margin-top: 25px;
-            padding: 25px;
-            transition: all var(--transition-speed) var(--transition-timing);
-            transform-origin: top;
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-        }
-
-        html.light #services {
-            background: linear-gradient(145deg, rgba(240, 240, 240, 0.9), rgba(250, 250, 250, 0.9));
-            border: 1px solid rgba(255, 51, 0, 0.2);
-        }
-
-        #services.visible {
-            animation: fadeInScale 0.4s ease-out forwards;
-            max-height: 5000px;
-            opacity: 1;
-            padding: 25px;
-        }
-
-        #services:hover {
-            background: rgba(255, 51, 0, 0.1);
-        }
-
-        #services label:first-child {
-            font-size: 1.1em;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .service-option {
-            margin: 15px 0;
-            padding: 10px;
-            border-radius: 8px;
-            transition: all var(--transition-speed) var(--transition-timing);
-        }
-
-        .service-option:hover {
-            background: rgba(255, 51, 0, 0.1);
-            transform: translateX(5px);
-        }
-
-        /* Custom checkbox styling */
-        .checkbox-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            cursor: pointer;
-            padding: 5px;
-            transition: all var(--transition-speed) var(--transition-timing);
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-            height: 0;
-            width: 0;
-        }
-
-        .checkbox-wrapper .checkmark {
-            position: relative;
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 51, 0, 0.5);
-            border-radius: 6px;
-            transition: all var(--transition-speed) var(--transition-timing);
-        }
-
-        html.light .checkbox-wrapper .checkmark {
-            background: rgba(0, 0, 0, 0.05);
-            border-color: rgba(255, 51, 0, 0.3);
-        }
-
-        .checkbox-wrapper:hover .checkmark {
-            background: rgba(255, 51, 0, 0.1);
-            transform: scale(1.05);
-        }
-
-        .checkbox-wrapper input[type="checkbox"]:checked ~ .checkmark {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .checkbox-wrapper .checkmark:after {
-            content: '';
-            position: absolute;
-            display: none;
-            left: 7px;
-            top: 3px;
-            width: 6px;
-            height: 12px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-
-        .checkbox-wrapper input[type="checkbox"]:checked ~ .checkmark:after {
-            display: block;
-            animation: checkmark 0.2s ease-in-out forwards;
-        }
-
-        @keyframes checkmark {
-            0% {
-                opacity: 0;
-                transform: rotate(45deg) scale(0);
-            }
-            100% {
-                opacity: 1;
-                transform: rotate(45deg) scale(1);
-            }
-        }
-
-        /* Industry skills section - IMPROVED TRANSITIONS */
-        .industry-skills {
-            height: 0;
-            overflow: hidden;
-            opacity: 0;
-            margin-top: 0;
-            padding: 0 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            transition: all var(--transition-speed) var(--transition-timing);
-            transform: translateY(-20px);
-            border-left: 3px solid transparent;
-        }
-
-        html.light .industry-skills {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .industry-skills h3 {
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            opacity: 0;
-            transition: opacity var(--transition-speed) var(--transition-timing);
-        }
-
-        .industry-skills.visible {
-            height: auto;
-            opacity: 1;
-            margin-top: 20px;
-            padding: 15px;
-            transform: translateY(0);
-            border-left: 3px solid var(--primary-color);
-        }
-
-        .industry-skills.visible h3 {
-            opacity: 1;
-        }
-
-        .industry-skills.visible.slide-in-right {
-            animation: slideInFromRight 0.5s var(--transition-timing);
-        }
-
-        .industry-skills.visible.slide-in-left {
-            animation: slideInFromLeft 0.5s var(--transition-timing);
-        }
-
-        .industry-skills.visible.slide-in-top {
-            animation: slideInFromTop 0.5s var(--transition-timing);
-        }
-
-        .industry-skills.visible.slide-in-bottom {
-            animation: slideInFromBottom 0.5s var(--transition-timing);
-        }
-
-        .industry-skills.fade-out {
-            opacity: 0;
-            height: 0;
-            margin-top: 0;
-            padding: 0 15px;
-            transform: translateY(-20px);
-            transition: all var(--transition-speed) var(--transition-timing);
-        }
-
-        .custom-skills {
-            margin-top: 20px;
-        }
-
-        .status-pending {
-            background-color: rgba(255, 165, 0, 0.2);
-            color: orange;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            display: inline-block;
-            margin-left: 10px;
-        }
-
-        .status-approved {
-            background-color: rgba(0, 255, 0, 0.2);
-            color: #00cc66;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            display: inline-block;
-            margin-left: 10px;
-        }
-
-        .status-rejected {
-            background-color: rgba(255, 0, 0, 0.2);
-            color: #ff3333;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            display: inline-block;
-            margin-left: 10px;
-        }
-
-        /* Enhanced button styling */
-        button[type="submit"] {
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: all var(--transition-speed) var(--transition-timing);
-            position: relative;
-            overflow: hidden;
-        }
-
-        button[type="submit"]:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(255, 51, 0, 0.3);
-        }
-
-        button[type="submit"]::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
-            transition: 0.5s;
-        }
-
-        button[type="submit"]:hover::before {
-            left: 100%;
-        }
-
-        /* Enhanced message styling */
-        #success-message,
-        #error-message {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px;
-            animation: fadeInScale 0.4s ease-out;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #success-message {
-            background: rgba(0, 204, 102, 0.1);
-            border: 1px solid rgba(0, 204, 102, 0.2);
-            color: var(--success-color);
-        }
-
-        #error-message {
-            background: rgba(255, 51, 51, 0.1);
-            border: 1px solid rgba(255, 51, 51, 0.2);
-            color: var(--danger-color);
-        }
-
-        /* Orders section */
-        .orders-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .order-card {
-            background: var(--card-bg-dark);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            animation: fadeInScale 0.5s ease-out;
-            animation-fill-mode: both;
-        }
-
-        html.light .order-card {
-            background: var(--card-bg-light);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .order-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .order-header {
-            padding: 15px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            position: relative;
-        }
-
-        .order-number {
-            font-size: 0.8rem;
-            opacity: 0.8;
-            margin-bottom: 5px;
-        }
-
-        .order-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .order-status {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .status-pending {
-            background-color: var(--warning-color);
-            color: #333;
-        }
-
-        .status-approved {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .status-completed {
-            background-color: var(--accent-color);
-            color: white;
-        }
-
-        .status-cancelled {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        .order-body {
-            padding: 15px;
-        }
-
-        .order-info {
-            margin-bottom: 15px;
-        }
-
-        .order-info-item {
-            display: flex;
-            margin-bottom: 8px;
-        }
-
-        .order-info-label {
-            font-weight: bold;
-            width: 120px;
-            color: var(--primary-color);
-        }
-
-        .order-info-value {
-            flex: 1;
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .order-actions button {
-            flex: 1;
-            padding: 8px;
-            font-size: 0.8rem;
-        }
-
-        /* Reviews section */
-        .reviews-container {
-            padding: 20px;
-        }
-
-        .review-card {
-            background: var(--card-bg-dark);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            animation: fadeInScale 0.5s ease-out;
-            animation-fill-mode: both;
-        }
-
-        html.light .review-card {
-            background: var(--card-bg-light);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .reviewer-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .reviewer-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .reviewer-name {
-            font-weight: bold;
-        }
-
-        .review-date {
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-
-        .review-rating {
-            display: flex;
-            gap: 2px;
-            color: var(--warning-color);
-        }
-
-        .review-content {
-            margin-top: 10px;
-            line-height: 1.5;
-        }
-
-        .review-order {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* Notifications section */
-        .notifications-container {
-            padding: 20px;
-        }
-
-        .notification-card {
-            background: var(--card-bg-dark);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            display: flex;
-            gap: 15px;
-            transition: all 0.3s ease;
-            position: relative;
-            animation: fadeInScale 0.5s ease-out;
-            animation-fill-mode: both;
-        }
-
-        html.light .notification-card {
-            background: var(--card-bg-light);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .notification-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .notification-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .notification-type-info {
-            background: rgba(0, 123, 255, 0.2);
-            color: var(--accent-color);
-        }
-
-        .notification-type-success {
-            background: rgba(0, 204, 102, 0.2);
-            color: var(--success-color);
-        }
-
-        .notification-type-warning {
-            background: rgba(255, 204, 0, 0.2);
-            color: var(--warning-color);
-        }
-
-        .notification-type-error {
-            background: rgba(255, 51, 51, 0.2);
-            color: var(--danger-color);
-        }
-
-        .notification-content {
-            flex: 1;
-        }
-
-        .notification-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .notification-message {
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .notification-time {
-            font-size: 0.8rem;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
-
-        .notification-unread {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--primary-color);
-        }
-
-        .mark-all-read {
-            background: transparent;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            margin-bottom: 20px;
-        }
-
-        .mark-all-read:hover {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        /* Loading spinner */
-        .loading-spinner {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 1s ease-in-out infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 50px 0;
-        }
-
-        /* Responsive enhancements */
-        @media (max-width: 1200px) {
-            .container {
-                padding: 0 15px;
-            }
-        }
-
-        @media (max-width: 992px) {
-            h1 {
-                font-size: 2.2rem;
-            }
-            
-            #profile-form {
-                gap: 1rem;
-            }
-
-            .profile-header {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-
-            .profile-stats {
-                margin-top: 15px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .nav-buttons {
-                margin-top: 10px;
-                justify-content: center;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            main {
-                padding: 15px;
-            }
-
-            .form-group {
-                animation-delay: 0.1s !important;
-            }
-
-            button[type="submit"] {
-                width: 100%;
-            }
-
-            .tabs {
-                flex-wrap: wrap;
-            }
-
-            .tab {
-                flex: 1;
-                text-align: center;
-                padding: 10px;
-            }
-
-            .orders-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 576px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-
-            .nav-buttons {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .nav-buttons button {
-                width: 100%;
-                margin-bottom: 5px;
-            }
-
-            #services {
-                padding: 15px;
-            }
-
-            .profile-header-left {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .profile-stats {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 400px) {
-            h1 {
-                font-size: 1.6rem;
-            }
-
-            input[type="text"],
-            input[type="email"],
-            input[type="date"],
-            input[type="password"],
-            textarea,
-            select {
-                font-size: 0.9rem;
-            }
-
-            .tab {
-                font-size: 0.9rem;
-                padding: 8px;
-            }
-        }
-
-        /* Notification badge */
-        .notification-badge {
-            position: relative;
-        }
-
-        .notification-badge::after {
-            content: attr(data-count);
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: var(--danger-color);
-            color: white;
-            font-size: 0.7rem;
-            width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-weight: bold;
-        }
-
-        /* Password change form */
-        .password-strength {
-            height: 5px;
-            margin-top: 5px;
-            border-radius: 3px;
-            transition: all 0.3s ease;
-        }
-
-        .password-strength-weak {
-            background: var(--danger-color);
-            width: 30%;
-        }
-
-        .password-strength-medium {
-            background: var(--warning-color);
-            width: 60%;
-        }
-
-        .password-strength-strong {
-            background: var(--success-color);
-            width: 100%;
-        }
-
-        .password-requirements {
-            font-size: 0.8rem;
-            margin-top: 8px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        html.light .password-requirements {
-            color: rgba(0, 0, 0, 0.7);
-        }
-
-        .requirement {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-bottom: 3px;
-        }
-
-        .requirement i {
-            font-size: 0.7rem;
-        }
-
-        .requirement-met {
-            color: var(--success-color);
-        }
-
-        .requirement-unmet {
-            color: var(--danger-color);
-        }
+          padding: 20px;
+        }
+
+        .nav-buttons {
+          flex-wrap: wrap;
+        }
+
+        .nav-button {
+          font-size: 0.8rem;
+          padding: 8px 12px;
+        }
+      }
+
+      /* Notification Badge */
+      .notification-badge {
+        position: relative;
+      }
+
+      .notification-badge::after {
+        content: attr(data-count);
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: var(--danger-color);
+        color: white;
+        font-size: 0.7rem;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-weight: bold;
+      }
+
+      /* Empty state */
+      .empty-state {
+        text-align: center;
+        padding: 30px;
+        color: var(--text-dark);
+        opacity: 0.7;
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      html.light .empty-state {
+        color: var(--text-light);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <a href="index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          ProFix Network Hub
+        </a>
+        <div class="nav-buttons" id="navMenu">
+          <button
+            class="nav-button"
+            onclick="window.location.href='index.html'"
+          >
+            <i class="fas fa-home"></i> Головна
+          </button>
+          <button
+            class="nav-button notification-badge"
+            data-count="0"
+            id="notificationsBadge"
+          >
+            <i class="fas fa-bell"></i> Сповіщення
+          </button>
+          <button class="nav-button" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i> Вийти
+          </button>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span>
+              <span class="sun">☀️</span>
+            </span>
+          </label>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
     <div class="container">
-        <header>
-            <a href="index.html" class="logo"><i class="fas fa-tools"></i> ProFix Network Hub</a>
-            <div class="nav-buttons">
-                <button onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Головна</button>
-                <button onclick="window.location.href='orders.html'"><i class="fas fa-clipboard-list"></i> Замовлення</button>
-                <button class="notification-badge" data-count="0" id="notifications-btn" onclick="window.location.href='notifications.html'"><i class="fas fa-bell"></i> Сповіщення</button>
-                <button id="logout"><i class="fas fa-sign-out-alt"></i> Вийти</button>
+      <div class="main-content">
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar">
+              <span id="avatarInitials"></span>
+              <img
+                id="avatarImage"
+                style="display: none"
+                alt="Аватар профілю"
+              />
+              <div class="profile-avatar-upload" id="avatarUpload">
+                <i class="fas fa-camera"></i> Змінити
+              </div>
+              <input
+                type="file"
+                id="avatarInput"
+                style="display: none"
+                accept="image/*"
+              />
             </div>
-            <div class="theme-switch-container">
-                <label class="theme-switch">
-                    <input type="checkbox" id="themeToggle">
-                    <span class="slider">
-                        <span class="moon">🌙</span>
-                        <span class="sun">☀️</span>
-                    </span>
-                </label>
-            </div>
-        </header>
-
-        <main>
-            <div class="profile-header">
-                <div class="profile-header-left">
-                    <div class="profile-avatar" id="profile-avatar">
-                        <span id="avatar-initials"></span>
-                        <img id="avatar-image" style="display: none;" alt="Profile Avatar">
-                        <div class="profile-avatar-upload" id="avatar-upload">
-                            <i class="fas fa-camera"></i> Змінити
-                        </div>
-                        <input type="file" id="avatar-input" style="display: none;" accept="image/*">
-                    </div>
-                    <div class="profile-info">
-                        <h1 id="profile-name">Завантаження...</h1>
-                        <p id="profile-username">@username</p>
-                    </div>
+            <div class="profile-info">
+              <h1 class="profile-name" id="profileName">Завантаження...</h1>
+              <p class="profile-username" id="profileUsername">@username</p>
+              <div class="profile-stats">
+                <div class="stat-item">
+                  <div class="stat-value" id="ordersCount">0</div>
+                  <div class="stat-label">Замовлень</div>
                 </div>
-                <div class="profile-stats">
-                    <div class="stat-item">
-                        <div class="stat-value" id="orders-count">0</div>
-                        <div class="stat-label">Замовлень</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="rating-value">0.0</div>
-                        <div class="stat-label">Рейтинг</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="reviews-count">0</div>
-                        <div class="stat-label">Відгуків</div>
-                    </div>
+                <div class="stat-item">
+                  <div class="stat-value" id="ratingValue">0.0</div>
+                  <div class="stat-label">Рейтинг</div>
                 </div>
-            </div>
-
-            <div class="tabs">
-                <div class="tab active" data-tab="profile">Профіль</div>
-                <div class="tab" data-tab="services">Послуги</div>
-                <div class="tab" data-tab="orders">Замовлення</div>
-                <div class="tab" data-tab="reviews">Відгуки</div>
-                <div class="tab" data-tab="settings">Налаштування</div>
-            </div>
-
-            <div id="tab-profile" class="tab-content active">
-                <form id="profile-form">
-                    <div class="form-group">
-                        <label for="first_name">Ім'я:</label>
-                        <input type="text" id="first_name" name="first_name" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="last_name">Прізвище:</label>
-                        <input type="text" id="last_name" name="last_name" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="email">Електронна пошта:</label>
-                        <input type="email" id="email" name="email" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="phone">Телефон:</label>
-                        <input type="text" id="phone" name="phone" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="address">Адреса:</label>
-                        <textarea id="address" name="address" required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="date_of_birth">Дата народження:</label>
-                        <input type="date" id="date_of_birth" name="date_of_birth" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="bio">Про себе:</label>
-                        <textarea id="bio" name="bio" rows="4" placeholder="Розкажіть про себе, свій досвід та навички..."></textarea>
-                    </div>
-
-                    <label class="checkbox-wrapper">
-                        <input type="checkbox" id="role_master" name="role_master" />
-                        <span class="checkmark"></span>
-                        Я майстер
-                        <span id="approval-status"></span>
-                    </label>
-
-                    <button type="submit"><i class="fas fa-save"></i> Оновити профіль</button>
-                </form>
-            </div>
-
-            <div id="tab-services" class="tab-content">
-                <div id="services" class="visible">
-                    <label>Оберіть галузь:</label>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Інформаційні технології" data-industry="it"><span class="checkmark"></span>Інформаційні технології</label></div>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Медицина" data-industry="medicine"><span class="checkmark"></span>Медицина</label></div>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Енергетика" data-industry="energy"><span class="checkmark"></span>Енергетика</label></div>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Аграрна галузь" data-industry="agriculture"><span class="checkmark"></span>Аграрна галузь</label></div>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Фінанси та банківська справа" data-industry="finance"><span class="checkmark"></span>Фінанси та банківська справа</label></div>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Освіта" data-industry="education"><span class="checkmark"></span>Освіта</label></div>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Туризм і гостинність" data-industry="tourism"><span class="checkmark"></span>Туризм і гостинність</label></div>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Будівництво та нерухомість" data-industry="construction"><span class="checkmark"></span>Будівництво та нерухомість</label></div>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Транспорт" data-industry="transport"><span class="checkmark"></span>Транспорт</label></div>
-                    <div class="service-option"><label class="checkbox-wrapper"><input type="checkbox" name="industry" value="Мистецтво і культура" data-industry="art"><span class="checkmark"></span>Мистецтво і культура</label></div>
-                    
-                    <!-- Industry-specific skills sections -->
-                    <div id="it-skills" class="industry-skills">
-                        <h3>Навички в галузі Інформаційних технологій:</h3>
-                        <div class="form-group">
-                            <label for="it-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="it-skills-text" name="it-skills-text" placeholder="Наприклад: Розробка веб-сайтів, мобільних додатків, налаштування серверів..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Розробка веб-сайтів, мобільних додатків, налаштування серверів...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="medicine-skills" class="industry-skills">
-                        <h3>Навички в галузі Медицини:</h3>
-                        <div class="form-group">
-                            <label for="medicine-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="medicine-skills-text" name="medicine-skills-text" placeholder="Наприклад: Терапія, хірургія, педіатрія..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Терапія, хірургія, педіатрія...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="energy-skills" class="industry-skills">
-                        <h3>Навички в галузі Енергетики:</h3>
-                        <div class="form-group">
-                            <label for="energy-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="energy-skills-text" name="energy-skills-text" placeholder="Наприклад: Відновлювана енергетика, електроенергетика..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Відновлювана енергетика, електроенергетика...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="agriculture-skills" class="industry-skills">
-                        <h3>Навички в Аграрній галузі:</h3>
-                        <div class="form-group">
-                            <label for="agriculture-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="agriculture-skills-text" name="agriculture-skills-text" placeholder="Наприклад: Рослинництво, тваринництво, агрономія..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Рослинництво, тваринництво, агрономія...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="finance-skills" class="industry-skills">
-                        <h3>Навички в галузі Фінансів та банківської справи:</h3>
-                        <div class="form-group">
-                            <label for="finance-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="finance-skills-text" name="finance-skills-text" placeholder="Наприклад: Бухгалтерський облік, фінансовий аналіз..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Бухгалтерський облік, фінансовий аналіз...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="education-skills" class="industry-skills">
-                        <h3>Навички в галузі Освіти:</h3>
-                        <div class="form-group">
-                            <label for="education-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="education-skills-text" name="education-skills-text" placeholder="Наприклад: Викладання, репетиторство, розробка навчальних програм..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Викладання, репетиторство, розробка навчальних програм...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="tourism-skills" class="industry-skills">
-                        <h3>Навички в галузі Туризму і гостинності:</h3>
-                        <div class="form-group">
-                            <label for="tourism-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="tourism-skills-text" name="tourism-skills-text" placeholder="Наприклад: Організація турів, готельний менеджмент..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Організація турів, готельний менеджмент...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="construction-skills" class="industry-skills">
-                        <h3>Навички в галузі Будівництва та нерухомості:</h3>
-                        <div class="form-group">
-                            <label for="construction-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="construction-skills-text" name="construction-skills-text" placeholder="Наприклад: Архітектурне проектування, будівельні роботи..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Архітектурне проектування, будівельні роботи...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="transport-skills" class="industry-skills">
-                        <h3>Навички в галузі Транспорту:</h3>
-                        <div class="form-group">
-                            <label for="transport-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="transport-skills-text" name="transport-skills-text" placeholder="Наприклад: Логістика, вантажні перевезення..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Логістика, вантажні перевезення...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="art-skills" class="industry-skills">
-                        <h3>Навички в галузі Мистецтва і культури:</h3>
-                        <div class="form-group">
-                            <label for="art-skills-text">Опишіть ваші навички в цій галузі:</label>
-                            <textarea id="art-skills-text" name="art-skills-text" placeholder="Наприклад: Образотворче мистецтво, музика, театр..." rows="4"></textarea>
-                            <p class="hint" style="font-size: 0.8rem; color: #999; margin-top: 5px;">Приклад: Образотворче мистецтво, музика, театр...</p>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group custom-skills" style="margin-top: 20px;">
-                        <label for="custom-skills">Інші навички (вкажіть самостійно):</label>
-                        <textarea id="custom-skills" name="custom-skills" placeholder="Вкажіть інші навички, які у вас є, але не зазначені вище..." rows="4"></textarea>
-                    </div>
-
-                    <button type="button" id="save-services"><i class="fas fa-save"></i> Зберегти послуги</button>
+                <div class="stat-item">
+                  <div class="stat-value" id="reviewsCount">0</div>
+                  <div class="stat-label">Відгуків</div>
                 </div>
+              </div>
             </div>
+          </div>
 
-            <div id="tab-orders" class="tab-content">
-                <div class="loading-container" id="orders-loading">
-                    <div class="loading-spinner"></div>
+          <div class="tabs">
+            <div class="tab active" data-tab="profile">Профіль</div>
+            <div class="tab" data-tab="services">Послуги</div>
+            <div class="tab" data-tab="orders">Замовлення</div>
+            <div class="tab" data-tab="reviews">Відгуки</div>
+            <div class="tab" data-tab="settings">Налаштування</div>
+          </div>
+
+          <!-- Profile Tab -->
+          <div id="profileTab" class="tab-content active">
+            <form id="profileForm">
+              <div class="form-group">
+                <label for="firstName">Ім'я:</label>
+                <input type="text" id="firstName" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label for="lastName">Прізвище:</label>
+                <input type="text" id="lastName" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label for="email">Електронна пошта:</label>
+                <input type="email" id="email" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label for="phone">Телефон:</label>
+                <input type="text" id="phone" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label for="address">Адреса:</label>
+                <textarea id="address" class="form-input" required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="dateOfBirth">Дата народження:</label>
+                <input
+                  type="date"
+                  id="dateOfBirth"
+                  class="form-input"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="bio">Про себе:</label>
+                <textarea
+                  id="bio"
+                  class="form-input"
+                  rows="4"
+                  placeholder="Розкажіть про себе, свій досвід та навички..."
+                ></textarea>
+              </div>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="roleMaster" />
+                <label for="roleMaster">Я майстер</label>
+                <span id="approvalStatus"></span>
+              </div>
+              <button type="submit" class="form-button">
+                <i class="fas fa-save"></i> Оновити профіль
+              </button>
+            </form>
+          </div>
+
+          <!-- Services Tab -->
+          <div id="servicesTab" class="tab-content">
+            <div class="services-container" id="servicesContainer">
+              <h3>Оберіть галузь:</h3>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryIT"
+                    name="industry"
+                    value="Інформаційні технології"
+                    data-industry="it"
+                  />
+                  <label for="industryIT">Інформаційні технології</label>
                 </div>
-                <div class="orders-container" id="orders-container"></div>
-            </div>
-
-            <div id="tab-reviews" class="tab-content">
-                <div class="loading-container" id="reviews-loading">
-                    <div class="loading-spinner"></div>
+              </div>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryMedicine"
+                    name="industry"
+                    value="Медицина"
+                    data-industry="medicine"
+                  />
+                  <label for="industryMedicine">Медицина</label>
                 </div>
-                <div class="reviews-container" id="reviews-container"></div>
-            </div>
+              </div>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryEnergy"
+                    name="industry"
+                    value="Енергетика"
+                    data-industry="energy"
+                  />
+                  <label for="industryEnergy">Енергетика</label>
+                </div>
+              </div>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryAgriculture"
+                    name="industry"
+                    value="Аграрна галузь"
+                    data-industry="agriculture"
+                  />
+                  <label for="industryAgriculture">Аграрна галузь</label>
+                </div>
+              </div>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryFinance"
+                    name="industry"
+                    value="Фінанси та банківська справа"
+                    data-industry="finance"
+                  />
+                  <label for="industryFinance"
+                    >Фінанси та банківська справа</label
+                  >
+                </div>
+              </div>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryEducation"
+                    name="industry"
+                    value="Освіта"
+                    data-industry="education"
+                  />
+                  <label for="industryEducation">Освіта</label>
+                </div>
+              </div>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryTourism"
+                    name="industry"
+                    value="Туризм і гостинність"
+                    data-industry="tourism"
+                  />
+                  <label for="industryTourism">Туризм і гостинність</label>
+                </div>
+              </div>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryConstruction"
+                    name="industry"
+                    value="Будівництво та нерухомість"
+                    data-industry="construction"
+                  />
+                  <label for="industryConstruction"
+                    >Будівництво та нерухомість</label
+                  >
+                </div>
+              </div>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryTransport"
+                    name="industry"
+                    value="Транспорт"
+                    data-industry="transport"
+                  />
+                  <label for="industryTransport">Транспорт</label>
+                </div>
+              </div>
+              <div class="service-option">
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="industryArt"
+                    name="industry"
+                    value="Мистецтво і культура"
+                    data-industry="art"
+                  />
+                  <label for="industryArt">Мистецтво і культура</label>
+                </div>
+              </div>
 
-            <div id="tab-settings" class="tab-content">
-                <h3>Змінити пароль</h3>
-                <form id="password-form">
-                    <div class="form-group">
-                        <label for="current-password">Поточний пароль:</label>
-                        <input type="password" id="current-password" name="current-password" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="new-password">Новий пароль:</label>
-                        <input type="password" id="new-password" name="new-password" required />
-                        <div class="password-strength" id="password-strength"></div>
-                        <div class="password-requirements">
-                            <div class="requirement" id="req-length"><i class="fas fa-circle"></i> Мінімум 8 символів</div>
-                            <div class="requirement" id="req-uppercase"><i class="fas fa-circle"></i> Мінімум 1 велика літера</div>
-                            <div class="requirement" id="req-lowercase"><i class="fas fa-circle"></i> Мінімум 1 мала літера</div>
-                            <div class="requirement" id="req-number"><i class="fas fa-circle"></i> Мінімум 1 цифра</div>
-                            <div class="requirement" id="req-special"><i class="fas fa-circle"></i> Мінімум 1 спеціальний символ</div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="confirm-password">Підтвердіть новий пароль:</label>
-                        <input type="password" id="confirm-password" name="confirm-password" required />
-                    </div>
-
-                    <button type="submit"><i class="fas fa-key"></i> Змінити пароль</button>
-                </form>
-
-                <h3 style="margin-top: 30px;">Налаштування сповіщень</h3>
+              <!-- Industry Skills Sections -->
+              <div id="itSkills" class="industry-skills">
+                <h3>Навички в галузі Інформаційних технологій:</h3>
                 <div class="form-group">
-                    <label class="checkbox-wrapper">
-                        <input type="checkbox" id="email-notifications" name="email-notifications" checked />
-                        <span class="checkmark"></span>
-                        Отримувати сповіщення на електронну пошту
-                    </label>
+                  <label for="itSkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="itSkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Розробка веб-сайтів, мобільних додатків, налаштування серверів..."
+                    rows="4"
+                  ></textarea>
                 </div>
+              </div>
 
+              <div id="medicineSkills" class="industry-skills">
+                <h3>Навички в галузі Медицини:</h3>
                 <div class="form-group">
-                    <label class="checkbox-wrapper">
-                        <input type="checkbox" id="order-notifications" name="order-notifications" checked />
-                        <span class="checkmark"></span>
-                        Сповіщення про нові замовлення
-                    </label>
+                  <label for="medicineSkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="medicineSkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Терапія, хірургія, педіатрія..."
+                    rows="4"
+                  ></textarea>
                 </div>
+              </div>
 
+              <div id="energySkills" class="industry-skills">
+                <h3>Навички в галузі Енергетики:</h3>
                 <div class="form-group">
-                    <label class="checkbox-wrapper">
-                        <input type="checkbox" id="review-notifications" name="review-notifications" checked />
-                        <span class="checkmark"></span>
-                        Сповіщення про нові відгуки
-                    </label>
+                  <label for="energySkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="energySkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Відновлювана енергетика, електроенергетика..."
+                    rows="4"
+                  ></textarea>
                 </div>
+              </div>
 
-                <button type="button" id="save-settings"><i class="fas fa-save"></i> Зберегти налаштування</button>
+              <div id="agricultureSkills" class="industry-skills">
+                <h3>Навички в Аграрній галузі:</h3>
+                <div class="form-group">
+                  <label for="agricultureSkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="agricultureSkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Рослинництво, тваринництво, агрономія..."
+                    rows="4"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div id="financeSkills" class="industry-skills">
+                <h3>Навички в галузі Фінансів та банківської справи:</h3>
+                <div class="form-group">
+                  <label for="financeSkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="financeSkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Бухгалтерський облік, фінансовий аналіз..."
+                    rows="4"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div id="educationSkills" class="industry-skills">
+                <h3>Навички в галузі Освіти:</h3>
+                <div class="form-group">
+                  <label for="educationSkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="educationSkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Викладання, репетиторство, розробка навчальних програм..."
+                    rows="4"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div id="tourismSkills" class="industry-skills">
+                <h3>Навички в галузі Туризму і гостинності:</h3>
+                <div class="form-group">
+                  <label for="tourismSkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="tourismSkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Організація турів, готельний менеджмент..."
+                    rows="4"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div id="constructionSkills" class="industry-skills">
+                <h3>Навички в галузі Будівництва та нерухомості:</h3>
+                <div class="form-group">
+                  <label for="constructionSkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="constructionSkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Архітектурне проектування, будівельні роботи..."
+                    rows="4"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div id="transportSkills" class="industry-skills">
+                <h3>Навички в галузі Транспорту:</h3>
+                <div class="form-group">
+                  <label for="transportSkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="transportSkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Логістика, вантажні перевезення..."
+                    rows="4"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div id="artSkills" class="industry-skills">
+                <h3>Навички в галузі Мистецтва і культури:</h3>
+                <div class="form-group">
+                  <label for="artSkillsText"
+                    >Опишіть ваші навички в цій галузі:</label
+                  >
+                  <textarea
+                    id="artSkillsText"
+                    class="form-input"
+                    placeholder="Наприклад: Образотворче мистецтво, музика, театр..."
+                    rows="4"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top: 20px">
+                <label for="customSkills"
+                  >Інші навички (вкажіть самостійно):</label
+                >
+                <textarea
+                  id="customSkills"
+                  class="form-input"
+                  placeholder="Вкажіть інші навички, які у вас є, але не зазначені вище..."
+                  rows="4"
+                ></textarea>
+              </div>
+
+              <button type="button" id="saveServices" class="form-button">
+                <i class="fas fa-save"></i> Зберегти послуги
+              </button>
+            </div>
+          </div>
+
+          <!-- Orders Tab -->
+          <div id="ordersTab" class="tab-content">
+            <div class="loading-container" id="ordersLoading">
+              <div class="loading-spinner"></div>
+            </div>
+            <div class="orders-container" id="ordersContainer"></div>
+          </div>
+
+          <!-- Reviews Tab -->
+          <div id="reviewsTab" class="tab-content">
+            <div class="loading-container" id="reviewsLoading">
+              <div class="loading-spinner"></div>
+            </div>
+            <div class="reviews-container" id="reviewsContainer"></div>
+          </div>
+
+          <!-- Settings Tab -->
+          <div id="settingsTab" class="tab-content">
+            <div class="settings-section">
+              <h3 class="settings-title">Змінити пароль</h3>
+              <form id="passwordForm">
+                <div class="form-group">
+                  <label for="currentPassword">Поточний пароль:</label>
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    class="form-input"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="newPassword">Новий пароль:</label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    class="form-input"
+                    required
+                  />
+                  <div class="password-strength">
+                    <div
+                      class="password-strength-meter"
+                      id="passwordStrengthMeter"
+                    ></div>
+                  </div>
+                  <div class="password-requirements">
+                    <div class="requirement" id="reqLength">
+                      <i class="fas fa-circle"></i> Мінімум 8 символів
+                    </div>
+                    <div class="requirement" id="reqUppercase">
+                      <i class="fas fa-circle"></i> Мінімум 1 велика літера
+                    </div>
+                    <div class="requirement" id="reqLowercase">
+                      <i class="fas fa-circle"></i> Мінімум 1 мала літера
+                    </div>
+                    <div class="requirement" id="reqNumber">
+                      <i class="fas fa-circle"></i> Мінімум 1 цифра
+                    </div>
+                    <div class="requirement" id="reqSpecial">
+                      <i class="fas fa-circle"></i> Мінімум 1 спеціальний символ
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="confirmPassword">Підтвердіть новий пароль:</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    class="form-input"
+                    required
+                  />
+                </div>
+                <button type="submit" class="form-button">
+                  <i class="fas fa-key"></i> Змінити пароль
+                </button>
+              </form>
             </div>
 
-            <div id="error-message" style="display: none;"></div>
-            <div id="success-message" style="display: none;"></div>
-        </main>
+            <div class="settings-section">
+              <h3 class="settings-title">Налаштування сповіщень</h3>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="emailNotifications" checked />
+                <label for="emailNotifications"
+                  >Отримувати сповіщення на електронну пошту</label
+                >
+              </div>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="orderNotifications" checked />
+                <label for="orderNotifications"
+                  >Сповіщення про нові замовлення</label
+                >
+              </div>
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="reviewNotifications" checked />
+                <label for="reviewNotifications"
+                  >Сповіщення про нові відгуки</label
+                >
+              </div>
+              <button type="button" id="saveSettings" class="form-button">
+                <i class="fas fa-save"></i> Зберегти налаштування
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-        // Theme toggle functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
-        
-        // Check for saved theme preference
-        if (localStorage.getItem('theme') === 'light') {
-            htmlElement.classList.remove('dark');
-            htmlElement.classList.add('light');
-            themeToggle.checked = true;
+      // Theme Toggle
+      const themeToggle = document.getElementById("themeToggle");
+      const htmlElement = document.documentElement;
+
+      // Check for saved theme preference
+      if (localStorage.getItem("theme") === "light") {
+        htmlElement.classList.remove("dark");
+        htmlElement.classList.add("light");
+        themeToggle.checked = true;
+      }
+
+      // Toggle theme when switch is clicked
+      themeToggle.addEventListener("change", function () {
+        if (this.checked) {
+          htmlElement.classList.remove("dark");
+          htmlElement.classList.add("light");
+          localStorage.setItem("theme", "light");
+        } else {
+          htmlElement.classList.remove("light");
+          htmlElement.classList.add("dark");
+          localStorage.setItem("theme", "dark");
         }
-        
-        // Toggle theme when switch is clicked
-        themeToggle.addEventListener('change', function() {
-            if (this.checked) {
-                htmlElement.classList.remove('dark');
-                htmlElement.classList.add('light');
-                localStorage.setItem('theme', 'light');
-            } else {
-                htmlElement.classList.remove('light');
-                htmlElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
+      });
+
+      // Mobile Menu Toggle
+      const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+      const navMenu = document.getElementById("navMenu");
+
+      mobileMenuBtn.addEventListener("click", function () {
+        navMenu.classList.toggle("active");
+
+        // Change icon based on menu state
+        const icon = this.querySelector("i");
+        if (navMenu.classList.contains("active")) {
+          icon.classList.remove("fa-bars");
+          icon.classList.add("fa-times");
+        } else {
+          icon.classList.remove("fa-times");
+          icon.classList.add("fa-bars");
+        }
+      });
+
+      // Tab Switching
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", function () {
+          // Remove active class from all tabs
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((c) => c.classList.remove("active"));
+
+          // Add active class to clicked tab
+          this.classList.add("active");
+
+          // Show corresponding content
+          const tabName = this.getAttribute("data-tab");
+          document.getElementById(`${tabName}Tab`).classList.add("active");
+
+          // Load content based on tab
+          if (tabName === "orders") {
+            loadUserOrders();
+          } else if (tabName === "reviews") {
+            loadUserReviews();
+          }
+        });
+      });
+
+      // Toast Notification System
+      function showToast(title, message, type = "info", duration = 5000) {
+        const toastContainer = document.getElementById("toastContainer");
+
+        const toast = document.createElement("div");
+        toast.className = "toast";
+
+        let iconClass = "fa-info-circle";
+        if (type === "success") iconClass = "fa-check-circle";
+        if (type === "error") iconClass = "fa-exclamation-circle";
+        if (type === "warning") iconClass = "fa-exclamation-triangle";
+
+        toast.innerHTML = `
+        <div class="toast-icon"><i class="fas ${iconClass}"></i></div>
+        <div class="toast-content">
+          <div class="toast-title">${title}</div>
+          <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close"><i class="fas fa-times"></i></button>
+        <div class="toast-progress"></div>
+      `;
+
+        toastContainer.appendChild(toast);
+
+        // Show toast with animation
+        setTimeout(() => {
+          toast.classList.add("show");
+        }, 10);
+
+        // Close button functionality
+        const closeBtn = toast.querySelector(".toast-close");
+        closeBtn.addEventListener("click", () => {
+          toast.classList.remove("show");
+          setTimeout(() => {
+            toast.remove();
+          }, 300);
         });
 
-        // Tab functionality
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                // Remove active class from all tabs
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked tab
-                this.classList.add('active');
-                
-                // Show corresponding content
-                const tabName = this.getAttribute('data-tab');
-                document.getElementById(`tab-${tabName}`).classList.add('active');
-                
-                // Load content based on tab
-                if (tabName === 'orders') {
-                    loadUserOrders();
-                } else if (tabName === 'reviews') {
-                    loadUserReviews();
-                } else if (tabName === 'services') {
-                    loadUserServices(getUserId());
-                }
-            });
-        });
-
-        // Function to get user ID
-        function getUserId() {
-            const userId = localStorage.getItem('userId');
-            if (userId) {
-                return userId;
-            }
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlUserId = urlParams.get('userId');
-            
-            if (urlUserId) {
-                localStorage.setItem('userId', urlUserId);
-                return urlUserId;
-            }
-            
-            alert('Необхідно авторизуватися');
-            window.location.href = '/auth.html';
-            return null;
-        }
-
-        // Function to load user profile
-        async function loadUserProfile() {
-            const userId = getUserId();
-            if (!userId) return;
-            
-            try {
-                const response = await fetch(`/profile/${userId}`);
-                
-                if (!response.ok) {
-                    throw new Error('Не вдалося завантажити профіль');
-                }
-                
-                const data = await response.json();
-                
-                if (data.profile) {
-                    // Update profile header
-                    updateProfileHeader(data.profile);
-                    
-                    // Update form fields
-                    document.getElementById("first_name").value = data.profile.first_name || '';
-                    document.getElementById("last_name").value = data.profile.last_name || '';
-                    document.getElementById("email").value = data.profile.email || '';
-                    document.getElementById("phone").value = data.profile.phone || '';
-                    document.getElementById("address").value = data.profile.address || '';
-                    document.getElementById("bio").value = data.profile.bio || '';
-                    
-                    if (data.profile.date_of_birth) {
-                        const date = new Date(data.profile.date_of_birth);
-                        const formattedDate = date.toISOString().split('T')[0];
-                        document.getElementById("date_of_birth").value = formattedDate;
-                    }
-                    
-                    document.getElementById("role_master").checked = data.profile.role_master || false;
-                    
-                    // Display approval status if available
-                    if (data.profile.approval_status) {
-                        const statusElement = document.getElementById('approval-status');
-                        statusElement.textContent = getStatusText(data.profile.approval_status);
-                        statusElement.className = `status-${data.profile.approval_status}`;
-                    }
-                    
-                    // Update notification badge
-                    if (data.unreadNotifications > 0) {
-                        const notificationBadge = document.getElementById('notifications-btn');
-                        notificationBadge.setAttribute('data-count', data.unreadNotifications);
-                        notificationBadge.classList.add('has-notifications');
-                    }
-                    
-                    // Update stats
-                    document.getElementById('rating-value').textContent = data.profile.rating || '0.0';
-                    document.getElementById('reviews-count').textContent = data.profile.reviews_count || '0';
-                    document.getElementById('orders-count').textContent = data.ordersCount || '0';
-                }
-            } catch (error) {
-                showError(error.message);
-            }
-        }
-        
-        // Function to update profile header
-        function updateProfileHeader(profile) {
-            // Set profile name
-            const profileName = document.getElementById('profile-name');
-            profileName.textContent = profile.first_name && profile.last_name 
-                ? `${profile.first_name} ${profile.last_name}`
-                : profile.username;
-            
-            // Set username
-            document.getElementById('profile-username').textContent = `@${profile.username}`;
-            
-            // Set avatar initials
-            const avatarInitials = document.getElementById('avatar-initials');
-            if (profile.first_name && profile.last_name) {
-                avatarInitials.textContent = `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`;
-            } else {
-                avatarInitials.textContent = profile.username.charAt(0).toUpperCase();
-            }
-            
-            // Set avatar image if available
-            if (profile.profile_image_url) {
-                const avatarImage = document.getElementById('avatar-image');
-                avatarImage.src = profile.profile_image_url;
-                avatarImage.style.display = 'block';
-                avatarInitials.style.display = 'none';
-            }
-        }
-        
-        function getStatusText(status) {
-            switch(status) {
-                case 'pending': return 'На розгляді';
-                case 'approved': return 'Затверджено';
-                case 'rejected': return 'Відхилено';
-                default: return '';
-            }
-        }
-        
-        // Function to load user services
-        async function loadUserServices(userId) {
-            try {
-                const response = await fetch(`/services/${userId}`);
-                
-                if (!response.ok) {
-                    throw new Error('Не вдалося завантажити послуги');
-                }
-                
-                const data = await response.json();
-                
-                if (data.services && data.services.length > 0) {
-                    // Reset all checkboxes
-                    document.querySelectorAll('#services input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.checked = false;
-                    });
-                    
-                    // Clear all textareas
-                    document.querySelectorAll('#services textarea').forEach(textarea => {
-                        textarea.value = '';
-                    });
-                    
-                    const selectedIndustries = [];
-                    
-                    data.services.forEach(service => {
-                        if (service.service_type === 'industry') {
-                            const checkbox = Array.from(document.querySelectorAll('#services input[name="industry"]'))
-                                .find(cb => cb.value === service.service_name);
-                            
-                            if (checkbox) {
-                                checkbox.checked = true;
-                                selectedIndustries.push(checkbox.dataset.industry);
-                            }
-                        } else if (service.service_type.endsWith('-skills-text')) {
-                            const textarea = document.getElementById(service.service_type);
-                            if (textarea) {
-                                textarea.value = service.service_name;
-                            }
-                        } else if (service.service_type === 'custom-skills') {
-                            document.getElementById('custom-skills').value = service.service_name;
-                        }
-                    });
-                    
-                    // Show industry-specific skills sections
-                    selectedIndustries.forEach(industry => {
-                        const skillsSection = document.getElementById(`${industry}-skills`);
-                        if (skillsSection) {
-                            skillsSection.classList.add('visible');
-                            // Add random animation class for initial load
-                            const animations = ['slide-in-right', 'slide-in-left', 'slide-in-top', 'slide-in-bottom'];
-                            const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
-                            skillsSection.classList.add(randomAnimation);
-                        }
-                    });
-                }
-            } catch (error) {
-                showError(error.message);
-            }
-        }
-        
-        // Function to load user orders
-        async function loadUserOrders() {
-            const userId = getUserId();
-            if (!userId) return;
-            
-            const ordersContainer = document.getElementById('orders-container');
-            const loadingElement = document.getElementById('orders-loading');
-            
-            ordersContainer.innerHTML = '';
-            loadingElement.style.display = 'flex';
-            
-            try {
-                const response = await fetch(`/orders/user/${userId}`);
-                
-                if (!response.ok) {
-                    throw new Error('Не вдалося завантажити замовлення');
-                }
-                
-                const data = await response.json();
-                
-                loadingElement.style.display = 'none';
-                
-                if (data.orders && data.orders.length > 0) {
-                    // Update orders count
-                    document.getElementById('orders-count').textContent = data.orders.length;
-                    
-                    data.orders.forEach((order, index) => {
-                        // Add animation delay based on index
-                        const delay = index * 0.1;
-                        
-                        const orderCard = document.createElement('div');
-                        orderCard.className = 'order-card';
-                        orderCard.style.animationDelay = `${delay}s`;
-                        
-                        const statusClass = `status-${order.status}`;
-                        const statusText = getOrderStatusText(order.status);
-                        
-                        orderCard.innerHTML = `
-                            <div class="order-header">
-                                <div class="order-number">${order.order_number}</div>
-                                <div class="order-title">${order.title}</div>
-                                <div class="order-status ${statusClass}">${statusText}</div>
-                            </div>
-                            <div class="order-body">
-                                <div class="order-info">
-                                    <div class="order-info-item">
-                                        <div class="order-info-label">Галузь:</div>
-                                        <div class="order-info-value">${order.industry || 'Не вказано'}</div>
-                                    </div>
-                                    <div class="order-info-item">
-                                        <div class="order-info-label">Дата створення:</div>
-                                        <div class="order-info-value">${formatDate(order.created_at)}</div>
-                                    </div>
-                                    <div class="order-info-item">
-                                        <div class="order-info-label">Ціна:</div>
-                                        <div class="order-info-value">${order.price ? `${order.price} грн` : 'За домовленістю'}</div>
-                                    </div>
-                                    <div class="order-info-item">
-                                        <div class="order-info-label">Статус оплати:</div>
-                                        <div class="order-info-value">${getPaymentStatusText(order.payment_status)}</div>
-                                    </div>
-                                </div>
-                                <div class="order-actions">
-                                    <button onclick="viewOrderDetails(${order.id})"><i class="fas fa-eye"></i> Деталі</button>
-                                    ${order.status === 'completed' ? 
-                                        `<button onclick="leaveReview(${order.id}, ${order.master_id})"><i class="fas fa-star"></i> Відгук</button>` : 
-                                        ''}
-                                    ${order.status === 'pending' ? 
-                                        `<button onclick="cancelOrder(${order.id})"><i class="fas fa-times"></i> Скасувати</button>` : 
-                                        ''}
-                                </div>
-                            </div>
-                        `;
-                        
-                        ordersContainer.appendChild(orderCard);
-                    });
-                } else {
-                    ordersContainer.innerHTML = '<p style="text-align: center; padding: 30px;">У вас ще немає замовлень</p>';
-                }
-            } catch (error) {
-                loadingElement.style.display = 'none';
-                ordersContainer.innerHTML = `<p style="text-align: center; padding: 30px; color: var(--danger-color);">Помилка: ${error.message}</p>`;
-            }
-        }
-        
-        // Function to load user reviews
-        async function loadUserReviews() {
-            const userId = getUserId();
-            if (!userId) return;
-            
-            const reviewsContainer = document.getElementById('reviews-container');
-            const loadingElement = document.getElementById('reviews-loading');
-            
-            reviewsContainer.innerHTML = '';
-            loadingElement.style.display = 'flex';
-            
-            try {
-                const response = await fetch(`/reviews/master/${userId}`);
-                
-                if (!response.ok) {
-                    throw new Error('Не вдалося завантажити відгуки');
-                }
-                
-                const data = await response.json();
-                
-                loadingElement.style.display = 'none';
-                
-                if (data.reviews && data.reviews.length > 0) {
-                    data.reviews.forEach((review, index) => {
-                        // Add animation delay based on index
-                        const delay = index * 0.1;
-                        
-                        const reviewCard = document.createElement('div');
-                        reviewCard.className = 'review-card';
-                        reviewCard.style.animationDelay = `${delay}s`;
-                        
-                        const reviewerName = review.user_first_name && review.user_last_name 
-                            ? `${review.user_first_name} ${review.user_last_name}`
-                            : review.user_username;
-                        
-                        const reviewerInitials = review.user_first_name && review.user_last_name
-                            ? `${review.user_first_name.charAt(0)}${review.user_last_name.charAt(0)}`
-                            : review.user_username.charAt(0).toUpperCase();
-                        
-                        reviewCard.innerHTML = `
-                            <div class="review-header">
-                                <div class="reviewer-info">
-                                    <div class="reviewer-avatar">${reviewerInitials}</div>
-                                    <div>
-                                        <div class="reviewer-name">${reviewerName}</div>
-                                        <div class="review-date">${formatDate(review.created_at)}</div>
-                                    </div>
-                                </div>
-                                <div class="review-rating">
-                                    ${generateStarRating(review.rating)}
-                                </div>
-                            </div>
-                            <div class="review-content">
-                                ${review.comment || 'Без коментаря'}
-                            </div>
-                            <div class="review-order">
-                                Замовлення: ${review.order_title} (${review.order_number})
-                            </div>
-                        `;
-                        
-                        reviewsContainer.appendChild(reviewCard);
-                    });
-                } else {
-                    reviewsContainer.innerHTML = '<p style="text-align: center; padding: 30px;">У вас ще немає відгуків</p>';
-                }
-            } catch (error) {
-                loadingElement.style.display = 'none';
-                reviewsContainer.innerHTML = `<p style="text-align: center; padding: 30px; color: var(--danger-color);">Помилка: ${error.message}</p>`;
-            }
-        }
-        
-        // Helper function to generate star rating
-        function generateStarRating(rating) {
-            let stars = '';
-            for (let i = 1; i <= 5; i++) {
-                if (i <= rating) {
-                    stars += '<i class="fas fa-star"></i>';
-                } else if (i - 0.5 <= rating) {
-                    stars += '<i class="fas fa-star-half-alt"></i>';
-                } else {
-                    stars += '<i class="far fa-star"></i>';
-                }
-            }
-            return stars;
-        }
-        
-        // Helper function to format date
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('uk-UA', { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-        
-        // Helper function to get order status text
-        function getOrderStatusText(status) {
-            switch(status) {
-                case 'pending': return 'Очікує';
-                case 'approved': return 'Прийнято';
-                case 'completed': return 'Виконано';
-                case 'cancelled': return 'Скасовано';
-                case 'rejected': return 'Відхилено';
-                default: return status;
-            }
-        }
-        
-        // Helper function to get payment status text
-        function getPaymentStatusText(status) {
-            switch(status) {
-                case 'unpaid': return 'Не оплачено';
-                case 'paid': return 'Оплачено';
-                case 'refunded': return 'Повернуто';
-                default: return status || 'Не оплачено';
-            }
-        }
-        
-        // Function to show error message
-        function showError(message) {
-            const errorElement = document.getElementById('error-message');
-            errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-            errorElement.style.display = 'flex';
-            
+        // Auto close after duration
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.classList.remove("show");
             setTimeout(() => {
-                errorElement.style.animation = 'fadeInScale 0.4s ease-out reverse';
-                setTimeout(() => {
-                    errorElement.style.display = 'none';
-                    errorElement.style.animation = '';
-                }, 400);
-            }, 5000);
+              if (toast.parentNode) toast.remove();
+            }, 300);
+          }
+        }, duration);
+      }
+
+      // Load User Profile
+      function loadUserProfile() {
+        // Get user data from localStorage
+        const userData = JSON.parse(localStorage.getItem("userData")) || {};
+
+        // Update profile header
+        updateProfileHeader(userData);
+
+        // Update form fields
+        document.getElementById("firstName").value = userData.firstName || "";
+        document.getElementById("lastName").value = userData.lastName || "";
+        document.getElementById("email").value = userData.email || "";
+        document.getElementById("phone").value = userData.phone || "";
+        document.getElementById("address").value = userData.address || "";
+        document.getElementById("bio").value = userData.bio || "";
+
+        if (userData.dateOfBirth) {
+          document.getElementById("dateOfBirth").value = userData.dateOfBirth;
         }
-        
-        // Function to show success message
-        function showSuccess(message) {
-            const successElement = document.getElementById('success-message');
-            successElement.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-            successElement.style.display = 'flex';
-            
-            setTimeout(() => {
-                successElement.style.animation = 'fadeInScale 0.4s ease-out reverse';
-                setTimeout(() => {
-                    successElement.style.display = 'none';
-                    successElement.style.animation = '';
-                }, 400);
-            }, 5000);
+
+        document.getElementById("roleMaster").checked =
+          userData.roleMaster || false;
+
+        // Display approval status if available
+        if (userData.approvalStatus) {
+          const statusElement = document.getElementById("approvalStatus");
+          statusElement.textContent = getStatusText(userData.approvalStatus);
+          statusElement.className = `status-${userData.approvalStatus}`;
         }
 
-        // Form submission handler
-        document.getElementById("profile-form").addEventListener("submit", async function (event) {
-            event.preventDefault();
-            
-            const userId = getUserId();
-            if (!userId) return;
-            
-            const formData = {
-                first_name: document.getElementById("first_name").value,
-                last_name: document.getElementById("last_name").value,
-                email: document.getElementById("email").value,
-                phone: document.getElementById("phone").value,
-                address: document.getElementById("address").value,
-                date_of_birth: document.getElementById("date_of_birth").value,
-                bio: document.getElementById("bio").value,
-                role_master: document.getElementById("role_master").checked,
-                approval_status: document.getElementById("role_master").checked ? 'pending' : null
-            };
-            
-            try {
-                const profileResponse = await fetch(`/profile/${userId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (!profileResponse.ok) {
-                    const errorData = await profileResponse.json();
-                    throw new Error(errorData.message || 'Не вдалося оновити профіль');
-                }
-                
-                // Update profile header
-                updateProfileHeader({
-                    first_name: formData.first_name,
-                    last_name: formData.last_name,
-                    username: document.getElementById('profile-username').textContent.substring(1)
-                });
-                
-                if (formData.role_master) {
-                    // Create master request if not already created
-                    try {
-                        await fetch(`/master-requests`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ 
-                                user_id: userId,
-                                status: 'pending'
-                            })
-                        });
-                        
-                        // Update approval status display
-                        const statusElement = document.getElementById('approval-status');
-                        statusElement.textContent = 'На розгляді';
-                        statusElement.className = 'status-pending';
-                    } catch (err) {
-                        // Ignore error if request already exists
-                        console.log("Master request may already exist:", err);
-                    }
-                }
-                
-                showSuccess('Профіль успішно оновлено!');
-            } catch (error) {
-                showError(error.message);
-            }
-        });
+        // Update notification badge
+        const unreadNotifications = parseInt(
+          localStorage.getItem("unreadNotifications") || "0"
+        );
+        if (unreadNotifications > 0) {
+          const notificationBadge =
+            document.getElementById("notificationsBadge");
+          notificationBadge.setAttribute("data-count", unreadNotifications);
+        }
 
-        // Save services handler
-        document.getElementById("save-services").addEventListener("click", async function () {
-            const userId = getUserId();
-            if (!userId) return;
-            
-            try {
-                // Get selected industries
-                const selectedIndustries = Array.from(
-                    document.querySelectorAll('#services input[name="industry"]:checked')
-                ).map(checkbox => ({
-                    name: checkbox.value,
-                    type: 'industry',
-                    industry: checkbox.dataset.industry
-                }));
-                
-                // Get skills texts for each selected industry
-                const skillsTexts = [];
-                selectedIndustries.forEach(industry => {
-                    const textareaId = `${industry.industry}-skills-text`;
-                    const textarea = document.getElementById(textareaId);
-                    if (textarea && textarea.value.trim()) {
-                        skillsTexts.push({
-                            name: textarea.value,
-                            type: textareaId
-                        });
-                    }
-                });
-                
-                // Get custom skills
-                const customSkills = document.getElementById('custom-skills').value;
-                
-                // Delete existing services
-                const servicesResponse = await fetch(`/services/${userId}`);
-                const servicesData = await servicesResponse.json();
-                
-                if (servicesData.services && servicesData.services.length > 0) {
-                    for (const service of servicesData.services) {
-                        await fetch(`/services/${service.id}`, {
-                            method: "DELETE"
-                        });
-                    }
-                }
-                
-                // Add industries
-                for (const industry of selectedIndustries) {
-                    await fetch(`/services/${userId}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ 
-                            service_name: industry.name,
-                            service_type: industry.type
-                        })
-                    });
-                }
-                
-                // Add skills texts
-                for (const skill of skillsTexts) {
-                    await fetch(`/services/${userId}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ 
-                            service_name: skill.name,
-                            service_type: skill.type
-                        })
-                    });
-                }
-                
-                // Add custom skills
-                if (customSkills.trim()) {
-                    await fetch(`/services/${userId}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ 
-                            service_name: customSkills,
-                            service_type: 'custom-skills'
-                        })
-                    });
-                }
-                
-                showSuccess('Послуги успішно збережено!');
-            } catch (error) {
-                showError(error.message);
-            }
-        });
+        // Update stats
+        document.getElementById("ratingValue").textContent =
+          userData.rating || "0.0";
+        document.getElementById("reviewsCount").textContent =
+          userData.reviewsCount || "0";
+        document.getElementById("ordersCount").textContent =
+          userData.ordersCount || "0";
+      }
 
-        // Add animation for services toggle
-        document.getElementById("role_master").addEventListener("change", function () {
-            const servicesDiv = document.getElementById("services");
-            if (this.checked) {
-                servicesDiv.style.display = "block";
-                setTimeout(() => {
-                    servicesDiv.classList.add("visible");
-                }, 10);
-            } else {
-                servicesDiv.classList.remove("visible");
-                setTimeout(() => {
-                    servicesDiv.style.display = "none";
-                }, 400);
-                
-                // Hide all industry skills sections
-                document.querySelectorAll('.industry-skills').forEach(section => {
-                    section.classList.add('fade-out');
-                    setTimeout(() => {
-                        section.classList.remove('visible');
-                        section.classList.remove('fade-out');
-                        section.classList.remove('slide-in-right', 'slide-in-left', 'slide-in-top', 'slide-in-bottom');
-                    }, 400);
-                });
-            }
-        });
-        
-        // Enhanced transitions for industry checkboxes
-        let lastActiveIndustry = null;
-        
-        document.querySelectorAll('input[name="industry"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const industry = this.dataset.industry;
-                const skillsSection = document.getElementById(`${industry}-skills`);
-                
-                if (this.checked && skillsSection) {
-                    // Determine animation direction based on position in the list
-                    const allIndustries = Array.from(document.querySelectorAll('input[name="industry"]'));
-                    const currentIndex = allIndustries.indexOf(this);
-                    
-                    // Remove all animation classes first
-                    skillsSection.classList.remove('slide-in-right', 'slide-in-left', 'slide-in-top', 'slide-in-bottom');
-                    
-                    // Add appropriate animation class
-                    if (lastActiveIndustry) {
-                        const lastIndex = allIndustries.findIndex(cb => cb.dataset.industry === lastActiveIndustry);
-                        
-                        if (currentIndex > lastIndex) {
-                            skillsSection.classList.add('slide-in-right');
-                        } else {
-                            skillsSection.classList.add('slide-in-left');
-                        }
-                    } else {
-                        skillsSection.classList.add('slide-in-bottom');
-                    }
-                    
-                    // Show the section with animation
-                    skillsSection.classList.add('visible');
-                    lastActiveIndustry = industry;
-                    
-                } else if (skillsSection) {
-                    // Add fade out animation
-                    skillsSection.classList.add('fade-out');
-                    
-                    // Remove the section after animation completes
-                    setTimeout(() => {
-                        skillsSection.classList.remove('visible');
-                        skillsSection.classList.remove('fade-out');
-                        skillsSection.classList.remove('slide-in-right', 'slide-in-left', 'slide-in-top', 'slide-in-bottom');
-                        
-                        // Update last active industry
-                        const activeCheckboxes = Array.from(document.querySelectorAll('input[name="industry"]:checked'));
-                        if (activeCheckboxes.length > 0) {
-                            lastActiveIndustry = activeCheckboxes[activeCheckboxes.length - 1].dataset.industry;
-                        } else {
-                            lastActiveIndustry = null;
-                        }
-                    }, 400);
-                }
+      // Update Profile Header
+      function updateProfileHeader(userData) {
+        // Set profile name
+        const profileName = document.getElementById("profileName");
+        profileName.textContent =
+          userData.firstName && userData.lastName
+            ? `${userData.firstName} ${userData.lastName}`
+            : userData.username || "Користувач";
+
+        // Set username
+        document.getElementById("profileUsername").textContent = `@${
+          userData.username || "username"
+        }`;
+
+        // Set avatar initials
+        const avatarInitials = document.getElementById("avatarInitials");
+        if (userData.firstName && userData.lastName) {
+          avatarInitials.textContent = `${userData.firstName.charAt(
+            0
+          )}${userData.lastName.charAt(0)}`;
+        } else if (userData.username) {
+          avatarInitials.textContent = userData.username
+            .charAt(0)
+            .toUpperCase();
+        } else {
+          avatarInitials.textContent = "U";
+        }
+
+        // Set avatar image if available
+        if (userData.avatarUrl) {
+          const avatarImage = document.getElementById("avatarImage");
+          avatarImage.src = userData.avatarUrl;
+          avatarImage.style.display = "block";
+          avatarInitials.style.display = "none";
+        }
+      }
+
+      // Get Status Text
+      function getStatusText(status) {
+        switch (status) {
+          case "pending":
+            return "На розгляді";
+          case "approved":
+            return "Затверджено";
+          case "rejected":
+            return "Відхилено";
+          default:
+            return "";
+        }
+      }
+
+      // Load User Orders
+      function loadUserOrders() {
+        const ordersContainer = document.getElementById("ordersContainer");
+        const loadingElement = document.getElementById("ordersLoading");
+
+        ordersContainer.innerHTML = "";
+        loadingElement.style.display = "flex";
+
+        // Get orders data from localStorage
+        const ordersData = JSON.parse(localStorage.getItem("userOrders")) || [];
+
+        setTimeout(() => {
+          loadingElement.style.display = "none";
+
+          if (ordersData.length > 0) {
+            // Update orders count
+            document.getElementById("ordersCount").textContent =
+              ordersData.length;
+
+            ordersData.forEach((order, index) => {
+              const orderCard = document.createElement("div");
+              orderCard.className = "order-card";
+              orderCard.style.animationDelay = `${index * 0.1}s`;
+
+              const statusClass = `status-${order.status}`;
+              const statusText = getOrderStatusText(order.status);
+
+              orderCard.innerHTML = `
+              <div class="order-header">
+                <div class="order-number">${
+                  order.orderNumber || `#${index + 1000}`
+                }</div>
+                <div class="order-title">${order.title}</div>
+                <div class="order-status ${statusClass}">${statusText}</div>
+              </div>
+              <div class="order-body">
+                <div class="order-info">
+                  <div class="order-info-item">
+                    <div class="order-info-label">Галузь:</div>
+                    <div class="order-info-value">${
+                      order.industry || "Не вказано"
+                    }</div>
+                  </div>
+                  <div class="order-info-item">
+                    <div class="order-info-label">Дата створення:</div>
+                    <div class="order-info-value">${formatDate(
+                      order.createdAt || new Date()
+                    )}</div>
+                  </div>
+                  <div class="order-info-item">
+                    <div class="order-info-label">Ціна:</div>
+                    <div class="order-info-value">${
+                      order.price ? `${order.price} грн` : "За домовленістю"
+                    }</div>
+                  </div>
+                  <div class="order-info-item">
+                    <div class="order-info-label">Статус оплати:</div>
+                    <div class="order-info-value">${getPaymentStatusText(
+                      order.paymentStatus
+                    )}</div>
+                  </div>
+                </div>
+                <div class="order-actions">
+                  <button class="form-button" onclick="viewOrderDetails(${
+                    order.id
+                  })">
+                    <i class="fas fa-eye"></i> Деталі
+                  </button>
+                  ${
+                    order.status === "completed"
+                      ? `<button class="form-button" onclick="leaveReview(${order.id}, ${order.masterId})">
+                      <i class="fas fa-star"></i> Відгук
+                    </button>`
+                      : ""
+                  }
+                  ${
+                    order.status === "pending"
+                      ? `<button class="form-button" onclick="cancelOrder(${order.id})">
+                      <i class="fas fa-times"></i> Скасувати
+                    </button>`
+                      : ""
+                  }
+                </div>
+              </div>
+            `;
+
+              ordersContainer.appendChild(orderCard);
             });
-        });
+          } else {
+            ordersContainer.innerHTML =
+              '<div class="empty-state">У вас ще немає замовлень</div>';
+          }
+        }, 1000);
+      }
 
-        // Avatar upload functionality
-        document.getElementById('avatar-upload').addEventListener('click', function() {
-            document.getElementById('avatar-input').click();
-        });
-        
-        document.getElementById('avatar-input').addEventListener('change', async function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            // Check file type
-            if (!file.type.startsWith('image/')) {
-                showError('Будь ласка, виберіть зображення');
-                return;
-            }
-            
-            // Check file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                showError('Розмір файлу не повинен перевищувати 5MB');
-                return;
-            }
-            
-            // Create FormData
-            const formData = new FormData();
-            formData.append('avatar', file);
-            
-            try {
-                const userId = getUserId();
-                if (!userId) return;
-                
-                // Upload avatar
-                const response = await fetch(`/upload-avatar/${userId}`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Не вдалося завантажити аватар');
-                }
-                
-                const data = await response.json();
-                
-                // Update avatar image
-                const avatarImage = document.getElementById('avatar-image');
-                avatarImage.src = data.imageUrl;
-                avatarImage.style.display = 'block';
-                document.getElementById('avatar-initials').style.display = 'none';
-                
-                // Update profile with new image URL
-                await fetch(`/profile/${userId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ profile_image_url: data.imageUrl })
-                });
-                
-                showSuccess('Аватар успішно оновлено!');
-            } catch (error) {
-                showError(error.message);
-            }
-        });
+      // Load User Reviews
+      function loadUserReviews() {
+        const reviewsContainer = document.getElementById("reviewsContainer");
+        const loadingElement = document.getElementById("reviewsLoading");
 
-        // Password strength checker
-        document.getElementById('new-password').addEventListener('input', function() {
-            const password = this.value;
-            const strengthBar = document.getElementById('password-strength');
-            
-            // Check requirements
-            const hasLength = password.length >= 8;
-            const hasUppercase = /[A-Z]/.test(password);
-            const hasLowercase = /[a-z]/.test(password);
-            const hasNumber = /[0-9]/.test(password);
-            const hasSpecial = /[^A-Za-z0-9]/.test(password);
-            
-            // Update requirement indicators
-            updateRequirement('req-length', hasLength);
-            updateRequirement('req-uppercase', hasUppercase);
-            updateRequirement('req-lowercase', hasLowercase);
-            updateRequirement('req-number', hasNumber);
-            updateRequirement('req-special', hasSpecial);
-            
-            // Calculate strength
-            let strength = 0;
-            if (hasLength) strength += 1;
-            if (hasUppercase) strength += 1;
-            if (hasLowercase) strength += 1;
-            if (hasNumber) strength += 1;
-            if (hasSpecial) strength += 1;
-            
-            // Update strength bar
-            strengthBar.className = 'password-strength';
-            if (strength < 3) {
-                strengthBar.classList.add('password-strength-weak');
-            } else if (strength < 5) {
-                strengthBar.classList.add('password-strength-medium');
-            } else {
-                strengthBar.classList.add('password-strength-strong');
-            }
-        });
-        
-        function updateRequirement(id, isMet) {
-            const element = document.getElementById(id);
-            if (isMet) {
-                element.classList.add('requirement-met');
-                element.classList.remove('requirement-unmet');
-                element.querySelector('i').className = 'fas fa-check-circle';
-            } else {
-                element.classList.add('requirement-unmet');
-                element.classList.remove('requirement-met');
-                element.querySelector('i').className = 'fas fa-times-circle';
-            }
+        reviewsContainer.innerHTML = "";
+        loadingElement.style.display = "flex";
+
+        // Get reviews data from localStorage
+        const reviewsData =
+          JSON.parse(localStorage.getItem("userReviews")) || [];
+
+        setTimeout(() => {
+          loadingElement.style.display = "none";
+
+          if (reviewsData.length > 0) {
+            // Update reviews count
+            document.getElementById("reviewsCount").textContent =
+              reviewsData.length;
+
+            reviewsData.forEach((review, index) => {
+              const reviewCard = document.createElement("div");
+              reviewCard.className = "review-card";
+              reviewCard.style.animationDelay = `${index * 0.1}s`;
+
+              const reviewerName = review.reviewerName || "Користувач";
+              const reviewerInitials = reviewerName.charAt(0).toUpperCase();
+
+              reviewCard.innerHTML = `
+              <div class="review-header">
+                <div class="reviewer-info">
+                  <div class="reviewer-avatar">${reviewerInitials}</div>
+                  <div>
+                    <div class="reviewer-name">${reviewerName}</div>
+                    <div class="review-date">${formatDate(
+                      review.createdAt || new Date()
+                    )}</div>
+                  </div>
+                </div>
+                <div class="review-rating">
+                  ${generateStarRating(review.rating)}
+                </div>
+              </div>
+              <div class="review-content">
+                ${review.comment || "Без коментаря"}
+              </div>
+              <div class="review-order">
+                Замовлення: ${review.orderTitle || "Замовлення"} (${
+                review.orderNumber || "#"
+              })
+              </div>
+            `;
+
+              reviewsContainer.appendChild(reviewCard);
+            });
+          } else {
+            reviewsContainer.innerHTML =
+              '<div class="empty-state">У вас ще немає відгуків</div>';
+          }
+        }, 1000);
+      }
+
+      // Helper Functions
+      function generateStarRating(rating) {
+        let stars = "";
+        for (let i = 1; i <= 5; i++) {
+          if (i <= rating) {
+            stars += '<i class="fas fa-star"></i>';
+          } else if (i - 0.5 <= rating) {
+            stars += '<i class="fas fa-star-half-alt"></i>';
+          } else {
+            stars += '<i class="far fa-star"></i>';
+          }
         }
-        
-        // Password change form handler
-        document.getElementById('password-form').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            
-            const currentPassword = document.getElementById('current-password').value;
-            const newPassword = document.getElementById('new-password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            
-            if (newPassword !== confirmPassword) {
-                showError('Паролі не співпадають');
-                return;
-            }
-            
-            // Check password strength
-            const hasLength = newPassword.length >= 8;
-            const hasUppercase = /[A-Z]/.test(newPassword);
-            const hasLowercase = /[a-z]/.test(newPassword);
-            const hasNumber = /[0-9]/.test(newPassword);
-            const hasSpecial = /[^A-Za-z0-9]/.test(newPassword);
-            
-            if (!(hasLength && hasUppercase && hasLowercase && hasNumber && hasSpecial)) {
-                showError('Пароль не відповідає вимогам безпеки');
-                return;
-            }
-            
-            try {
-                const userId = getUserId();
-                if (!userId) return;
-                
-                const response = await fetch(`/change-password/${userId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        currentPassword,
-                        newPassword
-                    })
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Не вдалося змінити пароль');
-                }
-                
-                showSuccess('Пароль успішно змінено!');
-                
-                // Clear form
-                document.getElementById('current-password').value = '';
-                document.getElementById('new-password').value = '';
-                document.getElementById('confirm-password').value = '';
-                
-                // Reset strength bar
-                document.getElementById('password-strength').className = 'password-strength';
-                
-                // Reset requirements
-                document.querySelectorAll('.requirement').forEach(req => {
-                    req.classList.remove('requirement-met', 'requirement-unmet');
-                    req.querySelector('i').className = 'fas fa-circle';
-                });
-            } catch (error) {
-                showError(error.message);
-            }
-        });
-        
-        // Save settings handler
-        document.getElementById('save-settings').addEventListener('click', async function() {
-            const userId = getUserId();
-            if (!userId) return;
-            
-            const settings = {
-                email_notifications: document.getElementById('email-notifications').checked,
-                order_notifications: document.getElementById('order-notifications').checked,
-                review_notifications: document.getElementById('review-notifications').checked
-            };
-            
-            try {
-                const response = await fetch(`/user-settings/${userId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(settings)
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Не вдалося зберегти налаштування');
-                }
-                
-                showSuccess('Налаштування успішно збережено!');
-            } catch (error) {
-                showError(error.message);
-            }
-        });
-        
-        // Order action functions
-        window.viewOrderDetails = function(orderId) {
-            window.location.href = `/order-details.html?id=${orderId}`;
-        };
-        
-        window.leaveReview = function(orderId, masterId) {
-            window.location.href = `/leave-review.html?orderId=${orderId}&masterId=${masterId}`;
-        };
-        
-        window.cancelOrder = async function(orderId) {
-            if (!confirm('Ви впевнені, що хочете скасувати це замовлення?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/orders/${orderId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'cancelled' })
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Не вдалося скасувати замовлення');
-                }
-                
-                showSuccess('Замовлення успішно скасовано!');
-                
-                // Reload orders
-                setTimeout(() => {
-                    loadUserOrders();
-                }, 1000);
-            } catch (error) {
-                showError(error.message);
-            }
-        };
+        return stars;
+      }
 
-        // Logout handler
-        document.getElementById("logout").addEventListener("click", function (event) {
-            event.preventDefault();
-            localStorage.removeItem('userId');
-            localStorage.removeItem('token');
-            window.location.href = "/auth.html";
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("uk-UA", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function getOrderStatusText(status) {
+        switch (status) {
+          case "pending":
+            return "Очікує";
+          case "approved":
+            return "Прийнято";
+          case "completed":
+            return "Виконано";
+          case "cancelled":
+            return "Скасовано";
+          case "rejected":
+            return "Відхилено";
+          default:
+            return status || "Очікує";
+        }
+      }
+
+      function getPaymentStatusText(status) {
+        switch (status) {
+          case "unpaid":
+            return "Не оплачено";
+          case "paid":
+            return "Оплачено";
+          case "refunded":
+            return "Повернуто";
+          default:
+            return status || "Не оплачено";
+        }
+      }
+
+      // Avatar Upload Functionality
+      document
+        .getElementById("avatarUpload")
+        .addEventListener("click", function () {
+          document.getElementById("avatarInput").click();
         });
 
-        // Load profile on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadUserProfile();
-            
-            // Check if we need to show a specific tab based on URL parameter
-            const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab');
-            
-            if (tab) {
-                const tabElement = document.querySelector(`.tab[data-tab="${tab}"]`);
-                if (tabElement) {
-                    tabElement.click();
-                }
-            }
+      document
+        .getElementById("avatarInput")
+        .addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          // Check file type
+          if (!file.type.startsWith("image/")) {
+            showToast("Помилка", "Будь ласка, виберіть зображення", "error");
+            return;
+          }
+
+          // Check file size (max 5MB)
+          if (file.size > 5 * 1024 * 1024) {
+            showToast(
+              "Помилка",
+              "Розмір файлу не повинен перевищувати 5MB",
+              "error"
+            );
+            return;
+          }
+
+          // Read file as data URL
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const imageUrl = e.target.result;
+
+            // Update avatar image
+            const avatarImage = document.getElementById("avatarImage");
+            avatarImage.src = imageUrl;
+            avatarImage.style.display = "block";
+            document.getElementById("avatarInitials").style.display = "none";
+
+            // Update user data in localStorage
+            const userData = JSON.parse(localStorage.getItem("userData")) || {};
+            userData.avatarUrl = imageUrl;
+            localStorage.setItem("userData", JSON.stringify(userData));
+
+            showToast("Успіх", "Аватар успішно оновлено!", "success");
+          };
+          reader.readAsDataURL(file);
         });
+
+      // Profile Form Submission
+      document
+        .getElementById("profileForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const userData = JSON.parse(localStorage.getItem("userData")) || {};
+
+          // Update user data with form values
+          userData.firstName = document.getElementById("firstName").value;
+          userData.lastName = document.getElementById("lastName").value;
+          userData.email = document.getElementById("email").value;
+          userData.phone = document.getElementById("phone").value;
+          userData.address = document.getElementById("address").value;
+          userData.dateOfBirth = document.getElementById("dateOfBirth").value;
+          userData.bio = document.getElementById("bio").value;
+          userData.roleMaster = document.getElementById("roleMaster").checked;
+          userData.approvalStatus = userData.roleMaster
+            ? userData.approvalStatus || "pending"
+            : null;
+
+          // Save to localStorage
+          localStorage.setItem("userData", JSON.stringify(userData));
+
+          // Update profile header
+          updateProfileHeader(userData);
+
+          showToast("Успіх", "Профіль успішно оновлено!", "success");
+        });
+
+      // Services Form Submission
+      document
+        .getElementById("saveServices")
+        .addEventListener("click", function () {
+          const services = [];
+
+          // Get selected industries
+          document
+            .querySelectorAll('input[name="industry"]:checked')
+            .forEach((checkbox) => {
+              services.push({
+                name: checkbox.value,
+                type: "industry",
+                industry: checkbox.getAttribute("data-industry"),
+              });
+
+              // Get skills for this industry
+              const industry = checkbox.getAttribute("data-industry");
+              const skillsTextarea = document.getElementById(
+                `${industry}SkillsText`
+              );
+              if (skillsTextarea && skillsTextarea.value.trim()) {
+                services.push({
+                  name: skillsTextarea.value,
+                  type: `${industry}SkillsText`,
+                });
+              }
+            });
+
+          // Get custom skills
+          const customSkills = document.getElementById("customSkills").value;
+          if (customSkills.trim()) {
+            services.push({
+              name: customSkills,
+              type: "customSkills",
+            });
+          }
+
+          // Save to localStorage
+          localStorage.setItem("userServices", JSON.stringify(services));
+
+          showToast("Успіх", "Послуги успішно збережено!", "success");
+        });
+
+      // Password Strength Checker
+      document
+        .getElementById("newPassword")
+        .addEventListener("input", function () {
+          const password = this.value;
+          const strengthMeter = document.getElementById(
+            "passwordStrengthMeter"
+          );
+
+          // Check requirements
+          const hasLength = password.length >= 8;
+          const hasUppercase = /[A-Z]/.test(password);
+          const hasLowercase = /[a-z]/.test(password);
+          const hasNumber = /[0-9]/.test(password);
+          const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+          // Update requirement indicators
+          updateRequirement("reqLength", hasLength);
+          updateRequirement("reqUppercase", hasUppercase);
+          updateRequirement("reqLowercase", hasLowercase);
+          updateRequirement("reqNumber", hasNumber);
+          updateRequirement("reqSpecial", hasSpecial);
+
+          // Calculate strength
+          let strength = 0;
+          if (hasLength) strength += 1;
+          if (hasUppercase) strength += 1;
+          if (hasLowercase) strength += 1;
+          if (hasNumber) strength += 1;
+          if (hasSpecial) strength += 1;
+
+          // Update strength meter
+          if (password.length === 0) {
+            strengthMeter.style.width = "0";
+            strengthMeter.style.backgroundColor = "";
+          } else if (strength < 3) {
+            strengthMeter.style.width = "30%";
+            strengthMeter.style.backgroundColor = "var(--danger-color)";
+          } else if (strength < 5) {
+            strengthMeter.style.width = "60%";
+            strengthMeter.style.backgroundColor = "var(--warning-color)";
+          } else {
+            strengthMeter.style.width = "100%";
+            strengthMeter.style.backgroundColor = "var(--success-color)";
+          }
+        });
+
+      function updateRequirement(id, isMet) {
+        const element = document.getElementById(id);
+        if (isMet) {
+          element.classList.add("requirement-met");
+          element.classList.remove("requirement-unmet");
+          element.querySelector("i").className = "fas fa-check-circle";
+        } else {
+          element.classList.add("requirement-unmet");
+          element.classList.remove("requirement-met");
+          element.querySelector("i").className = "fas fa-times-circle";
+        }
+      }
+
+      // Password Form Submission
+      document
+        .getElementById("passwordForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const currentPassword =
+            document.getElementById("currentPassword").value;
+          const newPassword = document.getElementById("newPassword").value;
+          const confirmPassword =
+            document.getElementById("confirmPassword").value;
+
+          if (newPassword !== confirmPassword) {
+            showToast("Помилка", "Паролі не співпадають", "error");
+            return;
+          }
+
+          // Check password strength
+          const hasLength = newPassword.length >= 8;
+          const hasUppercase = /[A-Z]/.test(newPassword);
+          const hasLowercase = /[a-z]/.test(newPassword);
+          const hasNumber = /[0-9]/.test(newPassword);
+          const hasSpecial = /[^A-Za-z0-9]/.test(newPassword);
+
+          if (
+            !(
+              hasLength &&
+              hasUppercase &&
+              hasLowercase &&
+              hasNumber &&
+              hasSpecial
+            )
+          ) {
+            showToast(
+              "Помилка",
+              "Пароль не відповідає вимогам безпеки",
+              "error"
+            );
+            return;
+          }
+
+          // Save to localStorage
+          const userData = JSON.parse(localStorage.getItem("userData")) || {};
+          userData.password = newPassword;
+          localStorage.setItem("userData", JSON.stringify(userData));
+
+          showToast("Успіх", "Пароль успішно змінено!", "success");
+
+          // Clear form
+          document.getElementById("currentPassword").value = "";
+          document.getElementById("newPassword").value = "";
+          document.getElementById("confirmPassword").value = "";
+
+          // Reset strength meter
+          document.getElementById("passwordStrengthMeter").style.width = "0";
+          document.getElementById(
+            "passwordStrengthMeter"
+          ).style.backgroundColor = "";
+
+          // Reset requirements
+          document.querySelectorAll(".requirement").forEach((req) => {
+            req.classList.remove("requirement-met", "requirement-unmet");
+            req.querySelector("i").className = "fas fa-circle";
+          });
+        });
+
+      // Save Settings Handler
+      document
+        .getElementById("saveSettings")
+        .addEventListener("click", function () {
+          const settings = {
+            emailNotifications:
+              document.getElementById("emailNotifications").checked,
+            orderNotifications:
+              document.getElementById("orderNotifications").checked,
+            reviewNotifications: document.getElementById("reviewNotifications")
+              .checked,
+          };
+
+          // Save to localStorage
+          const userData = JSON.parse(localStorage.getItem("userData")) || {};
+          userData.settings = settings;
+          localStorage.setItem("userData", JSON.stringify(userData));
+
+          showToast("Успіх", "Налаштування успішно збережено!", "success");
+        });
+
+      // Industry Checkbox Event Listeners
+      document
+        .querySelectorAll('input[name="industry"]')
+        .forEach((checkbox) => {
+          checkbox.addEventListener("change", function () {
+            const industry = this.getAttribute("data-industry");
+            const skillsSection = document.getElementById(`${industry}Skills`);
+
+            if (this.checked && skillsSection) {
+              skillsSection.classList.add("visible");
+            } else if (skillsSection) {
+              skillsSection.classList.remove("visible");
+            }
+          });
+        });
+
+      // Order Action Functions
+      window.viewOrderDetails = function (orderId) {
+        showToast(
+          "Інформація",
+          "Перегляд деталей замовлення #" + orderId,
+          "info"
+        );
+      };
+
+      window.leaveReview = function (orderId, masterId) {
+        showToast(
+          "Інформація",
+          "Залишення відгуку для замовлення #" + orderId,
+          "info"
+        );
+      };
+
+      window.cancelOrder = function (orderId) {
+        if (confirm("Ви впевнені, що хочете скасувати це замовлення?")) {
+          // Get orders from localStorage
+          const orders = JSON.parse(localStorage.getItem("userOrders")) || [];
+
+          // Find and update the order
+          const updatedOrders = orders.map((order) => {
+            if (order.id === orderId) {
+              return { ...order, status: "cancelled" };
+            }
+            return order;
+          });
+
+          // Save updated orders
+          localStorage.setItem("userOrders", JSON.stringify(updatedOrders));
+
+          showToast("Успіх", "Замовлення успішно скасовано!", "success");
+
+          // Reload orders
+          setTimeout(() => {
+            loadUserOrders();
+          }, 1000);
+        }
+      };
+
+      // Logout Handler
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", function () {
+          if (confirm("Ви впевнені, що хочете вийти?")) {
+            localStorage.removeItem("userId");
+            window.location.href = "auth.html";
+          }
+        });
+
+      // Load settings from localStorage
+      function loadSettings() {
+        const userData = JSON.parse(localStorage.getItem("userData")) || {};
+        const settings = userData.settings || {};
+
+        document.getElementById("emailNotifications").checked =
+          settings.emailNotifications !== false;
+        document.getElementById("orderNotifications").checked =
+          settings.orderNotifications !== false;
+        document.getElementById("reviewNotifications").checked =
+          settings.reviewNotifications !== false;
+      }
+
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        // Load user profile
+        loadUserProfile();
+
+        // Load settings
+        loadSettings();
+
+        // Check if user is logged in
+        if (!localStorage.getItem("userId")) {
+          localStorage.setItem("userId", "12345"); // For demo purposes
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
-
