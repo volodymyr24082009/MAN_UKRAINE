@@ -2,671 +2,107 @@
 <html lang="uk" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Реєстрація та Логін - ProFix Network Hub</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-      :root {
-          --background-dark: #1a1a1a;
-          --background-light: #f5f5f5;
-          --text-dark: #fff;
-          --text-light: #333;
-          --primary-color: #ff3300;
-          --secondary-color: #ff6600;
-          --accent-color: #007bff;
-          --success-color: #28a745;
-          --danger-color: #dc3545;
-          --warning-color: #ffc107;
-          --info-color: #17a2b8;
-      }
-
-      html {
-          scroll-behavior: smooth;
-          height: 100%;
-      }
-
-      body {
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: flex-start;
-          background: var(--background-dark);
-          background-image: radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px),
-              radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px);
-          background-size: 50px 50px;
-          background-position: 0 0, 25px 25px;
-          padding: 20px;
-          color: var(--text-dark);
-          font-family: 'Roboto', Arial, sans-serif;
-          transition: background 0.3s ease, color 0.3s ease;
-          margin: 0;
-          overflow-x: hidden;
-      }
-
-      html.light body {
-          background: var(--background-light);
-          color: var(--text-light);
-      }
-
-      .container {
-          width: 100%;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 20px;
-      }
-
-      header {
-          width: 100%;
-          background: linear-gradient(145deg, #222222, #333333);
-          border-radius: 10px;
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-          margin-bottom: 20px;
-          padding: 15px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 10px;
-          transition: all 0.3s ease;
-      }
-
-      html.light header {
-          background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-      }
-
-      .logo {
-          font-size: 1.5rem;
-          font-weight: bold;
-          color: var(--primary-color);
-          text-decoration: none;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-      }
-
-      .logo i {
-          font-size: 1.8rem;
-      }
-
-      .theme-switch {
-          position: relative;
-          display: inline-block;
-          width: 60px;
-          height: 30px;
-          margin: 0 10px;
-      }
-
-      .theme-switch input {
-          opacity: 0;
-          width: 0;
-          height: 0;
-      }
-
-      .slider {
-          position: absolute;
-          cursor: pointer;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: #333;
-          transition: .4s;
-          border-radius: 30px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 5px;
-      }
-
-      html.light .slider {
-          background-color: #ccc;
-      }
-
-      .slider:before {
-          position: absolute;
-          content: "";
-          height: 22px;
-          width: 22px;
-          left: 4px;
-          bottom: 4px;
-          background-color: white;
-          transition: .4s;
-          border-radius: 50%;
-      }
-
-      input:checked + .slider {
-          background-color: var(--primary-color);
-      }
-
-      input:checked + .slider:before {
-          transform: translateX(30px);
-      }
-
-      .slider .sun, .slider .moon {
-          color: #ffffff;
-          font-size: 14px;
-      }
-
-      main {
-          width: 100%;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 20px;
-      }
-
-      h1 {
-          width: 100%;
-          text-align: center;
-          font-size: 2rem;
-          margin-bottom: 20px;
-          color: var(--primary-color);
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      }
-
-      form {
-          flex: 1;
-          min-width: 300px;
-          max-width: 400px;
-          background: linear-gradient(45deg, rgba(40, 40, 40, 0.95), rgba(30, 30, 30, 0.95));
-          padding: 30px;
-          border-radius: 12px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          position: relative;
-          overflow: hidden;
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-      }
-
-      form:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-      }
-
-      form:before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: repeating-linear-gradient(
-              45deg,
-              transparent,
-              transparent 10px,
-              rgba(0, 0, 0, 0.1) 10px,
-              rgba(0, 0, 0, 0.1) 20px
-          );
-          z-index: -1;
-      }
-
-      html.light form {
-          background: linear-gradient(45deg, rgba(240, 240, 240, 0.95), rgba(250, 250, 250, 0.95));
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      }
-
-      form h2 {
-          font-size: 1.5rem;
-          margin-bottom: 20px;
-          color: var(--primary-color);
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-      }
-
-      label {
-          display: block;
-          margin-bottom: 15px;
-          color: var(--text-dark);
-          font-size: 0.9rem;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-      }
-
-      html.light label {
-          color: var(--text-light);
-      }
-
-      .input-group {
-          position: relative;
-          margin-bottom: 20px;
-      }
-
-      .input-group i {
-          position: absolute;
-          left: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: var(--primary-color);
-      }
-
-      input {
-          width: 100%;
-          padding: 12px 10px 12px 35px;
-          border: none;
-          border-radius: 5px;
-          background: rgba(255, 255, 255, 0.1);
-          color: var(--text-dark);
-          font-size: 1rem;
-          transition: all 0.3s ease;
-      }
-
-      html.light input {
-          background: rgba(0, 0, 0, 0.1);
-          color: var(--text-light);
-      }
-
-      input:focus {
-          outline: none;
-          box-shadow: 0 0 0 2px var(--primary-color);
-      }
-
-      .password-toggle {
-          position: absolute;
-          right: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          cursor: pointer;
-          color: var(--text-dark);
-      }
-
-      html.light .password-toggle {
-          color: var(--text-light);
-      }
-
-      form button {
-          width: 100%;
-          padding: 12px;
-          margin-top: 20px;
-          font-size: 1rem;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 10px;
-          background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-          color: white;
-          border: none;
-          border-radius: 5px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-      }
-
-      form button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-      }
-
-      #registerForm {
-          border-left: 4px solid var(--primary-color);
-      }
-
-      #loginForm {
-          border-left: 4px solid var(--accent-color);
-          display: none;
-      }
-
-      #loginForm button {
-          background: linear-gradient(90deg, var(--accent-color), #0056b3);
-      }
-
-      .form-footer {
-          margin-top: 20px;
-          text-align: center;
-          font-size: 0.9rem;
-          color: rgba(255, 255, 255, 0.7);
-      }
-
-      html.light .form-footer {
-          color: rgba(0, 0, 0, 0.7);
-      }
-
-      .form-footer a {
-          color: var(--primary-color);
-          text-decoration: none;
-          font-weight: bold;
-      }
-
-      .form-footer a:hover {
-          text-decoration: underline;
-      }
-
-      .password-strength {
-          height: 5px;
-          margin-top: 5px;
-          border-radius: 5px;
-          background: #ddd;
-          overflow: hidden;
-      }
-
-      .password-strength-meter {
-          height: 100%;
-          width: 0;
-          transition: width 0.3s ease, background-color 0.3s ease;
-      }
-
-      .password-strength-text {
-          font-size: 0.8rem;
-          margin-top: 5px;
-          text-align: right;
-      }
-
-      .strength-weak {
-          background-color: var(--danger-color);
-          width: 25%;
-      }
-
-      .strength-medium {
-          background-color: var(--warning-color);
-          width: 50%;
-      }
-
-      .strength-good {
-          background-color: var(--info-color);
-          width: 75%;
-      }
-
-      .strength-strong {
-          background-color: var(--success-color);
-          width: 100%;
-      }
-
-      .remember-me {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-top: 15px;
-      }
-
-      .remember-me input {
-          width: auto;
-          margin: 0;
-      }
-
-      .remember-me label {
-          margin: 0;
-          text-transform: none;
-          letter-spacing: normal;
-          font-size: 0.9rem;
-      }
-
-      @media (max-width: 768px) {
-          header {
-              flex-direction: column;
-              align-items: stretch;
-          }
-
-          .theme-switch-container {
-              display: flex;
-              justify-content: center;
-              margin-top: 10px;
-          }
-
-          main {
-              flex-direction: column;
-              align-items: center;
-          }
-
-          form {
-              width: 100%;
-          }
-      }
-
-      @media (max-width: 480px) {
-          body {
-              padding: 10px;
-          }
-
-          header {
-              padding: 10px;
-          }
-
-          .logo {
-              font-size: 1.2rem;
-          }
-
-          h1 {
-              font-size: 1.5rem;
-          }
-
-          form {
-              padding: 20px;
-          }
-
-          form h2 {
-              font-size: 1.2rem;
-          }
-      }
-
-      /* Animation for forms */
-      @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-      }
-
-      #registerForm, #loginForm {
-          animation: fadeIn 0.5s ease-out forwards;
-      }
-
-      #loginForm {
-          animation-delay: 0.2s;
-      }
-
-      /* Modal styles */
-      .modal-overlay {
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.7);
-          z-index: 1000;
-          justify-content: center;
-          align-items: center;
-          animation: fadeIn 0.3s ease-out;
-      }
-
-      .modal-content {
-          background: linear-gradient(45deg, rgba(40, 40, 40, 0.95), rgba(30, 30, 30, 0.95));
-          border-radius: 12px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-          width: 90%;
-          max-width: 500px;
-          overflow: hidden;
-          animation: slideIn 0.3s ease-out;
-          border-left: 4px solid var(--primary-color);
-      }
-
-      html.light .modal-content {
-          background: linear-gradient(45deg, rgba(240, 240, 240, 0.95), rgba(250, 250, 250, 0.95));
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      }
-
-      .modal-header {
-          padding: 15px 20px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      html.light .modal-header {
-          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-      }
-
-      #modalTitle {
-          font-size: 1.2rem;
-          font-weight: bold;
-          color: var(--primary-color);
-      }
-
-      .modal-close {
-          font-size: 1.5rem;
-          cursor: pointer;
-          color: var(--text-dark);
-      }
-
-      html.light .modal-close {
-          color: var(--text-light);
-      }
-
-      .modal-body {
-          padding: 20px;
-          color: var(--text-dark);
-      }
-
-      html.light .modal-body {
-          color: var(--text-light);
-      }
-
-      .modal-footer {
-          padding: 15px 20px;
-          display: flex;
-          justify-content: flex-end;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      html.light .modal-footer {
-          border-top: 1px solid rgba(0, 0, 0, 0.1);
-      }
-
-      .modal-button {
-          padding: 8px 16px;
-          background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-          color: white;
-          border: none;
-          border-radius: 5px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-      }
-
-      .modal-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-      }
-
-      .modal-success #modalTitle {
-          color: var(--success-color);
-      }
-
-      .modal-error #modalTitle {
-          color: var(--danger-color);
-      }
-
-      .modal-warning #modalTitle {
-          color: var(--warning-color);
-      }
-
-      .modal-info #modalTitle {
-          color: var(--info-color);
-      }
-
-      @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-      }
-
-      @keyframes slideIn {
-          from { transform: translateY(-50px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-      }
-  </style>
+  <link rel="stylesheet" href="./css/auth.css">
+
+  <!-- Add additional meta tags for better mobile experience -->
+  <meta name="theme-color" content="#1a2238" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
 <body>
   <div class="container">
-      <header>
-          <a href="index.html" class="logo">
-              <i class="fas fa-tools"></i>
-              ProFix Network Hub
-          </a>
-          <div class="theme-switch-container">
-              <label class="theme-switch">
-                  <input type="checkbox" id="themeToggle">
-                  <span class="slider">
-                      <span class="moon">🌙</span>
-                      <span class="sun">☀️</span>
-                  </span>
-              </label>
+      <header class="header">
+          <div class="header-container">
+              <a href="index.html" class="logo">
+                  <i class="fas fa-tools"></i>
+                  ProFix Network Hub
+              </a>
+              <div class="theme-switch-container">
+                  <label class="theme-switch">
+                      <input type="checkbox" id="themeToggle">
+                      <span class="slider">
+                          <span class="moon"><i class="fas fa-moon"></i></span>
+                          <span class="sun"><i class="fas fa-sun"></i></span>
+                      </span>
+                  </label>
+              </div>
           </div>
       </header>
 
       <main>
-          <h1>Реєстрація та Логін</h1>
-          
-          <form id="registerForm">
-              <h2><i class="fas fa-user-plus"></i> Реєстрація</h2>
+          <div class="auth-container">
+              <h1 class="auth-title">Реєстрація та Логін</h1>
               
-              <div class="input-group">
-                  <i class="fas fa-user"></i>
-                  <input type="text" id="regUsername" required placeholder="Ім'я користувача або email" />
-              </div>
-              
-              <div class="input-group">
-                  <i class="fas fa-lock"></i>
-                  <input type="password" id="regPassword" required placeholder="Пароль" />
-                  <i class="fas fa-eye password-toggle" id="regPasswordToggle"></i>
-              </div>
-              
-              <div class="password-strength">
-                  <div class="password-strength-meter" id="passwordStrengthMeter"></div>
-              </div>
-              <div class="password-strength-text" id="passwordStrengthText"></div>
-              
-              <div class="input-group">
-                  <i class="fas fa-lock"></i>
-                  <input type="password" id="regPasswordConfirm" required placeholder="Підтвердіть пароль" />
-                  <i class="fas fa-eye password-toggle" id="regPasswordConfirmToggle"></i>
-              </div>
-              
-              <button type="submit">
-                  <i class="fas fa-user-plus"></i> ЗАРЕЄСТРУВАТИСЯ
-              </button>
-              
-              <div class="form-footer">
-                  Вже маєте акаунт? <a href="#" id="showLoginForm">Увійти</a>
-              </div>
-          </form>
+              <form id="registerForm">
+                  <h2><i class="fas fa-user-plus"></i> Реєстрація</h2>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-user"></i>
+                      <input type="text" id="regUsername" required placeholder="Ім'я користувача або email" />
+                  </div>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-lock"></i>
+                      <input type="password" id="regPassword" required placeholder="Пароль" />
+                      <i class="fas fa-eye password-toggle" id="regPasswordToggle"></i>
+                  </div>
+                  
+                  <div class="password-strength">
+                      <div class="password-strength-meter" id="passwordStrengthMeter"></div>
+                  </div>
+                  <div class="password-strength-text" id="passwordStrengthText"></div>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-lock"></i>
+                      <input type="password" id="regPasswordConfirm" required placeholder="Підтвердіть пароль" />
+                      <i class="fas fa-eye password-toggle" id="regPasswordConfirmToggle"></i>
+                  </div>
+                  
+                  <button type="submit">
+                      <i class="fas fa-user-plus"></i> ЗАРЕЄСТРУВАТИСЯ
+                  </button>
+                  
+                  <div class="form-footer">
+                      Вже маєте акаунт? <a href="#" id="showLoginForm">Увійти</a>
+                  </div>
+              </form>
 
-          <form id="loginForm">
-              <h2><i class="fas fa-sign-in-alt"></i> Логін</h2>
-              
-              <div class="input-group">
-                  <i class="fas fa-user"></i>
-                  <input type="text" id="loginUsername" required placeholder="Ім'я користувача або email" />
-              </div>
-              
-              <div class="input-group">
-                  <i class="fas fa-lock"></i>
-                  <input type="password" id="loginPassword" required placeholder="Пароль" />
-                  <i class="fas fa-eye password-toggle" id="loginPasswordToggle"></i>
-              </div>
-              
-              <div class="remember-me">
-                  <input type="checkbox" id="rememberMe">
-                  <label for="rememberMe">Запам'ятати мене</label>
-              </div>
-              
-              <button type="submit">
-                  <i class="fas fa-sign-in-alt"></i> УВІЙТИ
-              </button>
-              
-              <div class="form-footer">
-                  Немає акаунту? <a href="#" id="showRegisterForm">Зареєструватися</a>
-              </div>
-          </form>
+              <form id="loginForm">
+                  <h2><i class="fas fa-sign-in-alt"></i> Логін</h2>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-user"></i>
+                      <input type="text" id="loginUsername" required placeholder="Ім'я користувача або email" />
+                  </div>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-lock"></i>
+                      <input type="password" id="loginPassword" required placeholder="Пароль" />
+                      <i class="fas fa-eye password-toggle" id="loginPasswordToggle"></i>
+                  </div>
+                  
+                  <div class="remember-me">
+                      <input type="checkbox" id="rememberMe">
+                      <label for="rememberMe">Запам'ятати мене</label>
+                  </div>
+                  
+                  <button type="submit">
+                      <i class="fas fa-sign-in-alt"></i> УВІЙТИ
+                  </button>
+                  
+                  <div class="form-footer">
+                      Немає акаунту? <a href="#" id="showRegisterForm">Зареєструватися</a>
+                  </div>
+              </form>
+          </div>
       </main>
+
+      <div class="back-to-top" id="backToTop">
+          <i class="fas fa-arrow-up"></i>
+      </div>
   </div>
 
   <div id="modalOverlay" class="modal-overlay">
@@ -682,296 +118,9 @@
             <button id="modalOkButton" class="modal-button">OK</button>
         </div>
     </div>
-</div>
+  </div>
 
-  <script>
-      // Theme Toggle
-      const themeToggle = document.getElementById('themeToggle');
-      const htmlElement = document.documentElement;
-      
-      // Check for saved theme preference
-      if (localStorage.getItem('theme') === 'light') {
-          htmlElement.classList.remove('dark');
-          htmlElement.classList.add('light');
-          themeToggle.checked = true;
-      }
-      
-      // Toggle theme when switch is clicked
-      themeToggle.addEventListener('change', function() {
-          if (this.checked) {
-              htmlElement.classList.remove('dark');
-              htmlElement.classList.add('light');
-              localStorage.setItem('theme', 'light');
-          } else {
-              htmlElement.classList.remove('light');
-              htmlElement.classList.add('dark');
-              localStorage.setItem('theme', 'dark');
-          }
-      });
-
-      // Password visibility toggle
-      document.querySelectorAll('.password-toggle').forEach(toggle => {
-          toggle.addEventListener('click', function() {
-              const passwordField = this.previousElementSibling;
-              const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-              passwordField.setAttribute('type', type);
-              this.classList.toggle('fa-eye');
-              this.classList.toggle('fa-eye-slash');
-          });
-      });
-
-      // Form switching
-      document.getElementById('showLoginForm').addEventListener('click', function(e) {
-          e.preventDefault();
-          document.getElementById('registerForm').style.display = 'none';
-          document.getElementById('loginForm').style.display = 'block';
-          document.getElementById('loginForm').style.animation = 'fadeIn 0.5s ease-out forwards';
-      });
-
-      document.getElementById('showRegisterForm').addEventListener('click', function(e) {
-          e.preventDefault();
-          document.getElementById('loginForm').style.display = 'none';
-          document.getElementById('registerForm').style.display = 'block';
-          document.getElementById('registerForm').style.animation = 'fadeIn 0.5s ease-out forwards';
-      });
-
-      // Password strength meter
-      const passwordInput = document.getElementById('regPassword');
-      const strengthMeter = document.getElementById('passwordStrengthMeter');
-      const strengthText = document.getElementById('passwordStrengthText');
-
-      passwordInput.addEventListener('input', function() {
-          const password = this.value;
-          let strength = 0;
-          let feedback = '';
-
-          // Length check
-          if (password.length >= 8) {
-              strength += 1;
-          }
-
-          // Contains lowercase
-          if (/[a-z]/.test(password)) {
-              strength += 1;
-          }
-
-          // Contains uppercase
-          if (/[A-Z]/.test(password)) {
-              strength += 1;
-          }
-
-          // Contains number
-          if (/[0-9]/.test(password)) {
-              strength += 1;
-          }
-
-          // Contains special character
-          if (/[^A-Za-z0-9]/.test(password)) {
-              strength += 1;
-          }
-
-          // Update UI based on strength
-          strengthMeter.className = 'password-strength-meter';
-          
-          if (password.length === 0) {
-              strengthMeter.style.width = '0';
-              strengthText.textContent = '';
-          } else if (strength < 2) {
-              strengthMeter.classList.add('strength-weak');
-              feedback = 'Слабкий';
-          } else if (strength < 3) {
-              strengthMeter.classList.add('strength-medium');
-              feedback = 'Середній';
-          } else if (strength < 5) {
-              strengthMeter.classList.add('strength-good');
-              feedback = 'Хороший';
-          } else {
-              strengthMeter.classList.add('strength-strong');
-              feedback = 'Сильний';
-          }
-          
-          strengthText.textContent = feedback;
-      });
-
-      // Modal notification system
-      function showModal(message, type = 'success') {
-          const modalOverlay = document.getElementById('modalOverlay');
-          const modalContent = document.getElementById('modalContent');
-          const modalTitle = document.getElementById('modalTitle');
-          const modalMessage = document.getElementById('modalMessage');
-          const modalClose = document.querySelector('.modal-close');
-          const modalOkButton = document.getElementById('modalOkButton');
-          
-          // Set modal content
-          modalMessage.textContent = message;
-          
-          // Set title and class based on type
-          modalContent.className = 'modal-content';
-          modalContent.classList.add('modal-' + type);
-          
-          switch(type) {
-              case 'success':
-                  modalTitle.textContent = 'Успіх';
-                  break;
-              case 'error':
-                  modalTitle.textContent = 'Помилка';
-                  break;
-              case 'warning':
-                  modalTitle.textContent = 'Попередження';
-                  break;
-              case 'info':
-                  modalTitle.textContent = 'Інформація';
-                  break;
-          }
-          
-          // Show modal
-          modalOverlay.style.display = 'flex';
-          
-          // Close modal when clicking the close button
-          modalClose.onclick = function() {
-              modalOverlay.style.display = 'none';
-          };
-          
-          // Close modal when clicking the OK button
-          modalOkButton.onclick = function() {
-              modalOverlay.style.display = 'none';
-          };
-          
-          // Close modal when clicking outside the modal
-          modalOverlay.onclick = function(event) {
-              if (event.target === modalOverlay) {
-                  modalOverlay.style.display = 'none';
-              }
-          };
-      }
-
-      // Form validation
-      function validatePassword(password) {
-          // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
-          const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-          return regex.test(password);
-      }
-
-      function validateEmail(email) {
-          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          return regex.test(email);
-      }
-
-      // Form handling
-      async function handleFormSubmit(endpoint, username, password, confirmPassword = null) {
-          try {
-              // Basic validation
-              if (!username || !password) {
-                  showModal('Усі поля повинні бути заповнені!', 'error');
-                  return;
-              }
-
-              // Registration specific validation
-              if (endpoint === '/register') {
-                  if (password !== confirmPassword) {
-                      showModal('Паролі не співпадають!', 'error');
-                      return;
-                  }
-
-                  if (!validatePassword(password)) {
-                      showModal('Пароль повинен містити мінімум 8 символів, 1 велику літеру, 1 малу літеру та 1 цифру', 'warning');
-                      return;
-                  }
-              }
-
-              // Email validation if username looks like an email
-              if (username.includes('@') && !validateEmail(username)) {
-                  showModal('Введіть коректний email!', 'error');
-                  return;
-              }
-
-              // Show loading state
-              const submitButton = document.querySelector(`form[id="${endpoint === '/register' ? 'registerForm' : 'loginForm'}"] button[type="submit"]`);
-              const originalText = submitButton.innerHTML;
-              submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-              submitButton.disabled = true;
-
-              // Add email to request body if username looks like an email
-              const requestBody = { username, password };
-              if (username.includes('@') && validateEmail(username)) {
-                  requestBody.email = username;
-              }
-
-              const response = await fetch(endpoint, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(requestBody),
-              });
-
-              const data = await response.json();
-
-              // Reset button state
-              submitButton.innerHTML = originalText;
-              submitButton.disabled = false;
-
-              if (response.ok) {
-                  if (data.userId) {
-                      localStorage.setItem('userId', data.userId);
-                      localStorage.setItem('token', data.token);
-                      
-                      // Store username
-                      if (document.getElementById('rememberMe') && document.getElementById('rememberMe').checked) {
-                          localStorage.setItem('username', username);
-                      } else {
-                          sessionStorage.setItem('username', username);
-                      }
-                  }
-                  
-                  showModal(data.message, 'success');
-                  
-                  // Redirect after a short delay to show the success message
-                  setTimeout(() => {
-                      window.location.href = data.redirect;
-                  }, 1500);
-              } else {
-                  showModal(data.message, 'error');
-              }
-          } catch (error) {
-              console.error("Error:", error);
-              showModal("Помилка з'єднання з сервером. Перевірте підключення до бази даних.", 'error');
-          }
-      }
-
-      document.getElementById("registerForm").addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const username = document.getElementById("regUsername").value;
-          const password = document.getElementById("regPassword").value;
-          const confirmPassword = document.getElementById("regPasswordConfirm").value;
-          await handleFormSubmit("/register", username, password, confirmPassword);
-      });
-
-      document.getElementById("loginForm").addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const username = document.getElementById("loginUsername").value;
-          const password = document.getElementById("loginPassword").value;
-          await handleFormSubmit("/login", username, password);
-      });
-
-      // Check for remembered username
-      window.addEventListener('DOMContentLoaded', () => {
-          const rememberedUsername = localStorage.getItem('username');
-          if (rememberedUsername) {
-              document.getElementById('loginUsername').value = rememberedUsername;
-              document.getElementById('rememberMe').checked = true;
-          }
-      });
-
-      // Initialize UI state
-      document.addEventListener('DOMContentLoaded', function() {
-          // Check if user is already logged in
-          const userId = localStorage.getItem('userId');
-          if (userId) {
-              showModal('Ви вже увійшли в систему. Перенаправлення...', 'info');
-              setTimeout(() => {
-                  window.location.href = 'index.html';
-              }, 2000);
-          }
-      });
-  </script>
+  <script src="./js/auth.js"></script>
 </body>
 </html>
+
