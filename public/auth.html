@@ -1,1432 +1,977 @@
 <!DOCTYPE html>
 <html lang="uk" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Авторизація - ProFix Network Hub</title>
-    <meta
-      name="description"
-      content="Сторінка авторизації ProFix Network Hub - платформи, що з'єднує клієнтів з професійними майстрами"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="manifest" href="/manifest.json" />
-    <style>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Реєстрація та Логін - ProFix Network Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
       :root {
-        /* Modern color palette */
-        --background-dark: #0f172a;
-        --background-light: #f8fafc;
-        --text-dark: #f1f5f9;
-        --text-light: #1e293b;
-        --primary-color: #3b82f6;
-        --secondary-color: #60a5fa;
-        --accent-color: #8b5cf6;
-        --success-color: #10b981;
-        --warning-color: #f59e0b;
-        --danger-color: #ef4444;
-        --info-color: #06b6d4;
-        --card-bg-dark: #1e293b;
-        --card-bg-light: #ffffff;
-        --border-dark: #334155;
-        --border-light: #e2e8f0;
-        --footer-bg-dark: #0f172a;
-        --footer-bg-light: #f1f5f9;
-        --shadow-dark: 0 10px 25px rgba(0, 0, 0, 0.5);
-        --shadow-light: 0 10px 25px rgba(0, 0, 0, 0.1);
-        --gradient-dark: linear-gradient(145deg, #1e293b, #334155);
-        --gradient-light: linear-gradient(145deg, #f8fafc, #ffffff);
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+          --background-dark: #1a1a1a;
+          --background-light: #f5f5f5;
+          --text-dark: #fff;
+          --text-light: #333;
+          --primary-color: #ff3300;
+          --secondary-color: #ff6600;
+          --accent-color: #007bff;
+          --success-color: #28a745;
+          --danger-color: #dc3545;
+          --warning-color: #ffc107;
+          --info-color: #17a2b8;
       }
 
       html {
-        scroll-behavior: smooth;
-        height: 100%;
-        font-size: 16px;
+          scroll-behavior: smooth;
+          height: 100%;
       }
 
       body {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        background: var(--background-dark);
-        background-image: radial-gradient(
-            rgba(59, 130, 246, 0.05) 1px,
-            transparent 1px
-          ),
-          radial-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px);
-        background-size: 50px 50px;
-        background-position: 0 0, 25px 25px;
-        color: var(--text-dark);
-        font-family: "Montserrat", sans-serif;
-        transition: background 0.3s ease, color 0.3s ease;
-        margin: 0;
-        overflow-x: hidden;
-        line-height: 1.6;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+          background: var(--background-dark);
+          background-image: radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px),
+              radial-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px);
+          background-size: 50px 50px;
+          background-position: 0 0, 25px 25px;
+          padding: 20px;
+          color: var(--text-dark);
+          font-family: 'Roboto', Arial, sans-serif;
+          transition: background 0.3s ease, color 0.3s ease;
+          margin: 0;
+          overflow-x: hidden;
       }
 
       html.light body {
-        background: var(--background-light);
-        color: var(--text-light);
+          background: var(--background-light);
+          color: var(--text-light);
       }
 
       .container {
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-        flex: 1;
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 20px;
       }
 
-      /* Header Styles */
-      .header {
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        width: 100%;
-        background: rgba(15, 23, 42, 0.95);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: var(--shadow-dark);
-        transition: all 0.3s ease;
+      header {
+          width: 100%;
+          background: linear-gradient(145deg, #222222, #333333);
+          border-radius: 10px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+          margin-bottom: 20px;
+          padding: 15px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 10px;
+          transition: all 0.3s ease;
       }
 
-      html.light .header {
-        background: rgba(248, 250, 252, 0.95);
-        box-shadow: var(--shadow-light);
-      }
-
-      .header-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 0;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
+      html.light header {
+          background: linear-gradient(145deg, #e0e0e0, #f0f0f0);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
       }
 
       .logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        text-decoration: none;
-        transition: transform 0.3s ease;
-      }
-
-      .logo:hover {
-        transform: scale(1.05);
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: var(--primary-color);
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          gap: 10px;
       }
 
       .logo i {
-        font-size: 1.8rem;
-        animation: spin 5s linear infinite;
+          font-size: 1.8rem;
       }
 
       .theme-switch {
-        position: relative;
-        display: inline-block;
-        width: 60px;
-        height: 30px;
-        margin-left: 15px;
+          position: relative;
+          display: inline-block;
+          width: 60px;
+          height: 30px;
+          margin: 0 10px;
       }
 
       .theme-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
+          opacity: 0;
+          width: 0;
+          height: 0;
       }
 
       .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #334155;
-        transition: 0.4s;
-        border-radius: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 5px;
-        overflow: hidden;
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #333;
+          transition: .4s;
+          border-radius: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 5px;
       }
 
       html.light .slider {
-        background-color: #cbd5e1;
+          background-color: #ccc;
       }
 
       .slider:before {
-        position: absolute;
-        content: "";
-        height: 22px;
-        width: 22px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: 0.4s;
-        border-radius: 50%;
-        z-index: 2;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      }
-
-      .slider .moon,
-      .slider .sun {
-        z-index: 1;
-        font-size: 14px;
-        transition: transform 0.4s ease;
-      }
-
-      .slider .moon {
-        margin-right: 5px;
-        transform: translateX(30px);
-      }
-
-      .slider .sun {
-        margin-left: 5px;
-        transform: translateX(-30px);
-      }
-
-      input:checked + .slider:before {
-        transform: translateX(30px);
-      }
-
-      input:checked + .slider .moon {
-        transform: translateX(0);
-      }
-
-      input:checked + .slider .sun {
-        transform: translateX(0);
+          position: absolute;
+          content: "";
+          height: 22px;
+          width: 22px;
+          left: 4px;
+          bottom: 4px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
       }
 
       input:checked + .slider {
-        background-color: var(--primary-color);
+          background-color: var(--primary-color);
       }
 
-      /* Auth Forms Container */
-      .auth-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: calc(100vh - 80px);
-        padding: 40px 20px;
-        perspective: 1000px;
+      input:checked + .slider:before {
+          transform: translateX(30px);
       }
 
-      .auth-card {
-        width: 100%;
-        max-width: 450px;
-        background: var(--gradient-dark);
-        border-radius: 15px;
-        box-shadow: var(--shadow-dark);
-        overflow: hidden;
-        position: relative;
-        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border: 1px solid var(--border-dark);
-        transform-style: preserve-3d;
+      .slider .sun, .slider .moon {
+          color: #ffffff;
+          font-size: 14px;
       }
 
-      html.light .auth-card {
-        background: var(--gradient-light);
-        box-shadow: var(--shadow-light);
-        border: 1px solid var(--border-light);
+      main {
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 20px;
       }
 
-      .auth-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      h1 {
+          width: 100%;
+          text-align: center;
+          font-size: 2rem;
+          margin-bottom: 20px;
+          color: var(--primary-color);
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
 
-      html.light .auth-card:hover {
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      form {
+          flex: 1;
+          min-width: 300px;
+          max-width: 400px;
+          background: linear-gradient(45deg, rgba(40, 40, 40, 0.95), rgba(30, 30, 30, 0.95));
+          padding: 30px;
+          border-radius: 12px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          position: relative;
+          overflow: hidden;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
       }
 
-      .auth-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 5px;
-        background: linear-gradient(
-          90deg,
-          var(--primary-color),
-          var(--secondary-color),
-          var(--primary-color)
-        );
-        background-size: 200% 100%;
-        animation: gradientMove 5s linear infinite;
+      form:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
       }
 
-      .auth-header {
-        padding: 25px 30px 15px;
-        text-align: center;
-        position: relative;
+      form:before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: repeating-linear-gradient(
+              45deg,
+              transparent,
+              transparent 10px,
+              rgba(0, 0, 0, 0.1) 10px,
+              rgba(0, 0, 0, 0.1) 20px
+          );
+          z-index: -1;
       }
 
-      .auth-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        margin-bottom: 10px;
-        position: relative;
-        display: inline-block;
+      html.light form {
+          background: linear-gradient(45deg, rgba(240, 240, 240, 0.95), rgba(250, 250, 250, 0.95));
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
       }
 
-      .auth-title::after {
-        content: "";
-        position: absolute;
-        bottom: -5px;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background: var(--primary-color);
-        transform: scaleX(0);
-        transform-origin: center;
-        transition: transform 0.3s ease;
+      form h2 {
+          font-size: 1.5rem;
+          margin-bottom: 20px;
+          color: var(--primary-color);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
       }
 
-      .auth-card:hover .auth-title::after {
-        transform: scaleX(1);
+      label {
+          display: block;
+          margin-bottom: 15px;
+          color: var(--text-dark);
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          letter-spacing: 1px;
       }
 
-      .auth-subtitle {
-        font-size: 1rem;
-        color: var(--text-dark);
-        margin-bottom: 20px;
-        opacity: 0.8;
+      html.light label {
+          color: var(--text-light);
       }
 
-      html.light .auth-subtitle {
-        color: var(--text-light);
+      .input-group {
+          position: relative;
+          margin-bottom: 20px;
       }
 
-      .auth-tabs {
-        display: flex;
-        border-bottom: 1px solid var(--border-dark);
-        margin-bottom: 20px;
+      .input-group i {
+          position: absolute;
+          left: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--primary-color);
       }
 
-      html.light .auth-tabs {
-        border-bottom: 1px solid var(--border-light);
+      input {
+          width: 100%;
+          padding: 12px 10px 12px 35px;
+          border: none;
+          border-radius: 5px;
+          background: rgba(255, 255, 255, 0.1);
+          color: var(--text-dark);
+          font-size: 1rem;
+          transition: all 0.3s ease;
       }
 
-      .auth-tab {
-        flex: 1;
-        padding: 15px;
-        text-align: center;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        color: var(--text-dark);
-        opacity: 0.7;
+      html.light input {
+          background: rgba(0, 0, 0, 0.1);
+          color: var(--text-light);
       }
 
-      html.light .auth-tab {
-        color: var(--text-light);
-      }
-
-      .auth-tab.active {
-        color: var(--primary-color);
-        opacity: 1;
-      }
-
-      .auth-tab::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background: var(--primary-color);
-        transform: scaleX(0);
-        transition: transform 0.3s ease;
-      }
-
-      .auth-tab.active::after {
-        transform: scaleX(1);
-      }
-
-      .auth-tab:hover {
-        background: rgba(59, 130, 246, 0.05);
-      }
-
-      .auth-forms {
-        position: relative;
-        overflow: hidden;
-        min-height: 350px;
-      }
-
-      .auth-form {
-        padding: 20px 30px 30px;
-        transition: all 0.5s ease;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateX(50px);
-      }
-
-      .auth-form.active {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(0);
-        position: relative;
-      }
-
-      .form-group {
-        margin-bottom: 20px;
-        position: relative;
-        transition: transform 0.3s ease;
-      }
-
-      .form-group:hover {
-        transform: translateX(5px);
-      }
-
-      .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--text-dark);
-        transition: color 0.3s ease;
-      }
-
-      html.light .form-group label {
-        color: var(--text-light);
-      }
-
-      .form-group:hover label {
-        color: var(--primary-color);
-      }
-
-      .form-input {
-        width: 100%;
-        padding: 12px 15px 12px 40px;
-        border-radius: 8px;
-        border: 1px solid var(--border-dark);
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text-dark);
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        font-family: "Montserrat", sans-serif;
-      }
-
-      html.light .form-input {
-        border: 1px solid var(--border-light);
-        background: rgba(255, 255, 255, 0.8);
-        color: var(--text-light);
-      }
-
-      .form-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-        transform: translateY(-3px);
-      }
-
-      .form-icon {
-        position: absolute;
-        left: 15px;
-        top: 40px;
-        color: var(--primary-color);
-        transition: transform 0.3s ease;
-      }
-
-      .form-group:hover .form-icon {
-        transform: scale(1.2);
+      input:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px var(--primary-color);
       }
 
       .password-toggle {
-        position: absolute;
-        right: 15px;
-        top: 40px;
-        color: var(--text-dark);
-        cursor: pointer;
-        transition: all 0.3s ease;
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          cursor: pointer;
+          color: var(--text-dark);
       }
 
       html.light .password-toggle {
-        color: var(--text-light);
+          color: var(--text-light);
       }
 
-      .password-toggle:hover {
-        color: var(--primary-color);
-        transform: scale(1.2);
+      form button {
+          width: 100%;
+          padding: 12px;
+          margin-top: 20px;
+          font-size: 1rem;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
+          background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+          color: white;
+          border: none;
+          border-radius: 5px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+      }
+
+      form button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      #registerForm {
+          border-left: 4px solid var(--primary-color);
+      }
+
+      #loginForm {
+          border-left: 4px solid var(--accent-color);
+          display: none;
+      }
+
+      #loginForm button {
+          background: linear-gradient(90deg, var(--accent-color), #0056b3);
+      }
+
+      .form-footer {
+          margin-top: 20px;
+          text-align: center;
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.7);
+      }
+
+      html.light .form-footer {
+          color: rgba(0, 0, 0, 0.7);
+      }
+
+      .form-footer a {
+          color: var(--primary-color);
+          text-decoration: none;
+          font-weight: bold;
+      }
+
+      .form-footer a:hover {
+          text-decoration: underline;
       }
 
       .password-strength {
-        height: 4px;
-        background: #4b5563;
-        border-radius: 2px;
-        margin-top: 8px;
-        overflow: hidden;
+          height: 5px;
+          margin-top: 5px;
+          border-radius: 5px;
+          background: #ddd;
+          overflow: hidden;
       }
 
       .password-strength-meter {
-        height: 100%;
-        width: 0;
-        border-radius: 2px;
-        transition: width 0.3s ease, background-color 0.3s ease;
+          height: 100%;
+          width: 0;
+          transition: width 0.3s ease, background-color 0.3s ease;
       }
 
       .password-strength-text {
-        font-size: 0.8rem;
-        text-align: right;
-        margin-top: 5px;
-        transition: color 0.3s ease;
+          font-size: 0.8rem;
+          margin-top: 5px;
+          text-align: right;
+      }
+
+      .strength-weak {
+          background-color: var(--danger-color);
+          width: 25%;
+      }
+
+      .strength-medium {
+          background-color: var(--warning-color);
+          width: 50%;
+      }
+
+      .strength-good {
+          background-color: var(--info-color);
+          width: 75%;
+      }
+
+      .strength-strong {
+          background-color: var(--success-color);
+          width: 100%;
       }
 
       .remember-me {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 20px;
-        transition: transform 0.3s ease;
-      }
-
-      .remember-me:hover {
-        transform: translateX(5px);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 15px;
       }
 
       .remember-me input {
-        width: 16px;
-        height: 16px;
-        cursor: pointer;
+          width: auto;
+          margin: 0;
       }
 
       .remember-me label {
-        cursor: pointer;
-        font-size: 0.9rem;
-        color: var(--text-dark);
+          margin: 0;
+          text-transform: none;
+          letter-spacing: normal;
+          font-size: 0.9rem;
       }
 
-      html.light .remember-me label {
-        color: var(--text-light);
-      }
-
-      .auth-btn {
-        width: 100%;
-        padding: 12px;
-        background: linear-gradient(
-          90deg,
-          var(--primary-color),
-          var(--secondary-color)
-        );
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        position: relative;
-        overflow: hidden;
-        z-index: 1;
-      }
-
-      .auth-btn::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          var(--secondary-color),
-          var(--primary-color)
-        );
-        transition: all 0.5s ease;
-        z-index: -1;
-      }
-
-      .auth-btn:hover::before {
-        left: 0;
-      }
-
-      .auth-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
-      }
-
-      .auth-btn:active {
-        transform: translateY(-1px);
-        box-shadow: 0 5px 10px rgba(59, 130, 246, 0.4);
-      }
-
-      .auth-btn i {
-        transition: transform 0.3s ease;
-      }
-
-      .auth-btn:hover i {
-        transform: translateX(5px);
-      }
-
-      .auth-footer {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 0.9rem;
-        color: var(--text-dark);
-        opacity: 0.8;
-      }
-
-      html.light .auth-footer {
-        color: var(--text-light);
-      }
-
-      .auth-link {
-        color: var(--primary-color);
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        position: relative;
-      }
-
-      .auth-link::after {
-        content: "";
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        width: 0;
-        height: 2px;
-        background: var(--primary-color);
-        transition: width 0.3s ease;
-      }
-
-      .auth-link:hover {
-        color: var(--secondary-color);
-      }
-
-      .auth-link:hover::after {
-        width: 100%;
-      }
-
-      /* Toast Notifications */
-      .toast-container {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .toast {
-        background: var(--gradient-dark);
-        color: var(--text-dark);
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: var(--shadow-dark);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 300px;
-        max-width: 400px;
-        transform: translateX(120%);
-        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border-left: 4px solid var(--primary-color);
-        position: relative;
-        overflow: hidden;
-      }
-
-      html.light .toast {
-        background: var(--gradient-light);
-        color: var(--text-light);
-        box-shadow: var(--shadow-light);
-      }
-
-      .toast.show {
-        transform: translateX(0);
-      }
-
-      .toast-icon {
-        font-size: 1.5rem;
-        color: var(--primary-color);
-      }
-
-      .toast-content {
-        flex: 1;
-      }
-
-      .toast-title {
-        font-weight: 600;
-        margin-bottom: 5px;
-      }
-
-      .toast-message {
-        font-size: 0.9rem;
-        opacity: 0.9;
-      }
-
-      .toast-close {
-        background: none;
-        border: none;
-        color: var(--text-dark);
-        font-size: 1.2rem;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-      }
-
-      html.light .toast-close {
-        color: var(--text-light);
-      }
-
-      .toast-close:hover {
-        transform: rotate(90deg);
-        color: var(--primary-color);
-      }
-
-      .toast-progress {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 3px;
-        background: var(--primary-color);
-        width: 100%;
-        transform-origin: left;
-        animation: progress 5s linear forwards;
-      }
-
-      @keyframes progress {
-        to {
-          transform: scaleX(0);
-        }
-      }
-
-      /* Footer */
-      .footer {
-        background-color: var(--footer-bg-dark);
-        color: var(--text-dark);
-        padding: 20px 0;
-        text-align: center;
-        font-size: 0.9rem;
-        position: relative;
-      }
-
-      html.light .footer {
-        background-color: var(--footer-bg-light);
-        color: var(--text-light);
-      }
-
-      .footer::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 1px;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          var(--primary-color),
-          transparent
-        );
-      }
-
-      /* Animations */
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes slideUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes slideLeft {
-        from {
-          opacity: 0;
-          transform: translateX(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
-      @keyframes slideRight {
-        from {
-          opacity: 0;
-          transform: translateX(-30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
-      @keyframes pulse {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
-        }
-        50% {
-          transform: scale(1.05);
-          box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5);
-        }
-        100% {
-          transform: scale(1);
-          box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
-        }
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      @keyframes textFocus {
-        0% {
-          filter: blur(12px);
-          opacity: 0;
-        }
-        100% {
-          filter: blur(0);
-          opacity: 1;
-        }
-      }
-
-      @keyframes gradientMove {
-        0% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-
-      @keyframes float {
-        0% {
-          transform: translateY(0px);
-        }
-        50% {
-          transform: translateY(-10px);
-        }
-        100% {
-          transform: translateY(0px);
-        }
-      }
-
-      @keyframes shake {
-        0%,
-        100% {
-          transform: translateX(0);
-        }
-        10%,
-        30%,
-        50%,
-        70%,
-        90% {
-          transform: translateX(-5px);
-        }
-        20%,
-        40%,
-        60%,
-        80% {
-          transform: translateX(5px);
-        }
-      }
-
-      /* Responsive Styles */
       @media (max-width: 768px) {
-        .auth-container {
-          padding: 20px;
-        }
+          header {
+              flex-direction: column;
+              align-items: stretch;
+          }
 
-        .auth-card {
-          max-width: 100%;
-        }
+          .theme-switch-container {
+              display: flex;
+              justify-content: center;
+              margin-top: 10px;
+          }
 
-        .auth-title {
-          font-size: 1.8rem;
-        }
+          main {
+              flex-direction: column;
+              align-items: center;
+          }
 
-        .auth-form {
-          padding: 15px 20px 25px;
-        }
+          form {
+              width: 100%;
+          }
       }
 
       @media (max-width: 480px) {
-        .auth-title {
+          body {
+              padding: 10px;
+          }
+
+          header {
+              padding: 10px;
+          }
+
+          .logo {
+              font-size: 1.2rem;
+          }
+
+          h1 {
+              font-size: 1.5rem;
+          }
+
+          form {
+              padding: 20px;
+          }
+
+          form h2 {
+              font-size: 1.2rem;
+          }
+      }
+
+      /* Animation for forms */
+      @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+
+      #registerForm, #loginForm {
+          animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      #loginForm {
+          animation-delay: 0.2s;
+      }
+
+      /* Modal styles */
+      .modal-overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.7);
+          z-index: 1000;
+          justify-content: center;
+          align-items: center;
+          animation: fadeIn 0.3s ease-out;
+      }
+
+      .modal-content {
+          background: linear-gradient(45deg, rgba(40, 40, 40, 0.95), rgba(30, 30, 30, 0.95));
+          border-radius: 12px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+          width: 90%;
+          max-width: 500px;
+          overflow: hidden;
+          animation: slideIn 0.3s ease-out;
+          border-left: 4px solid var(--primary-color);
+      }
+
+      html.light .modal-content {
+          background: linear-gradient(45deg, rgba(240, 240, 240, 0.95), rgba(250, 250, 250, 0.95));
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-header {
+          padding: 15px 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      html.light .modal-header {
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      #modalTitle {
+          font-size: 1.2rem;
+          font-weight: bold;
+          color: var(--primary-color);
+      }
+
+      .modal-close {
           font-size: 1.5rem;
-        }
-
-        .auth-subtitle {
-          font-size: 0.9rem;
-        }
-
-        .auth-tab {
-          padding: 12px 10px;
-          font-size: 0.9rem;
-        }
-
-        .form-input {
-          padding: 10px 15px 10px 35px;
-        }
-
-        .form-icon {
-          left: 12px;
-          top: 38px;
-        }
-
-        .password-toggle {
-          right: 12px;
-          top: 38px;
-        }
-
-        .auth-btn {
-          padding: 10px;
-          font-size: 0.9rem;
-        }
+          cursor: pointer;
+          color: var(--text-dark);
       }
-    </style>
-  </head>
-  <body>
-    <!-- Toast Notifications Container -->
-    <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Header -->
-    <header class="header">
-      <div class="header-container">
-        <a href="index.html" class="logo">
-          <i class="fas fa-tools"></i>
-          ProFix Network Hub
-        </a>
-        <label class="theme-switch">
-          <input type="checkbox" id="themeToggle" />
-          <span class="slider">
-            <span class="moon">🌙</span>
-            <span class="sun">☀️</span>
-          </span>
-        </label>
-      </div>
-    </header>
+      html.light .modal-close {
+          color: var(--text-light);
+      }
 
-    <!-- Main Content -->
-    <main>
-      <div class="auth-container">
-        <div class="auth-card">
-          <div class="auth-header">
-            <h1 class="auth-title">Авторизація</h1>
-            <p class="auth-subtitle">
-              Увійдіть або зареєструйтесь для доступу до всіх функцій платформи
-            </p>
+      .modal-body {
+          padding: 20px;
+          color: var(--text-dark);
+      }
+
+      html.light .modal-body {
+          color: var(--text-light);
+      }
+
+      .modal-footer {
+          padding: 15px 20px;
+          display: flex;
+          justify-content: flex-end;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      html.light .modal-footer {
+          border-top: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .modal-button {
+          padding: 8px 16px;
+          background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+          color: white;
+          border: none;
+          border-radius: 5px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+      }
+
+      .modal-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .modal-success #modalTitle {
+          color: var(--success-color);
+      }
+
+      .modal-error #modalTitle {
+          color: var(--danger-color);
+      }
+
+      .modal-warning #modalTitle {
+          color: var(--warning-color);
+      }
+
+      .modal-info #modalTitle {
+          color: var(--info-color);
+      }
+
+      @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+
+      @keyframes slideIn {
+          from { transform: translateY(-50px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+      }
+  </style>
+</head>
+<body>
+  <div class="container">
+      <header>
+          <a href="index.html" class="logo">
+              <i class="fas fa-tools"></i>
+              ProFix Network Hub
+          </a>
+          <div class="theme-switch-container">
+              <label class="theme-switch">
+                  <input type="checkbox" id="themeToggle">
+                  <span class="slider">
+                      <span class="moon">🌙</span>
+                      <span class="sun">☀️</span>
+                  </span>
+              </label>
           </div>
+      </header>
 
-          <div class="auth-tabs">
-            <div class="auth-tab active" id="loginTab">Вхід</div>
-            <div class="auth-tab" id="registerTab">Реєстрація</div>
-          </div>
-
-          <div class="auth-forms">
-            <!-- Login Form -->
-            <form class="auth-form active" id="loginForm">
-              <div class="form-group">
-                <label for="loginEmail">Email або логін</label>
-                <i class="fas fa-user form-icon"></i>
-                <input
-                  type="text"
-                  id="loginEmail"
-                  class="form-input"
-                  placeholder="Введіть email або логін"
-                  required
-                />
+      <main>
+          <h1>Реєстрація та Логін</h1>
+          
+          <form id="registerForm">
+              <h2><i class="fas fa-user-plus"></i> Реєстрація</h2>
+              
+              <div class="input-group">
+                  <i class="fas fa-user"></i>
+                  <input type="text" id="regUsername" required placeholder="Ім'я користувача або email" />
               </div>
-
-              <div class="form-group">
-                <label for="loginPassword">Пароль</label>
-                <i class="fas fa-lock form-icon"></i>
-                <input
-                  type="password"
-                  id="loginPassword"
-                  class="form-input"
-                  placeholder="Введіть пароль"
-                  required
-                />
-                <i
-                  class="fas fa-eye password-toggle"
-                  id="loginPasswordToggle"
-                ></i>
+              
+              <div class="input-group">
+                  <i class="fas fa-lock"></i>
+                  <input type="password" id="regPassword" required placeholder="Пароль" />
+                  <i class="fas fa-eye password-toggle" id="regPasswordToggle"></i>
               </div>
+              
+              <div class="password-strength">
+                  <div class="password-strength-meter" id="passwordStrengthMeter"></div>
+              </div>
+              <div class="password-strength-text" id="passwordStrengthText"></div>
+              
+              <div class="input-group">
+                  <i class="fas fa-lock"></i>
+                  <input type="password" id="regPasswordConfirm" required placeholder="Підтвердіть пароль" />
+                  <i class="fas fa-eye password-toggle" id="regPasswordConfirmToggle"></i>
+              </div>
+              
+              <button type="submit">
+                  <i class="fas fa-user-plus"></i> ЗАРЕЄСТРУВАТИСЯ
+              </button>
+              
+              <div class="form-footer">
+                  Вже маєте акаунт? <a href="#" id="showLoginForm">Увійти</a>
+              </div>
+          </form>
 
+          <form id="loginForm">
+              <h2><i class="fas fa-sign-in-alt"></i> Логін</h2>
+              
+              <div class="input-group">
+                  <i class="fas fa-user"></i>
+                  <input type="text" id="loginUsername" required placeholder="Ім'я користувача або email" />
+              </div>
+              
+              <div class="input-group">
+                  <i class="fas fa-lock"></i>
+                  <input type="password" id="loginPassword" required placeholder="Пароль" />
+                  <i class="fas fa-eye password-toggle" id="loginPasswordToggle"></i>
+              </div>
+              
               <div class="remember-me">
-                <input type="checkbox" id="rememberMe" />
-                <label for="rememberMe">Запам'ятати мене</label>
+                  <input type="checkbox" id="rememberMe">
+                  <label for="rememberMe">Запам'ятати мене</label>
               </div>
-
-              <button type="submit" class="auth-btn" id="loginButton">
-                <i class="fas fa-sign-in-alt"></i> Увійти
+              
+              <button type="submit">
+                  <i class="fas fa-sign-in-alt"></i> УВІЙТИ
               </button>
-
-              <div class="auth-footer">
-                <a href="#" class="auth-link">Забули пароль?</a>
+              
+              <div class="form-footer">
+                  Немає акаунту? <a href="#" id="showRegisterForm">Зареєструватися</a>
               </div>
-            </form>
+          </form>
+      </main>
+  </div>
 
-            <!-- Register Form -->
-            <form class="auth-form" id="registerForm">
-              <div class="form-group">
-                <label for="registerEmail">Email</label>
-                <i class="fas fa-envelope form-icon"></i>
-                <input
-                  type="email"
-                  id="registerEmail"
-                  class="form-input"
-                  placeholder="Введіть email"
-                  required
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="registerUsername">Ім'я користувача</label>
-                <i class="fas fa-user form-icon"></i>
-                <input
-                  type="text"
-                  id="registerUsername"
-                  class="form-input"
-                  placeholder="Введіть ім'я користувача"
-                  required
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="registerPassword">Пароль</label>
-                <i class="fas fa-lock form-icon"></i>
-                <input
-                  type="password"
-                  id="registerPassword"
-                  class="form-input"
-                  placeholder="Введіть пароль"
-                  required
-                />
-                <i
-                  class="fas fa-eye password-toggle"
-                  id="registerPasswordToggle"
-                ></i>
-                <div class="password-strength">
-                  <div
-                    class="password-strength-meter"
-                    id="passwordStrengthMeter"
-                  ></div>
-                </div>
-                <div
-                  class="password-strength-text"
-                  id="passwordStrengthText"
-                ></div>
-              </div>
-
-              <div class="form-group">
-                <label for="registerPasswordConfirm"
-                  >Підтвердження паролю</label
-                >
-                <i class="fas fa-lock form-icon"></i>
-                <input
-                  type="password"
-                  id="registerPasswordConfirm"
-                  class="form-input"
-                  placeholder="Підтвердіть пароль"
-                  required
-                />
-                <i
-                  class="fas fa-eye password-toggle"
-                  id="registerPasswordConfirmToggle"
-                ></i>
-              </div>
-
-              <button type="submit" class="auth-btn" id="registerButton">
-                <i class="fas fa-user-plus"></i> Зареєструватися
-              </button>
-            </form>
-          </div>
+  <div id="modalOverlay" class="modal-overlay">
+    <div id="modalContent" class="modal-content">
+        <div class="modal-header">
+            <span id="modalTitle">Повідомлення</span>
+            <span class="modal-close">&times;</span>
         </div>
-      </div>
-    </main>
+        <div id="modalBody" class="modal-body">
+            <p id="modalMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button id="modalOkButton" class="modal-button">OK</button>
+        </div>
+    </div>
+</div>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="container">
-        <p>&copy; 2024 ProFix Network Hub. Всі права захищені.</p>
-      </div>
-    </footer>
-
-    <script>
+  <script>
       // Theme Toggle
-      const themeToggle = document.getElementById("themeToggle");
+      const themeToggle = document.getElementById('themeToggle');
       const htmlElement = document.documentElement;
-
+      
       // Check for saved theme preference
-      if (localStorage.getItem("theme") === "light") {
-        htmlElement.classList.remove("dark");
-        htmlElement.classList.add("light");
-        themeToggle.checked = true;
+      if (localStorage.getItem('theme') === 'light') {
+          htmlElement.classList.remove('dark');
+          htmlElement.classList.add('light');
+          themeToggle.checked = true;
       }
-
+      
       // Toggle theme when switch is clicked
-      themeToggle.addEventListener("change", function () {
-        if (this.checked) {
-          htmlElement.classList.remove("dark");
-          htmlElement.classList.add("light");
-          localStorage.setItem("theme", "light");
-        } else {
-          htmlElement.classList.remove("light");
-          htmlElement.classList.add("dark");
-          localStorage.setItem("theme", "dark");
-        }
+      themeToggle.addEventListener('change', function() {
+          if (this.checked) {
+              htmlElement.classList.remove('dark');
+              htmlElement.classList.add('light');
+              localStorage.setItem('theme', 'light');
+          } else {
+              htmlElement.classList.remove('light');
+              htmlElement.classList.add('dark');
+              localStorage.setItem('theme', 'dark');
+          }
       });
 
-      // Tab Switching
-      const loginTab = document.getElementById("loginTab");
-      const registerTab = document.getElementById("registerTab");
-      const loginForm = document.getElementById("loginForm");
-      const registerForm = document.getElementById("registerForm");
-
-      loginTab.addEventListener("click", function () {
-        loginTab.classList.add("active");
-        registerTab.classList.remove("active");
-        loginForm.classList.add("active");
-        registerForm.classList.remove("active");
+      // Password visibility toggle
+      document.querySelectorAll('.password-toggle').forEach(toggle => {
+          toggle.addEventListener('click', function() {
+              const passwordField = this.previousElementSibling;
+              const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+              passwordField.setAttribute('type', type);
+              this.classList.toggle('fa-eye');
+              this.classList.toggle('fa-eye-slash');
+          });
       });
 
-      registerTab.addEventListener("click", function () {
-        registerTab.classList.add("active");
-        loginTab.classList.remove("active");
-        registerForm.classList.add("active");
-        loginForm.classList.remove("active");
+      // Form switching
+      document.getElementById('showLoginForm').addEventListener('click', function(e) {
+          e.preventDefault();
+          document.getElementById('registerForm').style.display = 'none';
+          document.getElementById('loginForm').style.display = 'block';
+          document.getElementById('loginForm').style.animation = 'fadeIn 0.5s ease-out forwards';
       });
 
-      // Password Visibility Toggle
-      const loginPasswordToggle = document.getElementById(
-        "loginPasswordToggle"
-      );
-      const registerPasswordToggle = document.getElementById(
-        "registerPasswordToggle"
-      );
-      const registerPasswordConfirmToggle = document.getElementById(
-        "registerPasswordConfirmToggle"
-      );
-
-      loginPasswordToggle.addEventListener("click", function () {
-        togglePasswordVisibility("loginPassword", this);
+      document.getElementById('showRegisterForm').addEventListener('click', function(e) {
+          e.preventDefault();
+          document.getElementById('loginForm').style.display = 'none';
+          document.getElementById('registerForm').style.display = 'block';
+          document.getElementById('registerForm').style.animation = 'fadeIn 0.5s ease-out forwards';
       });
 
-      registerPasswordToggle.addEventListener("click", function () {
-        togglePasswordVisibility("registerPassword", this);
-      });
+      // Password strength meter
+      const passwordInput = document.getElementById('regPassword');
+      const strengthMeter = document.getElementById('passwordStrengthMeter');
+      const strengthText = document.getElementById('passwordStrengthText');
 
-      registerPasswordConfirmToggle.addEventListener("click", function () {
-        togglePasswordVisibility("registerPasswordConfirm", this);
-      });
+      passwordInput.addEventListener('input', function() {
+          const password = this.value;
+          let strength = 0;
+          let feedback = '';
 
-      function togglePasswordVisibility(inputId, toggleIcon) {
-        const passwordInput = document.getElementById(inputId);
-        const type =
-          passwordInput.getAttribute("type") === "password"
-            ? "text"
-            : "password";
-        passwordInput.setAttribute("type", type);
-
-        toggleIcon.classList.toggle("fa-eye");
-        toggleIcon.classList.toggle("fa-eye-slash");
-      }
-
-      // Password Strength Meter
-      const registerPassword = document.getElementById("registerPassword");
-      const passwordStrengthMeter = document.getElementById(
-        "passwordStrengthMeter"
-      );
-      const passwordStrengthText = document.getElementById(
-        "passwordStrengthText"
-      );
-
-      registerPassword.addEventListener("input", function () {
-        const password = this.value;
-        let strength = 0;
-        let feedback = "";
-
-        // Check password strength
-        if (password.length > 0) {
           // Length check
           if (password.length >= 8) {
-            strength += 1;
+              strength += 1;
           }
 
           // Contains lowercase
           if (/[a-z]/.test(password)) {
-            strength += 1;
+              strength += 1;
           }
 
           // Contains uppercase
           if (/[A-Z]/.test(password)) {
-            strength += 1;
+              strength += 1;
           }
 
           // Contains number
           if (/[0-9]/.test(password)) {
-            strength += 1;
+              strength += 1;
           }
 
           // Contains special character
           if (/[^A-Za-z0-9]/.test(password)) {
-            strength += 1;
+              strength += 1;
           }
 
           // Update UI based on strength
-          if (strength < 2) {
-            passwordStrengthMeter.style.width = "25%";
-            passwordStrengthMeter.style.backgroundColor = "var(--danger-color)";
-            feedback = "Слабкий";
-            passwordStrengthText.style.color = "var(--danger-color)";
+          strengthMeter.className = 'password-strength-meter';
+          
+          if (password.length === 0) {
+              strengthMeter.style.width = '0';
+              strengthText.textContent = '';
+          } else if (strength < 2) {
+              strengthMeter.classList.add('strength-weak');
+              feedback = 'Слабкий';
           } else if (strength < 3) {
-            passwordStrengthMeter.style.width = "50%";
-            passwordStrengthMeter.style.backgroundColor =
-              "var(--warning-color)";
-            feedback = "Середній";
-            passwordStrengthText.style.color = "var(--warning-color)";
+              strengthMeter.classList.add('strength-medium');
+              feedback = 'Середній';
           } else if (strength < 5) {
-            passwordStrengthMeter.style.width = "75%";
-            passwordStrengthMeter.style.backgroundColor = "var(--info-color)";
-            feedback = "Хороший";
-            passwordStrengthText.style.color = "var(--info-color)";
+              strengthMeter.classList.add('strength-good');
+              feedback = 'Хороший';
           } else {
-            passwordStrengthMeter.style.width = "100%";
-            passwordStrengthMeter.style.backgroundColor =
-              "var(--success-color)";
-            feedback = "Сильний";
-            passwordStrengthText.style.color = "var(--success-color)";
+              strengthMeter.classList.add('strength-strong');
+              feedback = 'Сильний';
           }
-        } else {
-          passwordStrengthMeter.style.width = "0";
-          feedback = "";
-        }
-
-        passwordStrengthText.textContent = feedback;
+          
+          strengthText.textContent = feedback;
       });
 
-      // Toast Notification System
-      function showToast(title, message, type = "info", duration = 5000) {
-        const toastContainer = document.getElementById("toastContainer");
-
-        const toast = document.createElement("div");
-        toast.className = "toast";
-
-        let iconClass = "fa-info-circle";
-        if (type === "success") iconClass = "fa-check-circle";
-        if (type === "error") iconClass = "fa-exclamation-circle";
-        if (type === "warning") iconClass = "fa-exclamation-triangle";
-
-        toast.innerHTML = `
-          <div class="toast-icon"><i class="fas ${iconClass}"></i></div>
-          <div class="toast-content">
-            <div class="toast-title">${title}</div>
-            <div class="toast-message">${message}</div>
-          </div>
-          <button class="toast-close"><i class="fas fa-times"></i></button>
-          <div class="toast-progress"></div>
-        `;
-
-        toastContainer.appendChild(toast);
-
-        // Show toast with animation
-        setTimeout(() => {
-          toast.classList.add("show");
-        }, 10);
-
-        // Close button functionality
-        const closeBtn = toast.querySelector(".toast-close");
-        closeBtn.addEventListener("click", () => {
-          toast.classList.remove("show");
-          setTimeout(() => {
-            toast.remove();
-          }, 300);
-        });
-
-        // Auto close after duration
-        setTimeout(() => {
-          if (toast.parentNode) {
-            toast.classList.remove("show");
-            setTimeout(() => {
-              if (toast.parentNode) toast.remove();
-            }, 300);
+      // Modal notification system
+      function showModal(message, type = 'success') {
+          const modalOverlay = document.getElementById('modalOverlay');
+          const modalContent = document.getElementById('modalContent');
+          const modalTitle = document.getElementById('modalTitle');
+          const modalMessage = document.getElementById('modalMessage');
+          const modalClose = document.querySelector('.modal-close');
+          const modalOkButton = document.getElementById('modalOkButton');
+          
+          // Set modal content
+          modalMessage.textContent = message;
+          
+          // Set title and class based on type
+          modalContent.className = 'modal-content';
+          modalContent.classList.add('modal-' + type);
+          
+          switch(type) {
+              case 'success':
+                  modalTitle.textContent = 'Успіх';
+                  break;
+              case 'error':
+                  modalTitle.textContent = 'Помилка';
+                  break;
+              case 'warning':
+                  modalTitle.textContent = 'Попередження';
+                  break;
+              case 'info':
+                  modalTitle.textContent = 'Інформація';
+                  break;
           }
-        }, duration);
+          
+          // Show modal
+          modalOverlay.style.display = 'flex';
+          
+          // Close modal when clicking the close button
+          modalClose.onclick = function() {
+              modalOverlay.style.display = 'none';
+          };
+          
+          // Close modal when clicking the OK button
+          modalOkButton.onclick = function() {
+              modalOverlay.style.display = 'none';
+          };
+          
+          // Close modal when clicking outside the modal
+          modalOverlay.onclick = function(event) {
+              if (event.target === modalOverlay) {
+                  modalOverlay.style.display = 'none';
+              }
+          };
       }
 
-      // Form Validation and Submission
-      const loginFormElement = document.getElementById("loginForm");
-      const registerFormElement = document.getElementById("registerForm");
+      // Form validation
+      function validatePassword(password) {
+          // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+          const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+          return regex.test(password);
+      }
 
-      loginFormElement.addEventListener("submit", function (e) {
-        e.preventDefault();
+      function validateEmail(email) {
+          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return regex.test(email);
+      }
 
-        const email = document.getElementById("loginEmail").value;
-        const password = document.getElementById("loginPassword").value;
-        const rememberMe = document.getElementById("rememberMe").checked;
+      // Form handling
+      async function handleFormSubmit(endpoint, username, password, confirmPassword = null) {
+          try {
+              // Basic validation
+              if (!username || !password) {
+                  showModal('Усі поля повинні бути заповнені!', 'error');
+                  return;
+              }
 
-        // Simple validation
-        if (!email || !password) {
-          showToast("Помилка", "Будь ласка, заповніть всі поля", "error");
-          return;
-        }
+              // Registration specific validation
+              if (endpoint === '/register') {
+                  if (password !== confirmPassword) {
+                      showModal('Паролі не співпадають!', 'error');
+                      return;
+                  }
 
-        // Simulate API call
-        const loginButton = document.getElementById("loginButton");
-        loginButton.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-        loginButton.disabled = true;
+                  if (!validatePassword(password)) {
+                      showModal('Пароль повинен містити мінімум 8 символів, 1 велику літеру, 1 малу літеру та 1 цифру', 'warning');
+                      return;
+                  }
+              }
 
-        setTimeout(() => {
-          // Simulate successful login
-          localStorage.setItem("userId", "12345");
-          if (rememberMe) {
-            localStorage.setItem("username", email);
+              // Email validation if username looks like an email
+              if (username.includes('@') && !validateEmail(username)) {
+                  showModal('Введіть коректний email!', 'error');
+                  return;
+              }
+
+              // Show loading state
+              const submitButton = document.querySelector(`form[id="${endpoint === '/register' ? 'registerForm' : 'loginForm'}"] button[type="submit"]`);
+              const originalText = submitButton.innerHTML;
+              submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
+              submitButton.disabled = true;
+
+              // Add email to request body if username looks like an email
+              const requestBody = { username, password };
+              if (username.includes('@') && validateEmail(username)) {
+                  requestBody.email = username;
+              }
+
+              const response = await fetch(endpoint, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(requestBody),
+              });
+
+              const data = await response.json();
+
+              // Reset button state
+              submitButton.innerHTML = originalText;
+              submitButton.disabled = false;
+
+              if (response.ok) {
+                  if (data.userId) {
+                      localStorage.setItem('userId', data.userId);
+                      localStorage.setItem('token', data.token);
+                      
+                      // Store username
+                      if (document.getElementById('rememberMe') && document.getElementById('rememberMe').checked) {
+                          localStorage.setItem('username', username);
+                      } else {
+                          sessionStorage.setItem('username', username);
+                      }
+                  }
+                  
+                  showModal(data.message, 'success');
+                  
+                  // Redirect after a short delay to show the success message
+                  setTimeout(() => {
+                      window.location.href = data.redirect;
+                  }, 1500);
+              } else {
+                  showModal(data.message, 'error');
+              }
+          } catch (error) {
+              console.error("Error:", error);
+              showModal("Помилка з'єднання з сервером. Перевірте підключення до бази даних.", 'error');
           }
+      }
 
-          showToast("Успіх", "Ви успішно увійшли в систему", "success");
-
-          loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Увійти';
-          loginButton.disabled = false;
-
-          // Redirect after delay
-          setTimeout(() => {
-            window.location.href = "index.html";
-          }, 1500);
-        }, 1500);
+      document.getElementById("registerForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const username = document.getElementById("regUsername").value;
+          const password = document.getElementById("regPassword").value;
+          const confirmPassword = document.getElementById("regPasswordConfirm").value;
+          await handleFormSubmit("/register", username, password, confirmPassword);
       });
 
-      registerFormElement.addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const email = document.getElementById("registerEmail").value;
-        const username = document.getElementById("registerUsername").value;
-        const password = document.getElementById("registerPassword").value;
-        const passwordConfirm = document.getElementById(
-          "registerPasswordConfirm"
-        ).value;
-
-        // Validation
-        if (!email || !username || !password || !passwordConfirm) {
-          showToast("Помилка", "Будь ласка, заповніть всі поля", "error");
-          return;
-        }
-
-        if (password !== passwordConfirm) {
-          showToast("Помилка", "Паролі не співпадають", "error");
-          return;
-        }
-
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          showToast("Помилка", "Введіть коректний email", "error");
-          return;
-        }
-
-        // Password strength validation
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-        if (!passwordRegex.test(password)) {
-          showToast(
-            "Помилка",
-            "Пароль повинен містити мінімум 8 символів, 1 велику літеру, 1 малу літеру та 1 цифру",
-            "warning"
-          );
-          return;
-        }
-
-        // Simulate API call
-        const registerButton = document.getElementById("registerButton");
-        registerButton.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-        registerButton.disabled = true;
-
-        setTimeout(() => {
-          // Simulate successful registration
-          localStorage.setItem("userId", "12345");
-
-          showToast("Успіх", "Ви успішно зареєструвались", "success");
-
-          registerButton.innerHTML =
-            '<i class="fas fa-user-plus"></i> Зареєструватися';
-          registerButton.disabled = false;
-
-          // Redirect after delay
-          setTimeout(() => {
-            window.location.href = "index.html";
-          }, 1500);
-        }, 1500);
+      document.getElementById("loginForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const username = document.getElementById("loginUsername").value;
+          const password = document.getElementById("loginPassword").value;
+          await handleFormSubmit("/login", username, password);
       });
 
-      // Check if user is already logged in
-      document.addEventListener("DOMContentLoaded", function () {
-        const userId = localStorage.getItem("userId");
-        if (userId) {
-          showToast("Інформація", "Ви вже увійшли в систему", "info");
-          setTimeout(() => {
-            window.location.href = "index.html";
-          }, 2000);
-        }
-
-        // Check for remembered username
-        const rememberedUsername = localStorage.getItem("username");
-        if (rememberedUsername) {
-          document.getElementById("loginEmail").value = rememberedUsername;
-          document.getElementById("rememberMe").checked = true;
-        }
+      // Check for remembered username
+      window.addEventListener('DOMContentLoaded', () => {
+          const rememberedUsername = localStorage.getItem('username');
+          if (rememberedUsername) {
+              document.getElementById('loginUsername').value = rememberedUsername;
+              document.getElementById('rememberMe').checked = true;
+          }
       });
-    </script>
-  </body>
+
+      // Initialize UI state
+      document.addEventListener('DOMContentLoaded', function() {
+          // Check if user is already logged in
+          const userId = localStorage.getItem('userId');
+          if (userId) {
+              showModal('Ви вже увійшли в систему. Перенаправлення...', 'info');
+              setTimeout(() => {
+                  window.location.href = 'index.html';
+              }, 2000);
+          }
+      });
+  </script>
+</body>
 </html>
