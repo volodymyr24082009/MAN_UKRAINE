@@ -2,12 +2,17 @@
 <html lang="uk" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Адмін-панель - ProFix Network Hub</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="./css/admin.css">
+  
+  <!-- Add additional meta tags for better mobile experience -->
+  <meta name="theme-color" content="#1a2238" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
 <body>
   <div class="admin-layout">
@@ -70,8 +75,8 @@
           <label class="theme-switch">
             <input type="checkbox" id="themeToggle">
             <span class="slider">
-              <span class="moon">🌙</span>
-              <span class="sun">☀️</span>
+              <span class="moon"><i class="fas fa-moon"></i></span>
+              <span class="sun"><i class="fas fa-sun"></i></span>
             </span>
           </label>
           <div class="user-menu">
@@ -447,6 +452,6 @@
     <span id="notificationText">Операція успішно виконана</span>
   </div>
 
-  <script></script>
+  <script src="./js/admin.js"></script>
 </body>
 </html>
