@@ -2407,19 +2407,21 @@
             );
             tableBody.innerHTML = "";
 
-            if (data.requests.length === 0) {
+            if (!data.requests || data.requests.length === 0) {
               tableBody.innerHTML = `
-              <tr>
-                <td colspan="10">
-                  <div class="empty-state">
-                    <i class="fas fa-clipboard-check"></i>
-                    <div class="empty-state-text">Немає запитів на роль майстра</div>
-                  </div>
-                </td>
-              </tr>
-            `;
+            <tr>
+              <td colspan="10">
+                <div class="empty-state">
+                  <i class="fas fa-clipboard-check"></i>
+                  <div class="empty-state-text">Немає запитів на роль майстра</div>
+                </div>
+              </td>
+            </tr>
+          `;
               return;
             }
+
+            console.log("Master requests loaded:", data.requests.length);
 
             for (const request of data.requests) {
               // Fetch user services
@@ -2447,34 +2449,34 @@
               );
 
               const row = `
-              <tr>
-                <td>${request.id}</td>
-                <td>${request.username}</td>
-                <td>${request.first_name || ""}</td>
-                <td>${request.last_name || ""}</td>
-                <td>${request.email || ""}</td>
-                <td>${industries || "Не вказано"}</td>
-                <td>${skills || "Не вказано"}</td>
-                <td><span class="status-badge status-${
-                  request.status
-                }">${getStatusText(request.status)}</span></td>
-                <td>${createdDate}</td>
-                <td class="action-buttons">
-                  ${
-                    request.status === "pending"
-                      ? `
-                    <button class="btn btn-success" onclick="updateRequestStatus(${request.id}, 'approved')">
-                      <i class="fas fa-check"></i> Затвердити
-                    </button>
-                    <button class="btn btn-danger" onclick="updateRequestStatus(${request.id}, 'rejected')">
-                      <i class="fas fa-times"></i> Відхилити
-                    </button>
-                  `
-                      : ""
-                  }
-                </td>
-              </tr>
-            `;
+            <tr>
+              <td>${request.id}</td>
+              <td>${request.username}</td>
+              <td>${request.first_name || ""}</td>
+              <td>${request.last_name || ""}</td>
+              <td>${request.email || ""}</td>
+              <td>${industries || "Не вказано"}</td>
+              <td>${skills || "Не вказано"}</td>
+              <td><span class="status-badge status-${
+                request.status
+              }">${getStatusText(request.status)}</span></td>
+              <td>${createdDate}</td>
+              <td class="action-buttons">
+                ${
+                  request.status === "pending"
+                    ? `
+                  <button class="btn btn-success" onclick="updateRequestStatus(${request.id}, 'approved')">
+                    <i class="fas fa-check"></i> Затвердити
+                  </button>
+                  <button class="btn btn-danger" onclick="updateRequestStatus(${request.id}, 'rejected')">
+                    <i class="fas fa-times"></i> Відхилити
+                  </button>
+                `
+                    : ""
+                }
+              </td>
+            </tr>
+          `;
               tableBody.innerHTML += row;
             }
 
@@ -2957,10 +2959,17 @@
           })
             .then((response) => response.json())
             .then((data) => {
-              showNotification(data.message, "success");
-              loadMasterRequests();
-              loadMasters();
-              loadDashboardData();
+              if (data.success) {
+                showNotification(data.message, "success");
+                loadMasterRequests();
+                loadMasters();
+                loadDashboardData();
+              } else {
+                showNotification(
+                  data.message || "Помилка при оновленні запиту",
+                  "error"
+                );
+              }
             })
             .catch((error) => {
               console.error(
@@ -3075,6 +3084,7 @@
                 );
                 const status = getStatusText(order.status);
 
+                //
                 // Create CSV row
                 const row = [
                   order.id,
@@ -3249,6 +3259,222 @@
         getUserData();
         loadDashboardData();
       });
+    </script>
+
+    <script>
+      // Update the loadMasterRequests function to properly display master requests
+      function loadMasterRequests() {
+        fetch("/master-requests")
+          .then((response) => response.json())
+          .then(async (data) => {
+            const tableBody = document.querySelector(
+              "#masterRequestsTable tbody"
+            );
+            tableBody.innerHTML = "";
+
+            if (!data.requests || data.requests.length === 0) {
+              tableBody.innerHTML = `
+            <tr>
+              <td colspan="10">
+                <div class="empty-state">
+                  <i class="fas fa-clipboard-check"></i>
+                  <div class="empty-state-text">Немає запитів на роль майстра</div>
+                </div>
+              </td>
+            </tr>
+          `;
+              return;
+            }
+
+            console.log("Master requests loaded:", data.requests.length);
+
+            for (const request of data.requests) {
+              // Fetch user services
+              const servicesResponse = await fetch(
+                `/services/${request.user_id}`
+              );
+              const servicesData = await servicesResponse.json();
+
+              const industries = servicesData.services
+                .filter((service) => service.service_type === "industry")
+                .map((service) => service.service_name)
+                .join(", ");
+
+              const skills = servicesData.services
+                .filter(
+                  (service) =>
+                    service.service_type.endsWith("-skills-text") ||
+                    service.service_type === "custom-skills"
+                )
+                .map((service) => service.service_name)
+                .join(", ");
+
+              const createdDate = new Date(request.created_at).toLocaleString(
+                "uk-UA"
+              );
+
+              const row = `
+            <tr>
+              <td>${request.id}</td>
+              <td>${request.username}</td>
+              <td>${request.first_name || ""}</td>
+              <td>${request.last_name || ""}</td>
+              <td>${request.email || ""}</td>
+              <td>${industries || "Не вказано"}</td>
+              <td>${skills || "Не вказано"}</td>
+              <td><span class="status-badge status-${
+                request.status
+              }">${getStatusText(request.status)}</span></td>
+              <td>${createdDate}</td>
+              <td class="action-buttons">
+                ${
+                  request.status === "pending"
+                    ? `
+                  <button class="btn btn-success" onclick="updateRequestStatus(${request.id}, 'approved')">
+                    <i class="fas fa-check"></i> Затвердити
+                  </button>
+                  <button class="btn btn-danger" onclick="updateRequestStatus(${request.id}, 'rejected')">
+                    <i class="fas fa-times"></i> Відхилити
+                  </button>
+                `
+                    : ""
+                }
+              </td>
+            </tr>
+          `;
+              tableBody.innerHTML += row;
+            }
+
+            // Create pagination
+            createPagination(data.requests.length, 10, "requestsPagination");
+          })
+          .catch((error) => {
+            console.error("Помилка при завантаженні запитів майстрів:", error);
+            showNotification(
+              "Помилка при завантаженні запитів майстрів",
+              "error"
+            );
+          });
+      }
+
+      // Update the updateRequestStatus function to properly handle status updates
+      function updateRequestStatus(requestId, status) {
+        const statusText = status === "approved" ? "затвердити" : "відхилити";
+        if (confirm(`Ви впевнені, що хочете ${statusText} цей запит?`)) {
+          fetch(`/master-requests/${requestId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                showNotification(data.message, "success");
+                loadMasterRequests();
+                loadMasters();
+                loadDashboardData();
+              } else {
+                showNotification(
+                  data.message || "Помилка при оновленні запиту",
+                  "error"
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                `Помилка при ${
+                  statusText === "затвердити" ? "затвердженні" : "відхиленні"
+                } запиту:`,
+                error
+              );
+              showNotification(
+                `Помилка при ${
+                  statusText === "затвердити" ? "затвердженні" : "відхиленні"
+                } запиту`,
+                "error"
+              );
+            });
+        }
+      }
+
+      // Update the loadUsers function to properly display users
+      function loadUsers() {
+        fetch("/admin/users-with-services")
+          .then((response) => response.json())
+          .then((usersWithServices) => {
+            const tableBody = document.querySelector("#usersTable tbody");
+            tableBody.innerHTML = "";
+
+            if (!usersWithServices || usersWithServices.length === 0) {
+              tableBody.innerHTML = `
+            <tr>
+              <td colspan="9">
+                <div class="empty-state">
+                  <i class="fas fa-users"></i>
+                  <div class="empty-state-text">Немає користувачів для відображення</div>
+                </div>
+              </td>
+            </tr>
+          `;
+              return;
+            }
+
+            console.log("Users loaded:", usersWithServices.length);
+
+            usersWithServices.forEach((user) => {
+              const industries = user.services
+                .filter((service) => service.service_type === "industry")
+                .map((service) => service.service_name)
+                .join(", ");
+
+              const skills = user.services
+                .filter(
+                  (service) =>
+                    service.service_type.endsWith("-skills-text") ||
+                    service.service_type === "custom-skills"
+                )
+                .map((service) => service.service_name)
+                .join(", ");
+
+              const row = `
+            <tr>
+              <td>${user.id}</td>
+              <td>${user.username}</td>
+              <td>${user.role_master ? "Майстер" : "Користувач"} ${
+                user.approval_status
+                  ? `<span class="status-badge status-${
+                      user.approval_status
+                    }">${getStatusText(user.approval_status)}</span>`
+                  : ""
+              }</td>
+              <td>${user.first_name || ""}</td>
+              <td>${user.last_name || ""}</td>
+              <td>${user.email || ""}</td>
+              <td>${industries || "Не вказано"}</td>
+              <td>${skills || "Не вказано"}</td>
+              <td class="action-buttons">
+                <button class="btn btn-info" onclick="showUserDetails(${
+                  user.id
+                })">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-danger" onclick="deleteUser(${user.id})">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+              tableBody.innerHTML += row;
+            });
+
+            // Create pagination
+            createPagination(usersWithServices.length, 10, "usersPagination");
+          })
+          .catch((error) => {
+            console.error("Помилка при завантаженні користувачів:", error);
+            showNotification("Помилка при завантаженні користувачів", "error");
+          });
+      }
     </script>
   </body>
 </html>
