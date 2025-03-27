@@ -11,7 +11,7 @@ const cors = require("cors");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 30009;
+const port = process.env.PORT || 30565;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -28,16 +28,19 @@ const pool = new Pool({
 });
 
 // Test database connection
-pool.connect()
-  .then(client => {
+pool
+  .connect()
+  .then((client) => {
     console.log("✅ Successfully connected to PostgreSQL database!");
     console.log(`   Host: ${process.env.DB_HOST}`);
     console.log(`   Database: ${process.env.DB_NAME}`);
     client.release();
   })
-  .catch(err => {
+  .catch((err) => {
     console.error("❌ Database connection error:", err.message);
-    console.error("   Please check your database credentials and network connection.");
+    console.error(
+      "   Please check your database credentials and network connection."
+    );
     // Continue running the server even if DB connection fails initially
   });
 
@@ -50,7 +53,7 @@ app.use(express.static(path.join(__dirname)));
 // Helper function for database queries with retry logic
 const executeQuery = async (queryText, params = [], retries = 3) => {
   let lastError;
-  
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const result = await pool.query(queryText, params);
@@ -58,15 +61,15 @@ const executeQuery = async (queryText, params = [], retries = 3) => {
     } catch (err) {
       console.error(`Query attempt ${attempt} failed:`, err.message);
       lastError = err;
-      
+
       // If this isn't the last attempt, wait before retrying
       if (attempt < retries) {
         const delay = 1000 * attempt; // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
-  
+
   // If we get here, all attempts failed
   throw lastError;
 };
@@ -175,13 +178,17 @@ const createTables = async () => {
     await executeQuery(masterRequestsTableQuery);
     await executeQuery(ordersTableQuery);
     await executeQuery(addIndustryColumnQuery);
-    console.log("✅ Таблиці створено або вже існують, колонки додано (якщо їх не було).");
+    console.log(
+      "✅ Таблиці створено або вже існують, колонки додано (якщо їх не було)."
+    );
 
     // Додаємо базові галузі для нових користувачів, якщо вони ще не існують
     await initializeIndustries();
   } catch (err) {
     console.error("❌ Помилка при створенні таблиць:", err.message);
-    console.error("   Сервер продовжить роботу, але функціональність може бути обмежена.");
+    console.error(
+      "   Сервер продовжить роботу, але функціональність може бути обмежена."
+    );
   }
 };
 
@@ -256,7 +263,7 @@ const initializeIndustries = async () => {
 };
 
 // Try to create tables, but don't block server startup
-createTables().catch(err => {
+createTables().catch((err) => {
   console.error("Failed to initialize database tables:", err.message);
 });
 
@@ -270,13 +277,21 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if (token == null) return res.status(401).json({ message: "Необхідна авторизація" });
+  if (token == null)
+    return res.status(401).json({ message: "Необхідна авторизація" });
 
-  jwt.verify(token, process.env.JWT_SECRET || "default_secret_key", (err, user) => {
-    if (err) return res.status(403).json({ message: "Недійсний або прострочений токен" });
-    req.user = user;
-    next();
-  });
+  jwt.verify(
+    token,
+    process.env.JWT_SECRET || "default_secret_key",
+    (err, user) => {
+      if (err)
+        return res
+          .status(403)
+          .json({ message: "Недійсний або прострочений токен" });
+      req.user = user;
+      next();
+    }
+  );
 };
 
 let isProcessing = false;
@@ -348,9 +363,10 @@ app.post("/login", async (req, res) => {
   }
 
   try {
-    const result = await executeQuery("SELECT * FROM users WHERE username = $1", [
-      username,
-    ]);
+    const result = await executeQuery(
+      "SELECT * FROM users WHERE username = $1",
+      [username]
+    );
     if (result.rows.length === 0) {
       return res
         .status(401)
@@ -371,7 +387,9 @@ app.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username },
       process.env.JWT_SECRET || "default_secret_key",
-      { expiresIn: "24h" }
+      {
+        expiresIn: "24h",
+      }
     );
 
     res.status(200).json({
@@ -430,28 +448,91 @@ app.put("/profile/:userId", async (req, res) => {
       return res.status(404).json({ message: "Користувача не знайдено" });
     }
 
-    await executeQuery(
-      `UPDATE user_profile 
-       SET first_name = $1, last_name = $2, email = $3, phone = $4, 
-           address = $5, date_of_birth = $6, role_master = $7, approval_status = $8
-       WHERE user_id = $9`,
-      [
-        first_name,
-        last_name,
-        email,
-        phone,
-        address,
-        date_of_birth,
-        role_master,
-        approval_status,
-        userId,
-      ]
+    // Отримуємо поточний профіль користувача для перевірки
+    const currentProfileResult = await executeQuery(
+      "SELECT * FROM user_profile WHERE user_id = $1",
+      [userId]
     );
 
-    console.log(`✅ Профіль користувача з ID ${userId} успішно оновлено.`);
-    res
-      .status(200)
-      .json({ success: true, message: "Профіль успішно оновлено" });
+    const currentProfile = currentProfileResult.rows[0];
+    const wasMaster = currentProfile.role_master;
+
+    // Перевіряємо, чи користувач став майстром або змінив дані як майстер
+    if (role_master && (!wasMaster || role_master !== wasMaster)) {
+      // Якщо користувач став майстром або змінив дані як майстер,
+      // встановлюємо статус "pending" для затвердження адміністратором
+      await executeQuery(
+        `UPDATE user_profile 
+         SET first_name = $1, last_name = $2, email = $3, phone = $4, 
+             address = $5, date_of_birth = $6, role_master = $7, approval_status = 'pending'
+         WHERE user_id = $8`,
+        [
+          first_name,
+          last_name,
+          email,
+          phone,
+          address,
+          date_of_birth,
+          role_master,
+          userId,
+        ]
+      );
+
+      // Перевіряємо, чи існує запит на роль майстра
+      const existingRequest = await executeQuery(
+        "SELECT * FROM master_requests WHERE user_id = $1",
+        [userId]
+      );
+
+      // Якщо запит не існує, створюємо новий
+      if (existingRequest.rows.length === 0) {
+        await executeQuery(
+          "INSERT INTO master_requests (user_id, status) VALUES ($1, 'pending')",
+          [userId]
+        );
+      } else {
+        // Якщо запит існує, оновлюємо його статус
+        await executeQuery(
+          "UPDATE master_requests SET status = 'pending', updated_at = CURRENT_TIMESTAMP WHERE user_id = $1",
+          [userId]
+        );
+      }
+
+      console.log(
+        `✅ Профіль користувача з ID ${userId} оновлено і відправлено на затвердження.`
+      );
+      res.status(200).json({
+        success: true,
+        message: "Профіль успішно оновлено і відправлено на затвердження",
+        requiresApproval: true,
+      });
+    } else {
+      // Якщо це звичайний користувач, просто оновлюємо профіль
+      await executeQuery(
+        `UPDATE user_profile 
+         SET first_name = $1, last_name = $2, email = $3, phone = $4, 
+             address = $5, date_of_birth = $6, role_master = $7, approval_status = $8
+         WHERE user_id = $9`,
+        [
+          first_name,
+          last_name,
+          email,
+          phone,
+          address,
+          date_of_birth,
+          role_master,
+          approval_status,
+          userId,
+        ]
+      );
+
+      console.log(`✅ Профіль користувача з ID ${userId} успішно оновлено.`);
+      res.status(200).json({
+        success: true,
+        message: "Профіль успішно оновлено",
+        requiresApproval: false,
+      });
+    }
   } catch (err) {
     console.error("❌ Помилка при оновленні профілю:", err.message);
     res.status(500).json({ message: "Помилка сервера", error: err.message });
@@ -568,14 +649,15 @@ app.post("/master-requests", async (req, res) => {
     console.log(
       `✅ Запит на роль майстра для користувача з ID ${user_id} успішно створено.`
     );
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Запит на роль майстра успішно створено",
-      });
+    res.status(201).json({
+      success: true,
+      message: "Запит на роль майстра успішно створено",
+    });
   } catch (err) {
-    console.error("❌ Помилка при створенні запиту на роль майстра:", err.message);
+    console.error(
+      "❌ Помилка при створенні запиту на роль майстра:",
+      err.message
+    );
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
@@ -595,7 +677,10 @@ app.get("/master-requests", async (req, res) => {
 
     res.status(200).json({ requests: result.rows });
   } catch (err) {
-    console.error("❌ Помилка при отриманні запитів на роль майстра:", err.message);
+    console.error(
+      "❌ Помилка при отриманні запитів на роль майстра:",
+      err.message
+    );
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
@@ -647,7 +732,7 @@ app.put("/master-requests/:requestId", async (req, res) => {
         "Фінанси та банківська справа",
         "Освіта",
         "Туризм і гостинність",
-        "Будівництво та нерухомість",
+        "Будівництво та нерухомі��ть",
         "Транспорт",
         "Мистецтво і культура",
       ];
@@ -822,6 +907,11 @@ app.get("/admin/users-with-services", async (req, res) => {
       err.message
     );
     res.status(500).json({ message: "Помилка сервера", error: err.message });
+    console.error(
+      "❌ Помилка при отриманні списку користувачів з послугами:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
 
@@ -885,7 +975,10 @@ app.get("/api/age-demographics", async (req, res) => {
     console.log("Відправлення даних:", agePercentages);
     res.json(agePercentages);
   } catch (error) {
-    console.error("❌ Помилка при отриманні вікової статистики:", error.message);
+    console.error(
+      "❌ Помилка при отриманні вікової статистики:",
+      error.message
+    );
     res.status(500).json({ message: "Помилка сервера", error: error.message });
   }
 });
@@ -915,11 +1008,13 @@ app.get("/api/user-master-count", async (req, res) => {
       )
     `);
 
-    const usersCount = parseInt(countResult.rows[0].users_count) || 0;
-    const mastersCount = parseInt(countResult.rows[0].masters_count) || 0;
-    const usersGrowth = parseInt(weeklyGrowthResult.rows[0].users_growth) || 0;
+    const usersCount = Number.parseInt(countResult.rows[0].users_count) || 0;
+    const mastersCount =
+      Number.parseInt(countResult.rows[0].masters_count) || 0;
+    const usersGrowth =
+      Number.parseInt(weeklyGrowthResult.rows[0].users_growth) || 0;
     const mastersGrowth =
-      parseInt(weeklyGrowthResult.rows[0].masters_growth) || 0;
+      Number.parseInt(weeklyGrowthResult.rows[0].masters_growth) || 0;
 
     console.log("Отримано дані про кількість користувачів та майстрів:", {
       users: usersCount,
@@ -971,8 +1066,9 @@ app.get("/api/user-master-timeline", async (req, res) => {
       FROM user_profile
     `);
 
-    const totalUsers = parseInt(countResult.rows[0].users_count) || 0;
-    const totalMasters = parseInt(countResult.rows[0].masters_count) || 0;
+    const totalUsers = Number.parseInt(countResult.rows[0].users_count) || 0;
+    const totalMasters =
+      Number.parseInt(countResult.rows[0].masters_count) || 0;
 
     // Get orders count by month
     const ordersResult = await executeQuery(`
@@ -992,7 +1088,7 @@ app.get("/api/user-master-timeline", async (req, res) => {
         month: "long",
         year: "numeric",
       });
-      ordersCountByMonth[monthKey] = parseInt(row.count);
+      ordersCountByMonth[monthKey] = Number.parseInt(row.count);
     });
 
     // Create timeline data with progressive growth
@@ -1015,7 +1111,10 @@ app.get("/api/user-master-timeline", async (req, res) => {
     console.log("Відправлення даних часової шкали:", timeline);
     res.json(timeline);
   } catch (error) {
-    console.error("❌ Помилка при отриманні даних часової шкали:", error.message);
+    console.error(
+      "❌ Помилка при отриманні даних часової шкали:",
+      error.message
+    );
     res.status(500).json({ message: "Помилка сервера", error: error.message });
   }
 });
@@ -1045,11 +1144,12 @@ app.get("/api/orders-count", async (req, res) => {
       WHERE created_at > NOW() - INTERVAL '7 days'
     `);
 
-    const totalOrders = parseInt(totalOrdersResult.rows[0].total_orders) || 0;
+    const totalOrders =
+      Number.parseInt(totalOrdersResult.rows[0].total_orders) || 0;
     const completedOrders =
-      parseInt(completedOrdersResult.rows[0].completed_orders) || 0;
+      Number.parseInt(completedOrdersResult.rows[0].completed_orders) || 0;
     const weeklyGrowth =
-      parseInt(weeklyGrowthResult.rows[0].weekly_growth) || 0;
+      Number.parseInt(weeklyGrowthResult.rows[0].weekly_growth) || 0;
 
     console.log("Отримано дані про кількість замовлень:", {
       total: totalOrders,
@@ -1063,7 +1163,10 @@ app.get("/api/orders-count", async (req, res) => {
       weeklyGrowth: weeklyGrowth,
     });
   } catch (error) {
-    console.error("❌ Помилка при отриманні кількості замовлень:", error.message);
+    console.error(
+      "❌ Помилка при отриманні кількості замовлень:",
+      error.message
+    );
     res.status(500).json({ message: "Помилка сервера", error: error.message });
   }
 });
@@ -1080,7 +1183,7 @@ app.get("/api/average-age", async (req, res) => {
     `);
 
     const averageAge = result.rows[0].average_age
-      ? parseFloat(result.rows[0].average_age).toFixed(1)
+      ? Number.parseFloat(result.rows[0].average_age).toFixed(1)
       : "N/A";
 
     console.log("Середній вік користувачів:", averageAge);
@@ -1301,7 +1404,10 @@ app.get("/orders/user/:userId", async (req, res) => {
 
     res.status(200).json({ orders: result.rows });
   } catch (err) {
-    console.error("❌ Помилка при отриманні замовлень користувача:", err.message);
+    console.error(
+      "❌ Помилка при отриманні замовлень користувача:",
+      err.message
+    );
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
@@ -1349,9 +1455,10 @@ app.put("/orders/:orderId", async (req, res) => {
 
   try {
     // Перевірка чи існує замовлення
-    const orderResult = await executeQuery("SELECT * FROM orders WHERE id = $1", [
-      orderId,
-    ]);
+    const orderResult = await executeQuery(
+      "SELECT * FROM orders WHERE id = $1",
+      [orderId]
+    );
     if (orderResult.rows.length === 0) {
       return res.status(404).json({ message: "Замовлення не знайдено" });
     }
@@ -1367,11 +1474,9 @@ app.put("/orders/:orderId", async (req, res) => {
       );
 
       if (masterResult.rows.length === 0) {
-        return res
-          .status(403)
-          .json({
-            message: "Тільки затверджені майстри можуть обробляти замовлення",
-          });
+        return res.status(403).json({
+          message: "Тільки затверджені майстри можуть обробляти замовлення",
+        });
       }
     }
 
@@ -1386,12 +1491,10 @@ app.put("/orders/:orderId", async (req, res) => {
     );
 
     console.log(`✅ Статус замовлення з ID ${orderId} змінено на ${status}.`);
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: `Статус замовлення змінено на ${status}`,
-      });
+    res.status(200).json({
+      success: true,
+      message: `Статус замовлення змінено на ${status}`,
+    });
   } catch (err) {
     console.error("❌ Помилка при оновленні статусу замовлення:", err.message);
     res.status(500).json({ message: "Помилка сервера", error: err.message });
