@@ -39,6 +39,7 @@
 html {
   scroll-behavior: smooth;
   height: 100%;
+  font-size: 16px;
 }
 
 body {
@@ -62,6 +63,7 @@ body {
     color var(--transition-speed) var(--transition-timing);
   margin: 0;
   overflow-x: hidden;
+  line-height: 1.6;
 }
 
 html.light body {
@@ -82,7 +84,7 @@ header {
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-dark);
   margin-bottom: 20px;
-  padding: 15px;
+  padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -333,7 +335,7 @@ main {
   position: relative;
   width: 100%;
   max-width: 800px;
-  margin: 0 auto;
+  margin: 0 auto 30px;
 }
 
 html.light main {
@@ -393,6 +395,7 @@ html.light .profile-header {
   box-shadow: var(--shadow-dark);
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .profile-avatar img {
@@ -424,6 +427,7 @@ html.light .profile-header {
   margin: 0;
   font-size: 1.8rem;
   color: var(--primary-color);
+  word-break: break-word;
 }
 
 .profile-info p {
@@ -435,6 +439,7 @@ html.light .profile-header {
 .profile-stats {
   display: flex;
   gap: 15px;
+  flex-wrap: wrap;
 }
 
 .stat-item {
@@ -494,6 +499,8 @@ h1::after {
   display: flex;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 html.light .tabs {
@@ -506,6 +513,7 @@ html.light .tabs {
   position: relative;
   font-weight: 500;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .tab:hover {
@@ -581,6 +589,7 @@ select {
   color: var(--text-dark);
   font-size: 1rem;
   transition: all var(--transition-speed) var(--transition-timing);
+  font-family: var(--font-family);
 }
 
 html.light input[type="text"],
@@ -734,6 +743,7 @@ html.light #services {
   border: 2px solid rgba(52, 152, 219, 0.5);
   border-radius: 6px;
   transition: all var(--transition-speed) var(--transition-timing);
+  flex-shrink: 0;
 }
 
 html.light .checkbox-wrapper .checkmark {
@@ -903,6 +913,8 @@ button[type="submit"] {
   transition: all var(--transition-speed) var(--transition-timing);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  margin-top: 15px;
 }
 
 button[type="submit"]:hover {
@@ -940,6 +952,11 @@ button[type="submit"]:hover::before {
   display: flex;
   align-items: center;
   gap: 10px;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 90%;
 }
 
 #success-message {
@@ -1003,6 +1020,7 @@ html.light .order-card {
   font-size: 1.2rem;
   font-weight: bold;
   margin: 0;
+  word-break: break-word;
 }
 
 .order-status {
@@ -1047,28 +1065,34 @@ html.light .order-card {
 .order-info-item {
   display: flex;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .order-info-label {
   font-weight: bold;
   width: 120px;
   color: var(--primary-color);
+  flex-shrink: 0;
 }
 
 .order-info-value {
   flex: 1;
+  min-width: 150px;
+  word-break: break-word;
 }
 
 .order-actions {
   display: flex;
   gap: 10px;
   margin-top: 15px;
+  flex-wrap: wrap;
 }
 
 .order-actions button {
   flex: 1;
   padding: 8px;
   font-size: 0.8rem;
+  min-width: 100px;
 }
 
 /* Reviews section */
@@ -1096,6 +1120,8 @@ html.light .review-card {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .reviewer-info {
@@ -1118,10 +1144,12 @@ html.light .review-card {
   justify-content: center;
   color: white;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
 .reviewer-name {
   font-weight: bold;
+  word-break: break-word;
 }
 
 .review-date {
@@ -1138,6 +1166,7 @@ html.light .review-card {
 .review-content {
   margin-top: 10px;
   line-height: 1.5;
+  word-break: break-word;
 }
 
 .review-order {
@@ -1250,6 +1279,10 @@ html.light .password-requirements {
   .container {
     padding: 0 15px;
   }
+
+  main {
+    max-width: 90%;
+  }
 }
 
 @media (max-width: 992px) {
@@ -1265,29 +1298,61 @@ html.light .password-requirements {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 15px;
   }
 
   .profile-stats {
     margin-top: 15px;
+    justify-content: center;
+  }
+
+  .tab {
+    padding: 12px 15px;
+    font-size: 0.95rem;
   }
 }
 
 @media (max-width: 768px) {
+  body {
+    padding: 15px 10px;
+  }
+
   header {
     flex-direction: column;
     align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 15px;
   }
 
   .nav-buttons {
     margin-top: 10px;
     justify-content: center;
+    width: 100%;
+  }
+
+  .logo {
+    font-size: 1.3rem;
+  }
+
+  .logo i {
+    font-size: 1.5rem;
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h1::after {
+    width: 80px;
   }
 
   main {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .tab-content {
     padding: 15px;
   }
 
@@ -1295,58 +1360,171 @@ html.light .password-requirements {
     animation-delay: 0.1s !important;
   }
 
+  #profile-form {
+    padding: 15px;
+  }
+
   button[type="submit"] {
     width: 100%;
+    padding: 12px 20px;
   }
 
   .tabs {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
   }
 
   .tab {
-    flex: 1;
+    flex: 0 0 auto;
     text-align: center;
-    padding: 10px;
+    padding: 10px 15px;
+    font-size: 0.9rem;
   }
 
   .orders-container {
     grid-template-columns: 1fr;
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .reviews-container {
+    padding: 15px;
+  }
+
+  #services.visible {
+    padding: 15px;
+  }
+
+  .profile-avatar {
+    width: 70px;
+    height: 70px;
+    font-size: 1.8rem;
+  }
+
+  .profile-info h1 {
+    font-size: 1.6rem;
   }
 }
 
 @media (max-width: 576px) {
   h1 {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
+    padding-bottom: 10px;
+  }
+
+  h1::after {
+    width: 60px;
   }
 
   .nav-buttons {
     flex-direction: column;
-    width: 100%;
+    gap: 8px;
   }
 
   .nav-buttons button {
     width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 0;
+    justify-content: center;
+  }
+
+  .theme-switch {
+    margin: 10px 0;
   }
 
   #services {
-    padding: 15px;
+    padding: 10px;
+  }
+
+  #services.visible {
+    padding: 15px 10px;
   }
 
   .profile-header-left {
     flex-direction: column;
     text-align: center;
+    gap: 10px;
   }
 
   .profile-stats {
     flex-wrap: wrap;
     justify-content: center;
+    gap: 10px;
+  }
+
+  .stat-item {
+    min-width: 70px;
+    padding: 6px 10px;
+  }
+
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+
+  .profile-info h1 {
+    font-size: 1.4rem;
+  }
+
+  .profile-info p {
+    font-size: 0.85rem;
+  }
+
+  .order-header {
+    padding: 12px;
+  }
+
+  .order-body {
+    padding: 12px;
+  }
+
+  .order-status {
+    position: static;
+    display: inline-block;
+    margin-top: 8px;
+  }
+
+  .order-title {
+    font-size: 1.1rem;
+  }
+
+  .order-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .order-actions button {
+    width: 100%;
+  }
+
+  .review-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .review-rating {
+    margin-top: 5px;
+  }
+
+  #success-message,
+  #error-message {
+    margin: 10px;
+    padding: 12px;
+    bottom: 10px;
+    right: 10px;
   }
 }
 
 @media (max-width: 400px) {
   h1 {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
+  }
+
+  .tab {
+    padding: 8px 12px;
+    font-size: 0.85rem;
   }
 
   input[type="text"],
@@ -1356,10 +1534,114 @@ html.light .password-requirements {
   textarea,
   select {
     font-size: 0.9rem;
+    padding: 10px 12px;
+  }
+
+  label {
+    font-size: 0.9rem;
+  }
+
+  .checkbox-wrapper .checkmark {
+    width: 20px;
+    height: 20px;
+  }
+
+  .checkbox-wrapper .checkmark:after {
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+  }
+
+  .master-checkbox-container .checkbox-wrapper::after {
+    display: block;
+    margin-left: 30px;
+    margin-top: 5px;
+  }
+
+  .service-option {
+    padding: 8px;
+  }
+
+  .industry-skills.visible {
+    padding: 12px 10px;
+  }
+
+  .industry-skills h3 {
+    font-size: 1rem;
+  }
+
+  button[type="submit"] {
+    padding: 10px 15px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Add portrait and landscape orientations for better mobile experience */
+@media (max-height: 600px) and (orientation: landscape) {
+  .profile-header {
+    flex-direction: row;
+    padding: 12px 15px;
+  }
+
+  .profile-header-left {
+    flex-direction: row;
+  }
+
+  .profile-stats {
+    margin-top: 0;
+  }
+
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
 
   .tab {
-    font-size: 0.9rem;
-    padding: 8px;
+    flex: 0 0 auto;
+    padding: 8px 15px;
+  }
+
+  #profile-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+
+  .form-group:nth-last-child(1) {
+    grid-column: span 2;
+  }
+}
+
+/* Add high-resolution display support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    background-size: 25px 25px;
+    background-position: 0 0, 12.5px 12.5px;
+  }
+}
+
+/* Add support for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .loading-spinner {
+    animation: none !important;
+  }
+
+  button[type="submit"]::before {
+    display: none;
+  }
+
+  .order-card:hover,
+  button:hover,
+  .checkbox-wrapper:hover .checkmark,
+  .service-option:hover {
+    transform: none !important;
   }
 }
