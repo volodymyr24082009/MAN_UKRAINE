@@ -1,581 +1,605 @@
 // Theme toggle functionality
-const themeToggle = document.getElementById("themeToggle");
-const htmlElement = document.documentElement;
+document.addEventListener("DOMContentLoaded", function () {
+  const themeToggle = document.getElementById("themeToggle");
+  const htmlElement = document.documentElement;
 
-// Check for saved theme preference
-if (localStorage.getItem("theme") === "light") {
-  htmlElement.classList.remove("dark");
-  htmlElement.classList.add("light");
-  themeToggle.checked = true;
-}
-
-// Toggle theme when switch is clicked
-themeToggle.addEventListener("change", function () {
-  if (this.checked) {
+  // Check for saved theme preference
+  if (localStorage.getItem("theme") === "light") {
     htmlElement.classList.remove("dark");
     htmlElement.classList.add("light");
-    localStorage.setItem("theme", "light");
-  } else {
-    htmlElement.classList.remove("light");
-    htmlElement.classList.add("dark");
-    localStorage.setItem("theme", "dark");
+    themeToggle.checked = true;
   }
-});
 
-// Tab functionality
-document.querySelectorAll(".tab").forEach((tab) => {
-  tab.addEventListener("click", function () {
-    // Remove active class from all tabs
-    document
-      .querySelectorAll(".tab")
-      .forEach((t) => t.classList.remove("active"));
-    document
-      .querySelectorAll(".tab-content")
-      .forEach((c) => c.classList.remove("active"));
-
-    // Add active class to clicked tab
-    this.classList.add("active");
-
-    // Show corresponding content
-    const tabName = this.getAttribute("data-tab");
-    document.getElementById(`tab-${tabName}`).classList.add("active");
-
-    // Load content based on tab
-    if (tabName === "orders") {
-      loadUserOrders();
-    } else if (tabName === "reviews") {
-      loadUserReviews();
-    } else if (tabName === "services") {
-      loadUserServices(getUserId());
+  // Toggle theme when switch is clicked
+  themeToggle.addEventListener("change", function () {
+    if (this.checked) {
+      htmlElement.classList.remove("dark");
+      htmlElement.classList.add("light");
+      localStorage.setItem("theme", "light");
+    } else {
+      htmlElement.classList.remove("light");
+      htmlElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
     }
   });
-});
 
-// Function to get user ID
-function getUserId() {
-  const userId = localStorage.getItem("userId");
-  if (userId) {
-    return userId;
-  }
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlUserId = urlParams.get("userId");
-
-  if (urlUserId) {
-    localStorage.setItem("userId", urlUserId);
-    return urlUserId;
-  }
-
-  showError("Необхідно авторизуватися");
-  setTimeout(() => {
-    window.location.href = "/auth.html";
-  }, 2000);
-  return null;
-}
-
-// Function to load user profile
-async function loadUserProfile() {
-  const userId = getUserId();
-  if (!userId) return;
-
-  try {
-    const response = await fetch(`/profile/${userId}`);
-
-    if (!response.ok) {
-      throw new Error("Не вдалося завантажити профіль");
-    }
-
-    const data = await response.json();
-
-    if (data.profile) {
-      // Update profile header
-      updateProfileHeader(data.profile);
-
-      // Update form fields
-      document.getElementById("first_name").value =
-        data.profile.first_name || "";
-      document.getElementById("last_name").value = data.profile.last_name || "";
-      document.getElementById("email").value = data.profile.email || "";
-      document.getElementById("phone").value = data.profile.phone || "";
-      document.getElementById("address").value = data.profile.address || "";
-      document.getElementById("bio").value = data.profile.bio || "";
-
-      if (data.profile.date_of_birth) {
-        const date = new Date(data.profile.date_of_birth);
-        const formattedDate = date.toISOString().split("T")[0];
-        document.getElementById("date_of_birth").value = formattedDate;
-      }
-
-      document.getElementById("role_master").checked =
-        data.profile.role_master || false;
-
-      // Display approval status if available
-      if (data.profile.approval_status) {
-        const statusElement = document.getElementById("approval-status");
-        if (statusElement) {
-          statusElement.textContent = getStatusText(
-            data.profile.approval_status
-          );
-          statusElement.className = `status-${data.profile.approval_status}`;
-          statusElement.style.display = "inline-block";
-        }
-      }
-
-      // Update notification badge
-      if (data.unreadNotifications > 0) {
-        const notificationBadge = document.getElementById("notifications-btn");
-        if (notificationBadge) {
-          notificationBadge.setAttribute(
-            "data-count",
-            data.unreadNotifications
-          );
-          notificationBadge.classList.add("has-notifications");
-        }
-      }
-
-      // Update stats
-      const ratingValue = document.getElementById("rating-value");
-      if (ratingValue) {
-        ratingValue.textContent = data.profile.rating || "0.0";
-      }
-
-      const reviewsCount = document.getElementById("reviews-count");
-      if (reviewsCount) {
-        reviewsCount.textContent = data.profile.reviews_count || "0";
-      }
-
-      const ordersCount = document.getElementById("orders-count");
-      if (ordersCount) {
-        ordersCount.textContent = data.ordersCount || "0";
-      }
-
-      // Show services section if user is a master
-      const servicesDiv = document.getElementById("services");
-      if (servicesDiv) {
-        if (data.profile.role_master) {
-          servicesDiv.style.display = "block";
-          setTimeout(() => {
-            servicesDiv.classList.add("visible");
-          }, 10);
-
-          // Load user services
-          loadUserServices(userId);
-        } else {
-          servicesDiv.style.display = "none";
-          servicesDiv.classList.remove("visible");
-        }
-      }
-    }
-  } catch (error) {
-    showError(error.message);
-  }
-}
-
-// Function to update profile header
-function updateProfileHeader(profile) {
-  // Set profile name
-  const profileName = document.getElementById("profile-name");
-  if (profileName) {
-    profileName.textContent =
-      profile.first_name && profile.last_name
-        ? `${profile.first_name} ${profile.last_name}`
-        : profile.username;
-  }
-
-  // Set username
-  const profileUsername = document.getElementById("profile-username");
-  if (profileUsername) {
-    profileUsername.textContent = `@${profile.username}`;
-  }
-
-  // Set avatar initials
-  const avatarInitials = document.getElementById("avatar-initials");
-  if (avatarInitials) {
-    if (profile.first_name && profile.last_name) {
-      avatarInitials.textContent = `${profile.first_name.charAt(
-        0
-      )}${profile.last_name.charAt(0)}`;
-    } else if (profile.username) {
-      avatarInitials.textContent = profile.username.charAt(0).toUpperCase();
-    }
-  }
-
-  // Set avatar image if available
-  if (profile.profile_image_url) {
-    const avatarImage = document.getElementById("avatar-image");
-    if (avatarImage) {
-      avatarImage.src = profile.profile_image_url;
-      avatarImage.style.display = "block";
-      if (avatarInitials) {
-        avatarInitials.style.display = "none";
-      }
-    }
-  }
-}
-
-function getStatusText(status) {
-  switch (status) {
-    case "pending":
-      return "На розгляді";
-    case "approved":
-      return "Затверджено";
-    case "rejected":
-      return "Відхилено";
-    default:
-      return "";
-  }
-}
-
-// Function to load user services
-async function loadUserServices(userId) {
-  try {
-    const response = await fetch(`/services/${userId}`);
-
-    if (!response.ok) {
-      throw new Error("Не вдалося завантажити послуги");
-    }
-
-    const data = await response.json();
-
-    if (data.services && data.services.length > 0) {
-      // Reset all checkboxes
+  // Tab functionality
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.addEventListener("click", function () {
+      // Remove active class from all tabs
       document
-        .querySelectorAll('#services input[type="checkbox"]')
-        .forEach((checkbox) => {
-          checkbox.checked = false;
-        });
+        .querySelectorAll(".tab")
+        .forEach((t) => t.classList.remove("active"));
+      document
+        .querySelectorAll(".tab-content")
+        .forEach((c) => c.classList.remove("active"));
 
-      // Clear all textareas
-      document.querySelectorAll("#services textarea").forEach((textarea) => {
-        textarea.value = "";
-      });
+      // Add active class to clicked tab
+      this.classList.add("active");
 
-      const selectedIndustries = [];
+      // Show corresponding content
+      const tabName = this.getAttribute("data-tab");
+      document.getElementById(`tab-${tabName}`).classList.add("active");
 
-      data.services.forEach((service) => {
-        if (service.service_type === "industry") {
-          const checkbox = Array.from(
-            document.querySelectorAll('#services input[name="industry"]')
-          ).find((cb) => cb.value === service.service_name);
+      // Load content based on tab
+      if (tabName === "orders") {
+        loadUserOrders();
+      } else if (tabName === "reviews") {
+        loadUserReviews();
+      }
+    });
+  });
 
-          if (checkbox) {
-            checkbox.checked = true;
-            if (checkbox.dataset.industry) {
-              selectedIndustries.push(checkbox.dataset.industry);
-            }
-          }
-        } else if (service.service_type.endsWith("-skills-text")) {
-          const textarea = document.getElementById(service.service_type);
-          if (textarea) {
-            textarea.value = service.service_name;
-          }
-        } else if (service.service_type === "custom-skills") {
-          const customSkills = document.getElementById("custom-skills");
-          if (customSkills) {
-            customSkills.value = service.service_name;
+  // Function to get user ID
+  function getUserId() {
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      return userId;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUserId = urlParams.get("userId");
+
+    if (urlUserId) {
+      localStorage.setItem("userId", urlUserId);
+      return urlUserId;
+    }
+
+    showError("Необхідно авторизуватися");
+    setTimeout(() => {
+      window.location.href = "/auth.html";
+    }, 2000);
+    return null;
+  }
+
+  // Function to load user profile
+  async function loadUserProfile() {
+    const userId = getUserId();
+    if (!userId) return;
+
+    try {
+      const response = await fetch(`/profile/${userId}`);
+
+      if (!response.ok) {
+        throw new Error("Не вдалося завантажити профіль");
+      }
+
+      const data = await response.json();
+
+      if (data.profile) {
+        // Update profile header
+        updateProfileHeader(data.profile);
+
+        // Update form fields
+        document.getElementById("first_name").value =
+          data.profile.first_name || "";
+        document.getElementById("last_name").value =
+          data.profile.last_name || "";
+        document.getElementById("email").value = data.profile.email || "";
+        document.getElementById("phone").value = data.profile.phone || "";
+        document.getElementById("address").value = data.profile.address || "";
+        document.getElementById("bio").value = data.profile.bio || "";
+
+        if (data.profile.date_of_birth) {
+          const date = new Date(data.profile.date_of_birth);
+          const formattedDate = date.toISOString().split("T")[0];
+          document.getElementById("date_of_birth").value = formattedDate;
+        }
+
+        document.getElementById("role_master").checked =
+          data.profile.role_master || false;
+
+        // Display approval status if available
+        if (data.profile.approval_status) {
+          const statusElement = document.getElementById("approval-status");
+          if (statusElement) {
+            statusElement.textContent = getStatusText(
+              data.profile.approval_status
+            );
+            statusElement.className = `status-${data.profile.approval_status}`;
+            statusElement.style.display = "inline-block";
           }
         }
-      });
 
-      // Show industry-specific skills sections
-      selectedIndustries.forEach((industry) => {
-        const skillsSection = document.getElementById(`${industry}-skills`);
-        if (skillsSection) {
-          skillsSection.classList.add("visible");
-          // Add random animation class for initial load
-          const animations = [
+        // Update notification badge
+        if (data.unreadNotifications > 0) {
+          const notificationBadge =
+            document.getElementById("notifications-btn");
+          if (notificationBadge) {
+            notificationBadge.setAttribute(
+              "data-count",
+              data.unreadNotifications
+            );
+            notificationBadge.classList.add("has-notifications");
+          }
+        }
+
+        // Update stats
+        const ratingValue = document.getElementById("rating-value");
+        if (ratingValue) {
+          ratingValue.textContent = data.profile.rating || "0.0";
+        }
+
+        const reviewsCount = document.getElementById("reviews-count");
+        if (reviewsCount) {
+          reviewsCount.textContent = data.profile.reviews_count || "0";
+        }
+
+        const ordersCount = document.getElementById("orders-count");
+        if (ordersCount) {
+          ordersCount.textContent = data.ordersCount || "0";
+        }
+
+        // Show services section if user is a master
+        toggleServicesSection(data.profile.role_master);
+
+        // Load user services if master
+        if (data.profile.role_master) {
+          loadUserServices(userId);
+        }
+      }
+    } catch (error) {
+      showError(error.message);
+    }
+  }
+
+  // Function to toggle services section
+  function toggleServicesSection(isMaster) {
+    const servicesDiv = document.getElementById("services");
+    if (!servicesDiv) return;
+
+    if (isMaster) {
+      servicesDiv.style.display = "block";
+      setTimeout(() => {
+        servicesDiv.classList.add("visible");
+      }, 10);
+    } else {
+      servicesDiv.classList.remove("visible");
+      servicesDiv.classList.add("fade-out");
+      setTimeout(() => {
+        servicesDiv.style.display = "none";
+        servicesDiv.classList.remove("fade-out");
+      }, 500);
+
+      // Hide all industry skills sections
+      document.querySelectorAll(".industry-skills").forEach((section) => {
+        section.classList.add("fade-out");
+        setTimeout(() => {
+          section.classList.remove("visible");
+          section.classList.remove("fade-out");
+          section.classList.remove(
             "slide-in-right",
             "slide-in-left",
             "slide-in-top",
-            "slide-in-bottom",
-          ];
-          const randomAnimation =
-            animations[Math.floor(Math.random() * animations.length)];
-          skillsSection.classList.add(randomAnimation);
-        }
+            "slide-in-bottom"
+          );
+        }, 400);
       });
     }
-  } catch (error) {
-    showError(error.message);
   }
-}
 
-// Function to load user orders
-async function loadUserOrders() {
-  const userId = getUserId();
-  if (!userId) return;
-
-  const ordersContainer = document.getElementById("orders-container");
-  const loadingElement = document.getElementById("orders-loading");
-
-  if (!ordersContainer || !loadingElement) return;
-
-  ordersContainer.innerHTML = "";
-  loadingElement.style.display = "flex";
-
-  try {
-    const response = await fetch(`/orders/user/${userId}`);
-
-    if (!response.ok) {
-      throw new Error("Не вдалося завантажити замовлення");
+  // Function to update profile header
+  function updateProfileHeader(profile) {
+    // Set profile name
+    const profileName = document.getElementById("profile-name");
+    if (profileName) {
+      profileName.textContent =
+        profile.first_name && profile.last_name
+          ? `${profile.first_name} ${profile.last_name}`
+          : profile.username;
     }
 
-    const data = await response.json();
+    // Set username
+    const profileUsername = document.getElementById("profile-username");
+    if (profileUsername) {
+      profileUsername.textContent = `@${profile.username}`;
+    }
 
-    loadingElement.style.display = "none";
+    // Set avatar initials
+    const avatarInitials = document.getElementById("avatar-initials");
+    if (avatarInitials) {
+      if (profile.first_name && profile.last_name) {
+        avatarInitials.textContent = `${profile.first_name.charAt(
+          0
+        )}${profile.last_name.charAt(0)}`;
+      } else if (profile.username) {
+        avatarInitials.textContent = profile.username.charAt(0).toUpperCase();
+      }
+    }
 
-    if (data.orders && data.orders.length > 0) {
-      // Update orders count
-      const ordersCount = document.getElementById("orders-count");
-      if (ordersCount) {
-        ordersCount.textContent = data.orders.length;
+    // Set avatar image if available
+    if (profile.profile_image_url) {
+      const avatarImage = document.getElementById("avatar-image");
+      if (avatarImage) {
+        avatarImage.src = profile.profile_image_url;
+        avatarImage.style.display = "block";
+        if (avatarInitials) {
+          avatarInitials.style.display = "none";
+        }
+      }
+    }
+  }
+
+  function getStatusText(status) {
+    switch (status) {
+      case "pending":
+        return "На розгляді";
+      case "approved":
+        return "Затверджено";
+      case "rejected":
+        return "Відхилено";
+      default:
+        return "";
+    }
+  }
+
+  // Function to load user services
+  async function loadUserServices(userId) {
+    try {
+      const response = await fetch(`/services/${userId}`);
+
+      if (!response.ok) {
+        throw new Error("Не вдалося завантажити послуги");
       }
 
-      data.orders.forEach((order, index) => {
-        // Add animation delay based on index
-        const delay = index * 0.1;
+      const data = await response.json();
 
-        const orderCard = document.createElement("div");
-        orderCard.className = "order-card";
-        orderCard.style.animationDelay = `${delay}s`;
+      if (data.services && data.services.length > 0) {
+        // Reset all checkboxes
+        document
+          .querySelectorAll('#services input[type="checkbox"]')
+          .forEach((checkbox) => {
+            checkbox.checked = false;
+          });
 
-        const statusClass = `status-${order.status}`;
-        const statusText = getOrderStatusText(order.status);
+        // Clear all textareas
+        document.querySelectorAll("#services textarea").forEach((textarea) => {
+          textarea.value = "";
+        });
 
-        orderCard.innerHTML = `
-                    <div class="order-header">
-                        <div class="order-number">${order.id}</div>
-                        <div class="order-title">${order.title}</div>
-                        <div class="order-status ${statusClass}">${statusText}</div>
-                    </div>
-                    <div class="order-body">
-                        <div class="order-info">
-                            <div class="order-info-item">
-                                <div class="order-info-label">Галузь:</div>
-                                <div class="order-info-value">${
-                                  order.industry || "Не вказано"
-                                }</div>
-                            </div>
-                            <div class="order-info-item">
-                                <div class="order-info-label">Дата створення:</div>
-                                <div class="order-info-value">${formatDate(
-                                  order.created_at
-                                )}</div>
-                            </div>
-                            <div class="order-info-item">
-                                <div class="order-info-label">Телефон:</div>
-                                <div class="order-info-value">${
-                                  order.phone || "Не вказано"
-                                }</div>
-                            </div>
-                        </div>
-                        <div class="order-actions">
-                            <button onclick="viewOrderDetails(${
-                              order.id
-                            })"><i class="fas fa-eye"></i> Деталі</button>
-                            ${
-                              order.status === "completed"
-                                ? `<button onclick="leaveReview(${order.id}, ${order.master_id})"><i class="fas fa-star"></i> Відгук</button>`
-                                : ""
-                            }
-                            ${
-                              order.status === "pending"
-                                ? `<button onclick="cancelOrder(${order.id})"><i class="fas fa-times"></i> Скасувати</button>`
-                                : ""
-                            }
-                        </div>
-                    </div>
-                `;
+        const selectedIndustries = [];
 
-        ordersContainer.appendChild(orderCard);
-      });
-    } else {
-      ordersContainer.innerHTML =
-        '<p style="text-align: center; padding: 30px;">У вас ще немає замовлень</p>';
-    }
-  } catch (error) {
-    loadingElement.style.display = "none";
-    ordersContainer.innerHTML = `<p style="text-align: center; padding: 30px; color: var(--danger-color);">Помилка: ${error.message}</p>`;
-  }
-}
+        data.services.forEach((service) => {
+          if (service.service_type === "industry") {
+            const checkbox = Array.from(
+              document.querySelectorAll('#services input[name="industry"]')
+            ).find((cb) => cb.value === service.service_name);
 
-// Function to load user reviews
-async function loadUserReviews() {
-  const userId = getUserId();
-  if (!userId) return;
+            if (checkbox) {
+              checkbox.checked = true;
+              if (checkbox.dataset.industry) {
+                selectedIndustries.push(checkbox.dataset.industry);
+              }
+            }
+          } else if (service.service_type.endsWith("-skills-text")) {
+            const textarea = document.getElementById(service.service_type);
+            if (textarea) {
+              textarea.value = service.service_name;
+            }
+          } else if (service.service_type === "custom-skills") {
+            const customSkills = document.getElementById("custom-skills");
+            if (customSkills) {
+              customSkills.value = service.service_name;
+            }
+          }
+        });
 
-  const reviewsContainer = document.getElementById("reviews-container");
-  const loadingElement = document.getElementById("reviews-loading");
-
-  if (!reviewsContainer || !loadingElement) return;
-
-  reviewsContainer.innerHTML = "";
-  loadingElement.style.display = "flex";
-
-  try {
-    const response = await fetch(`/reviews/master/${userId}`);
-
-    if (!response.ok) {
-      throw new Error("Не вдалося завантажити відгуки");
-    }
-
-    const data = await response.json();
-
-    loadingElement.style.display = "none";
-
-    if (data.reviews && data.reviews.length > 0) {
-      data.reviews.forEach((review, index) => {
-        // Add animation delay based on index
-        const delay = index * 0.1;
-
-        const reviewCard = document.createElement("div");
-        reviewCard.className = "review-card";
-        reviewCard.style.animationDelay = `${delay}s`;
-
-        const reviewerName =
-          review.user_first_name && review.user_last_name
-            ? `${review.user_first_name} ${review.user_last_name}`
-            : review.user_username;
-
-        const reviewerInitials =
-          review.user_first_name && review.user_last_name
-            ? `${review.user_first_name.charAt(
-                0
-              )}${review.user_last_name.charAt(0)}`
-            : review.user_username.charAt(0).toUpperCase();
-
-        reviewCard.innerHTML = `
-                    <div class="review-header">
-                        <div class="reviewer-info">
-                            <div class="reviewer-avatar">${reviewerInitials}</div>
-                            <div>
-                                <div class="reviewer-name">${reviewerName}</div>
-                                <div class="review-date">${formatDate(
-                                  review.created_at
-                                )}</div>
-                            </div>
-                        </div>
-                        <div class="review-rating">
-                            ${generateStarRating(review.rating)}
-                        </div>
-                    </div>
-                    <div class="review-content">
-                        ${review.comment || "Без коментаря"}
-                    </div>
-                    <div class="review-order">
-                        Замовлення: ${review.order_title || "Замовлення"} (${
-          review.order_id || review.id
-        })
-                    </div>
-                `;
-
-        reviewsContainer.appendChild(reviewCard);
-      });
-    } else {
-      reviewsContainer.innerHTML =
-        '<p style="text-align: center; padding: 30px;">У вас ще немає відгуків</p>';
-    }
-  } catch (error) {
-    loadingElement.style.display = "none";
-    reviewsContainer.innerHTML = `<p style="text-align: center; padding: 30px; color: var(--danger-color);">Помилка: ${error.message}</p>`;
-  }
-}
-
-// Helper function to generate star rating
-function generateStarRating(rating) {
-  let stars = "";
-  for (let i = 1; i <= 5; i++) {
-    if (i <= rating) {
-      stars += '<i class="fas fa-star"></i>';
-    } else if (i - 0.5 <= rating) {
-      stars += '<i class="fas fa-star-half-alt"></i>';
-    } else {
-      stars += '<i class="far fa-star"></i>';
+        // Show industry-specific skills sections
+        selectedIndustries.forEach((industry) => {
+          const skillsSection = document.getElementById(`${industry}-skills`);
+          if (skillsSection) {
+            skillsSection.classList.add("visible");
+            // Add random animation class for initial load
+            const animations = [
+              "slide-in-right",
+              "slide-in-left",
+              "slide-in-top",
+              "slide-in-bottom",
+            ];
+            const randomAnimation =
+              animations[Math.floor(Math.random() * animations.length)];
+            skillsSection.classList.add(randomAnimation);
+          }
+        });
+      }
+    } catch (error) {
+      showError(error.message);
     }
   }
-  return stars;
-}
 
-// Helper function to format date
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("uk-UA", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+  // Function to load user orders
+  async function loadUserOrders() {
+    const userId = getUserId();
+    if (!userId) return;
 
-// Helper function to get order status text
-function getOrderStatusText(status) {
-  switch (status) {
-    case "pending":
-      return "Очікує";
-    case "approved":
-      return "Прийнято";
-    case "completed":
-      return "Виконано";
-    case "cancelled":
-      return "Скасовано";
-    case "rejected":
-      return "Відхилено";
-    default:
-      return status;
+    const ordersContainer = document.getElementById("orders-container");
+    const loadingElement = document.getElementById("orders-loading");
+
+    if (!ordersContainer || !loadingElement) return;
+
+    ordersContainer.innerHTML = "";
+    loadingElement.style.display = "flex";
+
+    try {
+      const response = await fetch(`/orders/user/${userId}`);
+
+      if (!response.ok) {
+        throw new Error("Не вдалося завантажити замовлення");
+      }
+
+      const data = await response.json();
+
+      loadingElement.style.display = "none";
+
+      if (data.orders && data.orders.length > 0) {
+        // Update orders count
+        const ordersCount = document.getElementById("orders-count");
+        if (ordersCount) {
+          ordersCount.textContent = data.orders.length;
+        }
+
+        data.orders.forEach((order, index) => {
+          // Add animation delay based on index
+          const delay = index * 0.1;
+
+          const orderCard = document.createElement("div");
+          orderCard.className = "order-card";
+          orderCard.style.animationDelay = `${delay}s`;
+
+          const statusClass = `status-${order.status}`;
+          const statusText = getOrderStatusText(order.status);
+
+          orderCard.innerHTML = `
+            <div class="order-header">
+              <div class="order-number">${order.id}</div>
+              <div class="order-title">${order.title}</div>
+              <div class="order-status ${statusClass}">${statusText}</div>
+            </div>
+            <div class="order-body">
+              <div class="order-info">
+                <div class="order-info-item">
+                  <div class="order-info-label">Галузь:</div>
+                  <div class="order-info-value">${
+                    order.industry || "Не вказано"
+                  }</div>
+                </div>
+                <div class="order-info-item">
+                  <div class="order-info-label">Дата створення:</div>
+                  <div class="order-info-value">${formatDate(
+                    order.created_at
+                  )}</div>
+                </div>
+                <div class="order-info-item">
+                  <div class="order-info-label">Телефон:</div>
+                  <div class="order-info-value">${
+                    order.phone || "Не вказано"
+                  }</div>
+                </div>
+              </div>
+              <div class="order-actions">
+                <button onclick="viewOrderDetails(${
+                  order.id
+                })"><i class="fas fa-eye"></i> Деталі</button>
+                ${
+                  order.status === "completed"
+                    ? `<button onclick="leaveReview(${order.id}, ${order.master_id})"><i class="fas fa-star"></i> Відгук</button>`
+                    : ""
+                }
+                ${
+                  order.status === "pending"
+                    ? `<button onclick="cancelOrder(${order.id})"><i class="fas fa-times"></i> Скасувати</button>`
+                    : ""
+                }
+              </div>
+            </div>
+          `;
+
+          ordersContainer.appendChild(orderCard);
+        });
+      } else {
+        ordersContainer.innerHTML =
+          '<p style="text-align: center; padding: 30px;">У вас ще немає замовлень</p>';
+      }
+    } catch (error) {
+      loadingElement.style.display = "none";
+      ordersContainer.innerHTML = `<p style="text-align: center; padding: 30px; color: var(--danger-color);">Помилка: ${error.message}</p>`;
+    }
   }
-}
 
-// Function to show error message
-function showError(message) {
-  const errorElement = document.getElementById("error-message");
-  if (!errorElement) {
-    // Create error element if it doesn't exist
-    const errorDiv = document.createElement("div");
-    errorDiv.id = "error-message";
-    errorDiv.className = "notification error";
-    errorDiv.style.display = "none";
-    document.body.appendChild(errorDiv);
+  // Function to load user reviews
+  async function loadUserReviews() {
+    const userId = getUserId();
+    if (!userId) return;
+
+    const reviewsContainer = document.getElementById("reviews-container");
+    const loadingElement = document.getElementById("reviews-loading");
+
+    if (!reviewsContainer || !loadingElement) return;
+
+    reviewsContainer.innerHTML = "";
+    loadingElement.style.display = "flex";
+
+    try {
+      const response = await fetch(`/reviews/master/${userId}`);
+
+      if (!response.ok) {
+        throw new Error("Не вдалося завантажити відгуки");
+      }
+
+      const data = await response.json();
+
+      loadingElement.style.display = "none";
+
+      if (data.reviews && data.reviews.length > 0) {
+        data.reviews.forEach((review, index) => {
+          // Add animation delay based on index
+          const delay = index * 0.1;
+
+          const reviewCard = document.createElement("div");
+          reviewCard.className = "review-card";
+          reviewCard.style.animationDelay = `${delay}s`;
+
+          const reviewerName =
+            review.user_first_name && review.user_last_name
+              ? `${review.user_first_name} ${review.user_last_name}`
+              : review.user_username;
+
+          const reviewerInitials =
+            review.user_first_name && review.user_last_name
+              ? `${review.user_first_name.charAt(
+                  0
+                )}${review.user_last_name.charAt(0)}`
+              : review.user_username.charAt(0).toUpperCase();
+
+          reviewCard.innerHTML = `
+            <div class="review-header">
+              <div class="reviewer-info">
+                <div class="reviewer-avatar">${reviewerInitials}</div>
+                <div>
+                  <div class="reviewer-name">${reviewerName}</div>
+                  <div class="review-date">${formatDate(
+                    review.created_at
+                  )}</div>
+                </div>
+              </div>
+              <div class="review-rating">
+                ${generateStarRating(review.rating)}
+              </div>
+            </div>
+            <div class="review-content">
+              ${review.comment || "Без коментаря"}
+            </div>
+            <div class="review-order">
+              Замовлення: ${review.order_title || "Замовлення"} (${
+            review.order_id || review.id
+          })
+            </div>
+          `;
+
+          reviewsContainer.appendChild(reviewCard);
+        });
+      } else {
+        reviewsContainer.innerHTML =
+          '<p style="text-align: center; padding: 30px;">У вас ще немає відгуків</p>';
+      }
+    } catch (error) {
+      loadingElement.style.display = "none";
+      reviewsContainer.innerHTML = `<p style="text-align: center; padding: 30px; color: var(--danger-color);">Помилка: ${error.message}</p>`;
+    }
   }
 
-  errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-  errorElement.style.display = "flex";
+  // Helper function to generate star rating
+  function generateStarRating(rating) {
+    let stars = "";
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        stars += '<i class="fas fa-star"></i>';
+      } else if (i - 0.5 <= rating) {
+        stars += '<i class="fas fa-star-half-alt"></i>';
+      } else {
+        stars += '<i class="far fa-star"></i>';
+      }
+    }
+    return stars;
+  }
 
-  setTimeout(() => {
-    errorElement.style.animation = "fadeInScale 0.4s ease-out reverse";
+  // Helper function to format date
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("uk-UA", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  // Helper function to get order status text
+  function getOrderStatusText(status) {
+    switch (status) {
+      case "pending":
+        return "Очікує";
+      case "approved":
+        return "Прийнято";
+      case "completed":
+        return "Виконано";
+      case "cancelled":
+        return "Скасовано";
+      case "rejected":
+        return "Відхилено";
+      default:
+        return status;
+    }
+  }
+
+  // Function to show error message
+  function showError(message) {
+    const errorElement = document.getElementById("error-message");
+    if (!errorElement) {
+      // Create error element if it doesn't exist
+      const errorDiv = document.createElement("div");
+      errorDiv.id = "error-message";
+      errorDiv.style.display = "none";
+      document.body.appendChild(errorDiv);
+    }
+
+    errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+    errorElement.style.display = "flex";
+
     setTimeout(() => {
-      errorElement.style.display = "none";
-      errorElement.style.animation = "";
-    }, 400);
-  }, 5000);
-}
-
-// Function to show success message
-function showSuccess(message) {
-  const successElement = document.getElementById("success-message");
-  if (!successElement) {
-    // Create success element if it doesn't exist
-    const successDiv = document.createElement("div");
-    successDiv.id = "success-message";
-    successDiv.className = "notification success";
-    successDiv.style.display = "none";
-    document.body.appendChild(successDiv);
+      errorElement.style.animation = "fadeInScale 0.4s ease-out reverse";
+      setTimeout(() => {
+        errorElement.style.display = "none";
+        errorElement.style.animation = "";
+      }, 400);
+    }, 5000);
   }
 
-  successElement.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-  successElement.style.display = "flex";
+  // Function to show success message
+  function showSuccess(message) {
+    const successElement = document.getElementById("success-message");
+    if (!successElement) {
+      // Create success element if it doesn't exist
+      const successDiv = document.createElement("div");
+      successDiv.id = "success-message";
+      successDiv.style.display = "none";
+      document.body.appendChild(successDiv);
+    }
 
-  setTimeout(() => {
-    successElement.style.animation = "fadeInScale 0.4s ease-out reverse";
+    successElement.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+    successElement.style.display = "flex";
+
     setTimeout(() => {
-      successElement.style.display = "none";
-      successElement.style.animation = "";
-    }, 400);
-  }, 5000);
-}
+      successElement.style.animation = "fadeInScale 0.4s ease-out reverse";
+      setTimeout(() => {
+        successElement.style.display = "none";
+        successElement.style.animation = "";
+      }, 400);
+    }, 5000);
+  }
 
-// Form submission handler
-document.addEventListener("DOMContentLoaded", () => {
+  // Form submission handler
   const profileForm = document.getElementById("profile-form");
   if (profileForm) {
     profileForm.addEventListener("submit", async (event) => {
@@ -632,9 +656,12 @@ document.addEventListener("DOMContentLoaded", () => {
             ?.textContent.substring(1),
         });
 
-        // Показуємо відповідне повідомлення в залежності від того, чи потрібне затвердження
+        // Toggle services section based on role_master
+        toggleServicesSection(formData.role_master);
+
+        // Show appropriate message
         if (responseData.requiresApproval) {
-          // Оновлюємо відображення статусу затвердження
+          // Update approval status display
           const statusElement = document.getElementById("approval-status");
           if (statusElement) {
             statusElement.textContent = "На розгляді";
@@ -648,133 +675,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           showSuccess("Профіль успішно оновлено!");
         }
-
-        // If user became a master, show services section
-        if (formData.role_master) {
-          const servicesDiv = document.getElementById("services");
-          if (servicesDiv) {
-            servicesDiv.style.display = "block";
-            setTimeout(() => {
-              servicesDiv.classList.add("visible");
-            }, 10);
-          }
-        }
       } catch (error) {
-        showError(error.message);
-      }
-    });
-  }
-
-  // Save services handler
-  const saveServicesBtn = document.getElementById("save-services");
-  if (saveServicesBtn) {
-    saveServicesBtn.addEventListener("click", async () => {
-      const userId = getUserId();
-      if (!userId) return;
-
-      try {
-        // Show loading state
-        const originalText = saveServicesBtn.innerHTML;
-        saveServicesBtn.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-        saveServicesBtn.disabled = true;
-
-        // Get selected industries
-        const selectedIndustries = Array.from(
-          document.querySelectorAll('#services input[name="industry"]:checked')
-        ).map((checkbox) => ({
-          name: checkbox.value,
-          type: "industry",
-          industry: checkbox.dataset.industry,
-        }));
-
-        // Get skills texts for each selected industry
-        const skillsTexts = [];
-        selectedIndustries.forEach((industry) => {
-          const textareaId = `${industry.industry}-skills-text`;
-          const textarea = document.getElementById(textareaId);
-          if (textarea && textarea.value.trim()) {
-            skillsTexts.push({
-              name: textarea.value,
-              type: textareaId,
-            });
-          }
-        });
-
-        // Get custom skills
-        const customSkills =
-          document.getElementById("custom-skills")?.value || "";
-
-        // Delete existing services
-        const servicesResponse = await fetch(`/services/${userId}`);
-        const servicesData = await servicesResponse.json();
-
-        if (servicesData.services && servicesData.services.length > 0) {
-          for (const service of servicesData.services) {
-            await fetch(`/services/${service.id}`, {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            });
-          }
-        }
-
-        // Add industries
-        for (const industry of selectedIndustries) {
-          await fetch(`/services/${userId}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              service_name: industry.name,
-              service_type: industry.type,
-            }),
-          });
-        }
-
-        // Add skills texts
-        for (const skill of skillsTexts) {
-          await fetch(`/services/${userId}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              service_name: skill.name,
-              service_type: skill.type,
-            }),
-          });
-        }
-
-        // Add custom skills
-        if (customSkills.trim()) {
-          await fetch(`/services/${userId}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              service_name: customSkills,
-              service_type: "custom-skills",
-            }),
-          });
-        }
-
-        // Reset button state
-        saveServicesBtn.innerHTML = originalText;
-        saveServicesBtn.disabled = false;
-
-        showSuccess("Послуги успішно збережено!");
-      } catch (error) {
-        // Reset button state
-        saveServicesBtn.innerHTML = originalText;
-        saveServicesBtn.disabled = false;
-
         showError(error.message);
       }
     });
@@ -784,35 +685,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const roleMasterCheckbox = document.getElementById("role_master");
   if (roleMasterCheckbox) {
     roleMasterCheckbox.addEventListener("change", function () {
-      const servicesDiv = document.getElementById("services");
-      if (!servicesDiv) return;
-
-      if (this.checked) {
-        servicesDiv.style.display = "block";
-        setTimeout(() => {
-          servicesDiv.classList.add("visible");
-        }, 10);
-      } else {
-        servicesDiv.classList.remove("visible");
-        setTimeout(() => {
-          servicesDiv.style.display = "none";
-        }, 400);
-
-        // Hide all industry skills sections
-        document.querySelectorAll(".industry-skills").forEach((section) => {
-          section.classList.add("fade-out");
-          setTimeout(() => {
-            section.classList.remove("visible");
-            section.classList.remove("fade-out");
-            section.classList.remove(
-              "slide-in-right",
-              "slide-in-left",
-              "slide-in-top",
-              "slide-in-bottom"
-            );
-          }, 400);
-        });
-      }
+      toggleServicesSection(this.checked);
     });
   }
 
@@ -890,6 +763,79 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Save services handler
+  const saveServicesBtn = document.getElementById("save-services");
+  if (saveServicesBtn) {
+    saveServicesBtn.addEventListener("click", async () => {
+      const userId = getUserId();
+      if (!userId) return;
+
+      try {
+        // Show loading state
+        const originalText = saveServicesBtn.innerHTML;
+        saveServicesBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
+        saveServicesBtn.disabled = true;
+
+        // Get selected industries
+        const selectedIndustries = Array.from(
+          document.querySelectorAll('#services input[name="industry"]:checked')
+        ).map((checkbox) => ({
+          name: checkbox.value,
+          type: "industry",
+          industry: checkbox.dataset.industry,
+        }));
+
+        // Get skills texts for each selected industry
+        const skillsTexts = [];
+        selectedIndustries.forEach((industry) => {
+          const textareaId = `${industry.industry}-skills-text`;
+          const textarea = document.getElementById(textareaId);
+          if (textarea && textarea.value.trim()) {
+            skillsTexts.push({
+              name: textarea.value,
+              type: textareaId,
+            });
+          }
+        });
+
+        // Get custom skills
+        const customSkills =
+          document.getElementById("custom-skills")?.value || "";
+
+        // Save services to server
+        const response = await fetch(`/services/${userId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            industries: selectedIndustries.map((i) => i.name),
+            skills: skillsTexts.map((s) => s.name),
+            customSkills: customSkills,
+          }),
+        });
+
+        // Reset button state
+        saveServicesBtn.innerHTML = originalText;
+        saveServicesBtn.disabled = false;
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Не вдалося зберегти послуги");
+        }
+
+        showSuccess("Послуги успішно збережено!");
+      } catch (error) {
+        // Reset button state
+        saveServicesBtn.innerHTML = originalText;
+        saveServicesBtn.disabled = false;
+        showError(error.message);
+      }
+    });
+  }
+
   // Avatar upload functionality
   const avatarUploadBtn = document.getElementById("avatar-upload");
   if (avatarUploadBtn) {
@@ -952,21 +898,75 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
-        // Update profile with new image URL
-        await fetch(`/profile/${userId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({ profile_image_url: data.imageUrl }),
-        });
-
         showSuccess("Аватар успішно оновлено!");
       } catch (error) {
         showError(error.message);
       }
     });
+  }
+
+  // Password strength checker
+  const newPasswordInput = document.getElementById("new-password");
+  if (newPasswordInput) {
+    newPasswordInput.addEventListener("input", function () {
+      const password = this.value;
+      const strengthBar = document.getElementById("password-strength");
+      if (!strengthBar) return;
+
+      // Check requirements
+      const hasLength = password.length >= 8;
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+      // Update requirement indicators
+      updateRequirement("req-length", hasLength);
+      updateRequirement("req-uppercase", hasUppercase);
+      updateRequirement("req-lowercase", hasLowercase);
+      updateRequirement("req-number", hasNumber);
+      updateRequirement("req-special", hasSpecial);
+
+      // Calculate strength
+      let strength = 0;
+      if (hasLength) strength += 1;
+      if (hasUppercase) strength += 1;
+      if (hasLowercase) strength += 1;
+      if (hasNumber) strength += 1;
+      if (hasSpecial) strength += 1;
+
+      // Update strength bar
+      strengthBar.className = "password-strength";
+      if (strength < 3) {
+        strengthBar.classList.add("password-strength-weak");
+      } else if (strength < 5) {
+        strengthBar.classList.add("password-strength-medium");
+      } else {
+        strengthBar.classList.add("password-strength-strong");
+      }
+    });
+  }
+
+  // Helper function to update requirement indicator
+  function updateRequirement(id, isMet) {
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    if (isMet) {
+      element.classList.add("requirement-met");
+      element.classList.remove("requirement-unmet");
+      const icon = element.querySelector("i");
+      if (icon) {
+        icon.className = "fas fa-check-circle";
+      }
+    } else {
+      element.classList.add("requirement-unmet");
+      element.classList.remove("requirement-met");
+      const icon = element.querySelector("i");
+      if (icon) {
+        icon.className = "fas fa-times-circle";
+      }
+    }
   }
 
   // Password change form handler
@@ -1059,48 +1059,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Password strength checker
-  const newPasswordInput = document.getElementById("new-password");
-  if (newPasswordInput) {
-    newPasswordInput.addEventListener("input", function () {
-      const password = this.value;
-      const strengthBar = document.getElementById("password-strength");
-      if (!strengthBar) return;
-
-      // Check requirements
-      const hasLength = password.length >= 8;
-      const hasUppercase = /[A-Z]/.test(password);
-      const hasLowercase = /[a-z]/.test(password);
-      const hasNumber = /[0-9]/.test(password);
-      const hasSpecial = /[^A-Za-z0-9]/.test(password);
-
-      // Update requirement indicators
-      updateRequirement("req-length", hasLength);
-      updateRequirement("req-uppercase", hasUppercase);
-      updateRequirement("req-lowercase", hasLowercase);
-      updateRequirement("req-number", hasNumber);
-      updateRequirement("req-special", hasSpecial);
-
-      // Calculate strength
-      let strength = 0;
-      if (hasLength) strength += 1;
-      if (hasUppercase) strength += 1;
-      if (hasLowercase) strength += 1;
-      if (hasNumber) strength += 1;
-      if (hasSpecial) strength += 1;
-
-      // Update strength bar
-      strengthBar.className = "password-strength";
-      if (strength < 3) {
-        strengthBar.classList.add("password-strength-weak");
-      } else if (strength < 5) {
-        strengthBar.classList.add("password-strength-medium");
-      } else {
-        strengthBar.classList.add("password-strength-strong");
-      }
-    });
-  }
-
   // Save settings handler
   const saveSettingsBtn = document.getElementById("save-settings");
   if (saveSettingsBtn) {
@@ -1160,6 +1118,57 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Order action functions
+  window.viewOrderDetails = (orderId) => {
+    window.location.href = `/order-details.html?id=${orderId}`;
+  };
+
+  window.leaveReview = (orderId, masterId) => {
+    window.location.href = `/leave-review.html?orderId=${orderId}&masterId=${masterId}`;
+  };
+
+  window.cancelOrder = async (orderId) => {
+    if (!confirm("Ви впевнені, що хочете скасувати це замовлення?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/orders/${orderId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Не вдалося скасувати замовлення");
+      }
+
+      showSuccess("Замовлення успішно скасовано!");
+
+      // Reload orders
+      setTimeout(() => {
+        loadUserOrders();
+      }, 1000);
+    } catch (error) {
+      showError(error.message);
+    }
+  };
+
+  // Logout handler
+  const logoutBtn = document.getElementById("logout");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      localStorage.removeItem("userId");
+      localStorage.removeItem("token");
+      window.location.href = "/auth.html";
+    });
+  }
+
   // Load profile on page load
   loadUserProfile();
 
@@ -1172,80 +1181,5 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabElement) {
       tabElement.click();
     }
-  }
-});
-
-// Helper function to update requirement indicator
-function updateRequirement(id, isMet) {
-  const element = document.getElementById(id);
-  if (!element) return;
-
-  if (isMet) {
-    element.classList.add("requirement-met");
-    element.classList.remove("requirement-unmet");
-    const icon = element.querySelector("i");
-    if (icon) {
-      icon.className = "fas fa-check-circle";
-    }
-  } else {
-    element.classList.add("requirement-unmet");
-    element.classList.remove("requirement-met");
-    const icon = element.querySelector("i");
-    if (icon) {
-      icon.className = "fas fa-times-circle";
-    }
-  }
-}
-
-// Order action functions
-window.viewOrderDetails = (orderId) => {
-  window.location.href = `/order-details.html?id=${orderId}`;
-};
-
-window.leaveReview = (orderId, masterId) => {
-  window.location.href = `/leave-review.html?orderId=${orderId}&masterId=${masterId}`;
-};
-
-window.cancelOrder = async (orderId) => {
-  if (!confirm("Ви впевнені, що хочете скасувати це замовлення?")) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`/orders/${orderId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({ status: "cancelled" }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Не вдалося скасувати замовлення");
-    }
-
-    showSuccess("Замовлення успішно скасовано!");
-
-    // Reload orders
-    setTimeout(() => {
-      loadUserOrders();
-    }, 1000);
-  } catch (error) {
-    showError(error.message);
-  }
-};
-
-// Logout handler
-document.addEventListener("DOMContentLoaded", () => {
-  const logoutBtn = document.getElementById("logout");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", (event) => {
-      event.preventDefault();
-      localStorage.removeItem("userId");
-      localStorage.removeItem("token");
-      window.location.href = "/auth.html";
-    });
   }
 });
