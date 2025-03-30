@@ -20,17 +20,6 @@
           <button onclick="window.location.href='index.html'">
             <i class="fas fa-home"></i> Головна
           </button>
-          <button onclick="window.location.href='orders.html'">
-            <i class="fas fa-clipboard-list"></i> Замовлення
-          </button>
-          <button
-            class="notification-badge"
-            data-count="0"
-            id="notifications-btn"
-            onclick="window.location.href='notifications.html'"
-          >
-            <i class="fas fa-bell"></i> Сповіщення
-          </button>
           <button id="logout"><i class="fas fa-sign-out-alt"></i> Вийти</button>
         </div>
         <div class="theme-switch-container">
@@ -144,7 +133,7 @@
                 <input type="checkbox" id="role_master" name="role_master" />
                 <span class="checkmark"></span>
                 Я майстер
-                <span id="approval-status" style="display: none;"></span>
+                <span id="approval-status" style="display: none"></span>
               </label>
             </div>
 
@@ -158,7 +147,8 @@
                     name="industry"
                     value="Інформаційні технології"
                     data-industry="it"
-                  /><span class="checkmark"></span>Інформаційні технології</label
+                  /><span class="checkmark"></span>Інформаційні
+                  технології</label
                 >
               </div>
               <div class="service-option">
@@ -268,8 +258,8 @@
                     rows="4"
                   ></textarea>
                   <p class="hint">
-                    Приклад: Розробка веб-сайтів, мобільних додатків, налаштування
-                    серверів...
+                    Приклад: Розробка веб-сайтів, мобільних додатків,
+                    налаштування серверів...
                   </p>
                 </div>
               </div>
@@ -286,9 +276,7 @@
                     placeholder="Наприклад: Терапія, хірургія, педіатрія..."
                     rows="4"
                   ></textarea>
-                  <p class="hint">
-                    Приклад: Терапія, хірургія, педіатрія...
-                  </p>
+                  <p class="hint">Приклад: Терапія, хірургія, педіатрія...</p>
                 </div>
               </div>
 
