@@ -1,3 +1,4 @@
+
 // Check if user is logged in
 function checkUserLoggedIn() {
   const userId = localStorage.getItem("userId");

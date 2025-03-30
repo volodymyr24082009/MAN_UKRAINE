@@ -1,3 +1,79 @@
+// Ініціалізація сторінки
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        setupThemeToggle();
+        setupMobileMenu();
+        setupBackToTop();
+    } catch (err) {
+        console.error('Помилка при ініціалізації сторінки:', err);
+    }
+});
+
+// Налаштування перемикача теми
+function setupThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    
+    // Перевіряємо збережену тему
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        htmlElement.classList.add('light');
+        themeToggle.checked = true;
+    }
+    
+    // Обробник події зміни теми
+    themeToggle.addEventListener('change', () => {
+        if (themeToggle.checked) {
+            htmlElement.classList.add('light');
+            localStorage.setItem('theme', 'light');
+        } else {
+            htmlElement.classList.remove('light');
+            localStorage.setItem('theme', 'dark');
+        }
+    });
+}
+
+// Налаштування мобільного меню
+function setupMobileMenu() {
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    mobileMenuBtn.addEventListener('click', () => {
+        navMenu.classList.toggle('active');
+        mobileMenuBtn.innerHTML = navMenu.classList.contains('active') 
+            ? '<i class="fas fa-times"></i>' 
+            : '<i class="fas fa-bars"></i>';
+    });
+    
+    // Закриваємо меню при кліку на посилання
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+        });
+    });
+}
+
+// Налаштування кнопки "Вгору"
+function setupBackToTop() {
+    const backToTopBtn = document.getElementById('backToTop');
+    
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            backToTopBtn.classList.add('visible');
+        } else {
+            backToTopBtn.classList.remove('visible');
+        }
+    });
+    
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
+
 // Message type selection
 const messageTypeRadios = document.querySelectorAll('input[name="messageType"]');
 const textMessageGroup = document.getElementById('textMessageGroup');
@@ -61,8 +137,8 @@ startVoiceBtn.addEventListener('click', async () => {
         stopVoiceBtn.disabled = false;
         voiceIndicator.classList.remove('hidden');
     } catch (err) {
-        console.error('Error accessing microphone:', err);
-        alert('Could not access microphone. Please check permissions.');
+        console.error('Помилка доступу до мікрофона:', err);
+        showStatus('Не вдалося отримати доступ до мікрофона. Перевірте дозволи.', 'error');
     }
 });
 
@@ -121,8 +197,8 @@ startVideoBtn.addEventListener('click', async () => {
         stopVideoBtn.disabled = false;
         videoIndicator.classList.remove('hidden');
     } catch (err) {
-        console.error('Error accessing camera:', err);
-        alert('Could not access camera. Please check permissions.');
+        console.error('Помилка доступу до камери:', err);
+        showStatus('Не вдалося отримати доступ до камери. Перевірте дозволи.', 'error');
     }
 });
 
@@ -147,27 +223,27 @@ messageForm.addEventListener('submit', async (e) => {
     const messageType = document.querySelector('input[name="messageType"]:checked').value;
     
     if (!username || !email) {
-        showStatus('Please fill in all required fields', 'error');
+        showStatus('Будь ласка, заповніть всі обов\'язкові поля', 'error');
         return;
     }
     
     if (messageType === 'text' && !textMessage.value) {
-        showStatus('Please enter a message', 'error');
+        showStatus('Будь ласка, введіть повідомлення', 'error');
         return;
     }
     
     if (messageType === 'voice' && !voiceBlob) {
-        showStatus('Please record a voice message', 'error');
+        showStatus('Будь ласка, запишіть голосове повідомлення', 'error');
         return;
     }
     
     if (messageType === 'video' && !videoBlob) {
-        showStatus('Please record a video message', 'error');
+        showStatus('Будь ласка, запишіть відео повідомлення', 'error');
         return;
     }
     
     submitBtn.disabled = true;
-    showStatus('Sending message...', 'info');
+    showStatus('Надсилання повідомлення...', 'info');
     
     try {
         const formData = new FormData();
@@ -191,7 +267,7 @@ messageForm.addEventListener('submit', async (e) => {
         const result = await response.json();
         
         if (response.ok) {
-            showStatus('Message sent successfully!', 'success');
+            showStatus('Повідомлення успішно надіслано!', 'success');
             messageForm.reset();
             
             // Reset previews
@@ -208,11 +284,11 @@ messageForm.addEventListener('submit', async (e) => {
             videoMessageGroup.classList.add('hidden');
             textMessage.setAttribute('required', '');
         } else {
-            showStatus(`Error: ${result.error}`, 'error');
+            showStatus(`Помилка: ${result.error}`, 'error');
         }
     } catch (err) {
-        console.error('Error sending message:', err);
-        showStatus('Failed to send message. Please try again.', 'error');
+        console.error('Помилка надсилання повідомлення:', err);
+        showStatus('Не вдалося надіслати повідомлення. Спробуйте ще раз.', 'error');
     } finally {
         submitBtn.disabled = false;
     }
@@ -220,7 +296,7 @@ messageForm.addEventListener('submit', async (e) => {
 
 function showStatus(message, type) {
     statusMessage.textContent = message;
-    statusMessage.className = `status ${type}`;
+    statusMessage.className = `form-message ${type}`;
     statusMessage.classList.remove('hidden');
     
     // Auto-hide success messages after 5 seconds

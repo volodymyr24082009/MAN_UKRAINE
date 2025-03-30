@@ -1,89 +1,190 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="uk" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Форма повідомлення</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/message.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-comments"></i>
+                <span>ProFix Netwotk Hub</span>
+            </a>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">Головна</a>
+                <a href="#" class="nav-link active">Повідомлення</a>
+                <a href="#" class="nav-link">Контакти</a>
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider">
+                        <i class="fas fa-moon moon"></i>
+                        <i class="fas fa-sun sun"></i>
+                    </span>
+                </label>
+            </nav>
+            <button class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
     <div class="container">
-        <h1>Надіслати повідомлення</h1>
-        <form id="messageForm">
-            <div class="form-group">
-                <label for="username">Ім'я</label>
-                <input type="text" id="username" name="username" required>
-            </div>
+        <div class="message-form-container">
+            <h1 class="message-form-title">Надіслати повідомлення</h1>
             
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="masterSelect">Майстер</label>
-                <select id="masterSelect" name="masterId">
-                    <option value="">Виберіть майстра (обов'язково)</option>
-                    <!-- Опції будуть додані через JavaScript -->
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Тип повідомлення</label>
-                <div class="radio-group">
-                    <label class="radio-label">
-                        <input type="radio" name="messageType" value="text" checked>
-                        <span>Текстове повідомлення</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="messageType" value="voice">
-                        <span>Голосове повідомлення</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="messageType" value="video">
-                        <span>Відео повідомлення</span>
-                    </label>
+            <form id="messageForm" class="message-form">
+                <div class="form-group">
+                    <input type="text" id="username" name="username" placeholder=" " required>
+                    <label for="username">Ім'я</label>
                 </div>
-            </div>
-            
-            <div class="form-group" id="textMessageGroup">
-                <label for="textMessage">Повідомлення</label>
-                <textarea id="textMessage" name="textMessage" required></textarea>
-            </div>
-            
-            <div class="form-group hidden" id="voiceMessageGroup">
-                <label>Голосове повідомлення</label>
-                <div class="media-controls">
-                    <button type="button" id="startVoiceBtn" class="media-btn">Почати запис</button>
-                    <button type="button" id="stopVoiceBtn" class="media-btn" disabled>Зупинити запис</button>
-                    <div class="recording-indicator" id="voiceIndicator">
-                        <div class="recording-waves"></div>
-                        <span>Запис...</span>
+                
+                <div class="form-group">
+                    <input type="email" id="email" name="email" placeholder=" " required>
+                    <label for="email">Email</label>
+                </div>
+                
+                <div class="message-type-selector">
+                    <h3>Тип повідомлення</h3>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="messageType" value="text" checked>
+                            <i class="fas fa-comment"></i>
+                            <span>Текстове повідомлення</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="messageType" value="voice">
+                            <i class="fas fa-microphone"></i>
+                            <span>Голосове повідомлення</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="messageType" value="video">
+                            <i class="fas fa-video"></i>
+                            <span>Відео повідомлення</span>
+                        </label>
                     </div>
-                    <audio id="voicePreview" controls class="hidden"></audio>
                 </div>
-            </div>
-            
-            <div class="form-group hidden" id="videoMessageGroup">
-                <label>Відео повідомлення</label>
-                <div class="media-controls">
-                    <button type="button" id="startVideoBtn" class="media-btn">Почати запис</button>
-                    <button type="button" id="stopVideoBtn" class="media-btn" disabled>Зупинити запис</button>
-                    <div class="recording-indicator" id="videoIndicator">
-                        <div class="recording-waves"></div>
-                        <span>Запис...</span>
+                
+                <div class="form-group" id="textMessageGroup">
+                    <textarea id="textMessage" name="textMessage" placeholder=" " required></textarea>
+                    <label for="textMessage">Повідомлення</label>
+                </div>
+                
+                <div class="form-group hidden" id="voiceMessageGroup">
+                    <label class="media-label">Голосове повідомлення</label>
+                    <div class="media-controls">
+                        <div class="media-buttons">
+                            <button type="button" id="startVoiceBtn" class="media-btn">
+                                <i class="fas fa-microphone"></i> Почати запис
+                            </button>
+                            <button type="button" id="stopVoiceBtn" class="media-btn" disabled>
+                                <i class="fas fa-stop"></i> Зупинити запис
+                            </button>
+                        </div>
+                        <div class="recording-indicator hidden" id="voiceIndicator">
+                            <div class="recording-waves"></div>
+                            <span>Запис...</span>
+                        </div>
+                        <audio id="voicePreview" controls class="hidden"></audio>
                     </div>
-                    <video id="videoPreview" controls class="hidden"></video>
-                    <div id="cameraPreview"></div>
                 </div>
-            </div>
+                
+                <div class="form-group hidden" id="videoMessageGroup">
+                    <label class="media-label">Відео повідомлення</label>
+                    <div class="media-controls">
+                        <div class="media-buttons">
+                            <button type="button" id="startVideoBtn" class="media-btn">
+                                <i class="fas fa-video"></i> Почати запис
+                            </button>
+                            <button type="button" id="stopVideoBtn" class="media-btn" disabled>
+                                <i class="fas fa-stop"></i> Зупинити запис
+                            </button>
+                        </div>
+                        <div class="recording-indicator hidden" id="videoIndicator">
+                            <div class="recording-waves"></div>
+                            <span>Запис...</span>
+                        </div>
+                        <div id="cameraPreview" class="camera-preview"></div>
+                        <video id="videoPreview" controls class="hidden"></video>
+                    </div>
+                </div>
+                
+                <button type="submit" id="submitBtn" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Надіслати повідомлення
+                </button>
+            </form>
             
-            <button type="submit" id="submitBtn">Надіслати повідомлення</button>
-        </form>
-        
-        <div id="statusMessage" class="hidden"></div>
+            <div id="statusMessage" class="form-message hidden"></div>
+        </div>
     </div>
 
-    <script src="message.js"></script>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-comments"></i>
+                    <span>Повідомлення</span>
+                </div>
+                <p class="footer-description">
+                    Зв'яжіться з нами за допомогою зручної форми повідомлень.
+                </p>
+                <div class="footer-social">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">Навігація</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="index.html"><i class="fas fa-home"></i> Головна</a></li>
+                    <li class="footer-link"><a href="#"><i class="fas fa-comments"></i> Повідомлення</a></li>
+                    <li class="footer-link"><a href="#"><i class="fas fa-info-circle"></i> Про нас</a></li>
+                    <li class="footer-link"><a href="#"><i class="fas fa-phone"></i> Контакти</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3 class="footer-title">Контакти</h3>
+                <div class="footer-contact">
+                    <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="contact-info">
+                        <div class="contact-label">Адреса</div>
+                        <div class="contact-value">вул. Прикладна, 123, Київ</div>
+                    </div>
+                </div>
+                <div class="footer-contact">
+                    <div class="contact-icon"><i class="fas fa-phone"></i></div>
+                    <div class="contact-info">
+                        <div class="contact-label">Телефон</div>
+                        <div class="contact-value"><a href="tel:+380123456789">+38 (012) 345-67-89</a></div>
+                    </div>
+                </div>
+                <div class="footer-contact">
+                    <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                    <div class="contact-info">
+                        <div class="contact-label">Email</div>
+                        <div class="contact-value"><a href="mailto:info@example.com">info@example.com</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="copyright">© 2023 Всі права захищено</div>
+        </div>
+    </footer>
+
+    <!-- Back to top button -->
+    <button class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="js/message.js"></script>
 </body>
 </html>
