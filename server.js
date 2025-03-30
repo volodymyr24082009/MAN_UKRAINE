@@ -6,12 +6,16 @@ const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const multer = require("multer");
+const { sendMessage } = require("./bot");
+const fs = require("fs");
+const punycode = require("punycode/");
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 30565;
+const port = process.env.PORT || 30535;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -1500,7 +1504,100 @@ app.put("/orders/:orderId", async (req, res) => {
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, "uploads");
 
+    // Create uploads directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max file size
+  },
+});
+
+// Handle form submissions
+app.post(
+  "/send-message",
+  upload.fields([
+    { name: "voiceMessage", maxCount: 1 },
+    { name: "videoMessage", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const { username, email, messageType } = req.body;
+
+      if (!username || !email || !messageType) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      let messageContent;
+      let filePath;
+
+      // Process message based on type
+      if (messageType === "text") {
+        const { textMessage } = req.body;
+
+        if (!textMessage) {
+          return res.status(400).json({ error: "Missing text message" });
+        }
+
+        messageContent = textMessage;
+      } else if (messageType === "voice") {
+        if (!req.files.voiceMessage) {
+          return res.status(400).json({ error: "Missing voice message" });
+        }
+
+        filePath = req.files.voiceMessage[0].path;
+      } else if (messageType === "video") {
+        if (!req.files.videoMessage) {
+          return res.status(400).json({ error: "Missing video message" });
+        }
+
+        filePath = req.files.videoMessage[0].path;
+      } else {
+        return res.status(400).json({ error: "Invalid message type" });
+      }
+
+      // Send message to Telegram
+      const result = await sendMessage({
+        username,
+        email,
+        messageType,
+        messageContent,
+        filePath,
+      });
+
+      // Clean up file after sending
+      if (filePath && fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      res
+        .status(200)
+        .json({ success: true, message: "Message sent successfully" });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res
+        .status(500)
+        .json({ error: error.message || "Failed to send message" });
+    }
+  }
+);
 // Запуск сервера
 app.listen(port, () => {
   console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);
