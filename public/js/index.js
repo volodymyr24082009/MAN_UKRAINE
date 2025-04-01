@@ -1,4 +1,4 @@
-
+// Original code from the first file
 // Check if user is logged in
 function checkUserLoggedIn() {
   const userId = localStorage.getItem("userId");
@@ -591,7 +591,7 @@ function renderIndustriesDropdown() {
   });
 }
 
-// Order Form Submission with validation and animations
+// UPDATED: Order Form Submission with validation and animations
 const orderForm = document.getElementById("orderForm");
 const orderFormMessage = document.getElementById("orderFormMessage");
 
@@ -634,7 +634,8 @@ if (orderForm) {
         "Введіть коректний номер телефону у форматі +380XXXXXXXXX";
       orderFormMessage.className = "form-message error";
       submitBtn.disabled = false;
-      submitBtn.textContent = "Відправити заявку";
+      submitBtn.innerHTML =
+        '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
 
       // Shake the phone input
       phoneInput.style.animation = "shake 0.5s";
@@ -652,7 +653,8 @@ if (orderForm) {
         "Будь ласка, авторизуйтесь для відправки заявки";
       orderFormMessage.className = "form-message error";
       submitBtn.disabled = false;
-      submitBtn.textContent = "Відправити заявку";
+      submitBtn.innerHTML =
+        '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
 
       // Show login modal
       document.getElementById("loginModal").classList.add("active");
@@ -660,28 +662,62 @@ if (orderForm) {
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Create order data
+      const orderData = {
+        user_id: userId,
+        title,
+        industry,
+        description,
+        phone,
+      };
 
-      // Success response
-      orderFormMessage.textContent =
-        "Заявку успішно відправлено! Наші майстри зв'яжуться з вами найближчим часом.";
-      orderFormMessage.className = "form-message success";
-      orderForm.reset();
-
-      // Success animation
-      const formContainer = document.querySelector(".order-form-container");
-      formContainer.style.animation = "pulse 1s";
-      formContainer.addEventListener("animationend", () => {
-        formContainer.style.animation = "";
+      // Send order to server
+      const response = await fetch("/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
       });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Success response
+        orderFormMessage.textContent =
+          "Заявку успішно відправлено! Наші майстри зв'яжуться з вами найближчим часом.";
+        orderFormMessage.className = "form-message success";
+        orderForm.reset();
+
+        // Success animation
+        const formContainer = document.querySelector(".order-form-container");
+        formContainer.style.animation = "pulse 1s";
+        formContainer.addEventListener("animationend", () => {
+          formContainer.style.animation = "";
+        });
+
+        // Add link to view orders
+        const viewOrdersLink = document.createElement("a");
+        viewOrdersLink.href = "order.html";
+        viewOrdersLink.className = "view-orders-link";
+        viewOrdersLink.innerHTML =
+          '<i class="fas fa-list"></i> Переглянути мої заявки';
+        orderFormMessage.appendChild(document.createElement("br"));
+        orderFormMessage.appendChild(viewOrdersLink);
+      } else {
+        // Error response
+        orderFormMessage.textContent =
+          data.message || "Помилка при відправці заявки";
+        orderFormMessage.className = "form-message error";
+      }
     } catch (error) {
       console.error("Помилка:", error);
       orderFormMessage.textContent = "Помилка з'єднання з сервером";
       orderFormMessage.className = "form-message error";
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Відправити заявку";
+      submitBtn.innerHTML =
+        '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
 
       // Hide message after 5 seconds with fade out
       setTimeout(() => {
@@ -689,8 +725,13 @@ if (orderForm) {
         orderFormMessage.addEventListener("animationend", () => {
           orderFormMessage.style.display = "none";
           orderFormMessage.style.animation = "";
+          setTimeout(() => {
+            orderFormMessage.style.display = "block";
+            orderFormMessage.textContent = "";
+            orderFormMessage.className = "form-message";
+          }, 500);
         });
-      }, 5000);
+      }, 10000);
     }
   });
 }
@@ -789,6 +830,36 @@ style.textContent = `
   88.8% {
     transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
   }
+}
+
+.view-orders-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.view-orders-link:hover {
+  color: var(--primary-dark);
+  transform: translateX(5px);
+}
+
+.view-orders-link i {
+  margin-right: 5px;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 `;
 document.head.appendChild(style);
@@ -918,6 +989,35 @@ document.addEventListener("DOMContentLoaded", () => {
       button.style.boxShadow = "";
     });
   });
+
+  // Add a link to the order page in the header
+  const navMenu = document.getElementById("navMenu");
+
+  if (navMenu) {
+    // Check if the orders link already exists
+    const ordersLink = Array.from(navMenu.querySelectorAll(".nav-link")).find(
+      (link) =>
+        link.textContent.trim() === "Заявки" || link.href.includes("order.html")
+    );
+
+    if (!ordersLink) {
+      // Create the orders link
+      const orderLink = document.createElement("a");
+      orderLink.href = "order.html";
+      orderLink.className = "nav-link";
+      orderLink.id = "ordersLink";
+      orderLink.textContent = "Заявки";
+
+      // Insert it before the profile link
+      const profileLink = document.getElementById("profileLink");
+      if (profileLink) {
+        navMenu.insertBefore(orderLink, profileLink);
+      } else {
+        // If profile link doesn't exist, append to the end
+        navMenu.appendChild(orderLink);
+      }
+    }
+  }
 });
 
 // Service Worker Registration for offline functionality
@@ -969,3 +1069,121 @@ const manifestLink = document.querySelector('link[rel="manifest"]');
 if (manifestLink) {
   manifestLink.href = manifestURL;
 }
+
+// Add real-time notification for new orders (for admins and masters)
+async function checkForNewOrders() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
+  try {
+    // Get user profile to check role
+    const profileResponse = await fetch(`/profile/${userId}`);
+    const profileData = await profileResponse.json();
+
+    if (!profileData.profile) return;
+
+    const isAdmin = userId === "1"; // For demo purposes
+    const isMaster = profileData.profile.role_master;
+
+    if (!isAdmin && !isMaster) return;
+
+    // Get last check time
+    const lastCheckTime = localStorage.getItem("lastOrderCheckTime") || 0;
+    const currentTime = new Date().getTime();
+
+    // Fetch new orders
+    const response = await fetch("/orders");
+    const data = await response.json();
+
+    if (!data.orders || data.orders.length === 0) return;
+
+    // Filter for new orders since last check
+    const newOrders = data.orders.filter((order) => {
+      const orderTime = new Date(order.created_at).getTime();
+      return orderTime > lastCheckTime && order.status === "pending";
+    });
+
+    // Show notification if there are new orders
+    if (newOrders.length > 0) {
+      showOrderNotification(newOrders.length);
+    }
+
+    // Update last check time
+    localStorage.setItem("lastOrderCheckTime", currentTime);
+  } catch (error) {
+    console.error("Error checking for new orders:", error);
+  }
+}
+
+// Show notification for new orders
+function showOrderNotification(count) {
+  // Create notification if it doesn't exist
+  let notification = document.querySelector(".order-notification");
+
+  if (!notification) {
+    notification = document.createElement("div");
+    notification.className = "order-notification";
+    document.body.appendChild(notification);
+
+    // Add CSS for notification
+    const style = document.createElement("style");
+    style.textContent = `
+      .order-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+      
+      .order-notification.active {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      
+      .order-notification:hover {
+        background-color: var(--primary-dark);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Set notification content
+  notification.innerHTML = `
+    <i class="fas fa-bell"></i> 
+    У вас ${count} ${
+    count === 1 ? "нова заявка" : count < 5 ? "нові заявки" : "нових заявок"
+  }!
+  `;
+
+  // Show notification
+  notification.classList.add("active");
+
+  // Add click event to redirect to orders page
+  notification.addEventListener("click", () => {
+    window.location.href = "order.html";
+  });
+
+  // Hide notification after 5 seconds
+  setTimeout(() => {
+    notification.classList.remove("active");
+  }, 5000);
+}
+
+// Check for new orders every minute
+setInterval(checkForNewOrders, 60000);
+
+// Initial check for new orders
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(checkForNewOrders, 5000); // Check after 5 seconds
+});
+
+console.log("ProFix Network Hub script loaded successfully!");

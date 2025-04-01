@@ -231,7 +231,7 @@ const initializeIndustries = async () => {
       WHERE up.role_master = true
     `);
 
-    // Для кожного майстра додаємо галузі, які ще не існують
+    // Для кожног�� майстра додаємо галузі, які ще не існують
     for (const master of masters.rows) {
       const masterIndustries = await executeQuery(
         `
@@ -736,7 +736,7 @@ app.put("/master-requests/:requestId", async (req, res) => {
         "Фінанси та банківська справа",
         "Освіта",
         "Туризм і гостинність",
-        "Будівництво та нерухомі��ть",
+        "Будівництво та нерухомість",
         "Транспорт",
         "Мистецтво і культура",
       ];
@@ -1452,9 +1452,15 @@ app.put("/orders/:orderId", async (req, res) => {
 
   if (
     !status ||
-    !["pending", "approved", "rejected", "completed"].includes(status)
+    !["pending", "approved", "in_progress", "rejected", "completed"].includes(
+      status
+    )
   ) {
-    return res.status(400).json({ message: "Невірний статус" });
+    return res.status(400).json({
+      success: false,
+      message:
+        "Невірний статус. Допустимі значення: pending, approved, in_progress, rejected, completed",
+    });
   }
 
   try {
@@ -1463,44 +1469,322 @@ app.put("/orders/:orderId", async (req, res) => {
       "SELECT * FROM orders WHERE id = $1",
       [orderId]
     );
+
     if (orderResult.rows.length === 0) {
-      return res.status(404).json({ message: "Замовлення не знайдено" });
+      return res.status(404).json({
+        success: false,
+        message: "Замовлення не знайдено",
+      });
     }
 
-    // Перевірка чи користувач є майстром
+    // Перевірка чи користувач є майстром, якщо вказано master_id
     if (master_id) {
       const masterResult = await executeQuery(
         `
         SELECT * FROM user_profile 
-        WHERE user_id = $1 AND role_master = true AND approval_status = 'approved'
-      `,
+        WHERE user_id = $1 AND role_master = true
+        `,
         [master_id]
       );
 
       if (masterResult.rows.length === 0) {
         return res.status(403).json({
+          success: false,
+          message: "Тільки майстри можуть обробляти замовлення",
+        });
+      }
+
+      // Перевіряємо статус затвердження майстра тільки якщо він знайдений
+      if (masterResult.rows[0].approval_status !== "approved") {
+        return res.status(403).json({
+          success: false,
           message: "Тільки затверджені майстри можуть обробляти замовлення",
         });
       }
     }
 
     // Оновлення статусу замовлення
-    await executeQuery(
+    const updateResult = await executeQuery(
       `
       UPDATE orders 
-      SET status = $1, master_id = $2, updated_at = CURRENT_TIMESTAMP 
+      SET status = $1, 
+          master_id = $2, 
+          updated_at = CURRENT_TIMESTAMP 
       WHERE id = $3
-    `,
-      [status, master_id, orderId]
+      RETURNING id, status, master_id
+      `,
+      [status, master_id || orderResult.rows[0].master_id, orderId]
     );
 
+    if (updateResult.rows.length === 0) {
+      throw new Error("Не вдалося оновити замовлення");
+    }
+
     console.log(`✅ Статус замовлення з ID ${orderId} змінено на ${status}.`);
+
     res.status(200).json({
       success: true,
       message: `Статус замовлення змінено на ${status}`,
+      order: updateResult.rows[0],
     });
   } catch (err) {
     console.error("❌ Помилка при оновленні статусу замовлення:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Помилка при оновленні статусу заявки",
+      error: err.message,
+    });
+  }
+});
+
+console.log("✅ Endpoint for updating order status has been fixed");
+// Add these endpoints to your existing server.js file
+
+// Отримання замовлень за галуззю
+app.get("/orders/industry/:industry", async (req, res) => {
+  const industry = req.params.industry;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.industry, o.master_id, o.created_at, o.updated_at
+      FROM orders o
+      WHERE o.industry = $1
+      ORDER BY o.created_at DESC
+    `,
+      [industry]
+    );
+
+    res.status(200).json({ orders: result.rows });
+  } catch (err) {
+    console.error(
+      "❌ Помилка при отриманні замовлень за галуззю:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання статистики замовлень
+app.get("/orders/stats", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected
+      FROM orders
+    `);
+
+    res.status(200).json({ stats: result.rows[0] });
+  } catch (err) {
+    console.error(
+      "❌ Помилка при отриманні статистики замовлень:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання замовлень за статусом
+app.get("/orders/status/:status", async (req, res) => {
+  const status = req.params.status;
+
+  if (!["pending", "completed", "rejected", "all"].includes(status)) {
+    return res.status(400).json({ message: "Невірний статус" });
+  }
+
+  try {
+    let query = `
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.industry, o.master_id, o.created_at, o.updated_at,
+             u.username as user_username, 
+             up.first_name as user_first_name, 
+             up.last_name as user_last_name,
+             up.email as user_email,
+             m.username as master_username,
+             mp.first_name as master_first_name,
+             mp.last_name as master_last_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      LEFT JOIN users m ON o.master_id = m.id
+      LEFT JOIN user_profile mp ON m.id = mp.user_id
+    `;
+
+    if (status !== "all") {
+      query += ` WHERE o.status = $1`;
+    }
+
+    query += ` ORDER BY o.created_at DESC`;
+
+    const result =
+      status === "all"
+        ? await executeQuery(query)
+        : await executeQuery(query, [status]);
+
+    res.status(200).json({ orders: result.rows });
+  } catch (err) {
+    console.error(
+      "❌ Помилка при отриманні замовлень за статусом:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання деталей замовлення за ID
+app.get("/orders/:orderId", async (req, res) => {
+  const orderId = req.params.orderId;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.industry, o.master_id, o.created_at, o.updated_at,
+             u.username as user_username, 
+             up.first_name as user_first_name, 
+             up.last_name as user_last_name,
+             up.email as user_email,
+             m.username as master_username,
+             mp.first_name as master_first_name,
+             mp.last_name as master_last_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      LEFT JOIN users m ON o.master_id = m.id
+      LEFT JOIN user_profile mp ON m.id = mp.user_id
+      WHERE o.id = $1
+    `,
+      [orderId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Замовлення не знайдено" });
+    }
+
+    res.status(200).json({ order: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні деталей замовлення:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Пошук замовлень
+app.get("/orders/search/:query", async (req, res) => {
+  const query = req.params.query;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.industry, o.master_id, o.created_at, o.updated_at,
+             u.username as user_username, 
+             up.first_name as user_first_name, 
+             up.last_name as user_last_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      WHERE 
+        o.title ILIKE $1 OR 
+        o.description ILIKE $1 OR 
+        o.industry ILIKE $1 OR
+        u.username ILIKE $1 OR
+        up.first_name ILIKE $1 OR
+        up.last_name ILIKE $1
+      ORDER BY o.created_at DESC
+    `,
+      [`%${query}%`]
+    );
+
+    res.status(200).json({ orders: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при пошуку замовлень:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання кількості замовлень за галузями
+app.get("/orders/stats/by-industry", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT 
+        industry, 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected
+      FROM orders
+      GROUP BY industry
+      ORDER BY total DESC
+    `);
+
+    res.status(200).json({ stats: result.rows });
+  } catch (err) {
+    console.error(
+      "❌ Помилка при отриманні статистики за галузями:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання останніх замовлень (для дашборду)
+app.get("/orders/latest/:limit", async (req, res) => {
+  const limit = parseInt(req.params.limit) || 5;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT o.id, o.title, o.status, o.industry, o.created_at,
+             u.username as user_username,
+             up.first_name as user_first_name,
+             up.last_name as user_last_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      ORDER BY o.created_at DESC
+      LIMIT $1
+    `,
+      [limit]
+    );
+
+    res.status(200).json({ orders: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні останніх замовлень:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання кількості замовлень за статусами
+app.get("/orders/count/by-status", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM orders
+      GROUP BY status
+    `);
+
+    // Перетворюємо результат у зручний формат
+    const counts = {
+      pending: 0,
+      completed: 0,
+      rejected: 0,
+      total: 0,
+    };
+
+    result.rows.forEach((row) => {
+      counts[row.status] = parseInt(row.count);
+      counts.total += parseInt(row.count);
+    });
+
+    res.status(200).json(counts);
+  } catch (err) {
+    console.error("❌ Помилка при отриманні кількості замовлень:", err.message);
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
