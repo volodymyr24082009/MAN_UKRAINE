@@ -15,7 +15,7 @@ const punycode = require("punycode/");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 30535;
+const port = process.env.PORT || 3000;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -76,6 +76,97 @@ const executeQuery = async (queryText, params = [], retries = 3) => {
 
   // If we get here, all attempts failed
   throw lastError;
+};
+
+// Function to check and fix the reviews table
+const fixReviewsTable = async () => {
+  try {
+    // Check if the reviews table exists
+    const tableExists = await executeQuery(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'reviews'
+      );
+    `);
+
+    if (tableExists.rows[0].exists) {
+      console.log("Reviews table exists, checking for required columns...");
+
+      // Get all columns in the reviews table
+      const columnsResult = await executeQuery(`
+        SELECT column_name, is_nullable, data_type
+        FROM information_schema.columns
+        WHERE table_name = 'reviews';
+      `);
+
+      const columns = columnsResult.rows.map((row) => row.column_name);
+      console.log("Existing columns:", columns);
+
+      // Check for city column with NOT NULL constraint
+      const cityColumnCheck = columnsResult.rows.find(
+        (row) => row.column_name === "city" && row.is_nullable === "NO"
+      );
+
+      if (cityColumnCheck) {
+        console.log("Found city column with NOT NULL constraint, modifying...");
+        await executeQuery(`
+          ALTER TABLE reviews ALTER COLUMN city DROP NOT NULL;
+        `);
+        console.log("✅ Modified city column to allow NULL values");
+      }
+
+      // Add missing columns if needed
+      const requiredColumns = [
+        { name: "name", type: "VARCHAR(100)", default: "'Анонім'" },
+        { name: "industry", type: "VARCHAR(100)", default: "'Загальне'" },
+        { name: "rating", type: "INTEGER", default: "5" },
+        { name: "text", type: "TEXT", default: "''" },
+        { name: "master_name", type: "VARCHAR(100)", default: "NULL" },
+        { name: "status", type: "VARCHAR(20)", default: "'approved'" },
+        { name: "created_at", type: "TIMESTAMP", default: "CURRENT_TIMESTAMP" },
+        { name: "updated_at", type: "TIMESTAMP", default: "CURRENT_TIMESTAMP" },
+        { name: "city", type: "VARCHAR(100)", default: "'Не вказано'" },
+      ];
+
+      for (const column of requiredColumns) {
+        if (!columns.includes(column.name)) {
+          console.log(
+            `Adding missing '${column.name}' column to reviews table...`
+          );
+          await executeQuery(`
+            ALTER TABLE reviews ADD COLUMN ${column.name} ${column.type} DEFAULT ${column.default}
+          `);
+          console.log(
+            `✅ Added missing '${column.name}' column to reviews table`
+          );
+        }
+      }
+    } else {
+      console.log("Reviews table doesn't exist, creating it...");
+
+      // Create the reviews table with all required columns
+      await executeQuery(`
+        CREATE TABLE reviews (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          name VARCHAR(100) NOT NULL DEFAULT 'Анонім',
+          industry VARCHAR(100) NOT NULL DEFAULT 'Загальне',
+          rating INTEGER NOT NULL DEFAULT 5,
+          text TEXT NOT NULL DEFAULT '',
+          master_name VARCHAR(100),
+          status VARCHAR(20) NOT NULL DEFAULT 'approved',
+          city VARCHAR(100) DEFAULT 'Не вказано',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      console.log("✅ Created reviews table with all required columns");
+    }
+  } catch (err) {
+    console.error("❌ Error fixing reviews table:", err.message);
+    throw err;
+  }
 };
 
 // Функція для створення таблиць
@@ -182,6 +273,10 @@ const createTables = async () => {
     await executeQuery(masterRequestsTableQuery);
     await executeQuery(ordersTableQuery);
     await executeQuery(addIndustryColumnQuery);
+
+    // Fix the reviews table
+    await fixReviewsTable();
+
     console.log(
       "✅ Таблиці створено або вже існують, колонки додано (якщо їх не було)."
     );
@@ -231,7 +326,7 @@ const initializeIndustries = async () => {
       WHERE up.role_master = true
     `);
 
-    // Для кожног�� майстра додаємо галузі, які ще не існують
+    // Для кожного майстра додаємо галузі, які ще не існують
     for (const master of masters.rows) {
       const masterIndustries = await executeQuery(
         `
@@ -606,7 +701,7 @@ app.delete("/services/:serviceId", async (req, res) => {
       return res.status(404).json({ message: "Послугу не знайдено" });
     }
 
-    console.log(`✅ Послугу з ID ${serviceId} успішно видалено.`);
+    console.log(`✅ Послугу з ID ${serviceId} усп��шно видалено.`);
     res
       .status(200)
       .json({ success: true, message: "Послугу успішно видалено" });
@@ -906,11 +1001,6 @@ app.get("/admin/users-with-services", async (req, res) => {
 
     res.json(usersWithServices);
   } catch (err) {
-    console.error(
-      "❌ Помилка при отриманні списку користувачів з послугами:",
-      err.message
-    );
-    res.status(500).json({ message: "Помилка сервера", error: err.message });
     console.error(
       "❌ Помилка при отриманні списку користувачів з послугами:",
       err.message
@@ -1537,9 +1627,6 @@ app.put("/orders/:orderId", async (req, res) => {
   }
 });
 
-console.log("✅ Endpoint for updating order status has been fixed");
-// Add these endpoints to your existing server.js file
-
 // Отримання замовлень за галуззю
 app.get("/orders/industry/:industry", async (req, res) => {
   const industry = req.params.industry;
@@ -1788,6 +1875,266 @@ app.get("/orders/count/by-status", async (req, res) => {
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
+
+// ЕНДПОІНТИ ДЛЯ ВІДГУКІВ
+
+// Створення нового відгуку
+app.post("/reviews", async (req, res) => {
+  const { user_id, name, industry, rating, text, master_name, city } = req.body;
+
+  if (!name || !industry || !rating || !text) {
+    return res
+      .status(400)
+      .json({ message: "Усі обов'язкові поля повинні бути заповнені" });
+  }
+
+  if (rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Оцінка повинна бути від 1 до 5" });
+  }
+
+  try {
+    // Перевірка чи існує користувач, якщо вказано user_id
+    if (user_id) {
+      const userResult = await executeQuery(
+        "SELECT * FROM users WHERE id = $1",
+        [user_id]
+      );
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ message: "Користувача не знайдено" });
+      }
+    }
+
+    // Створення нового відгуку
+    const newReview = await executeQuery(
+      "INSERT INTO reviews (user_id, name, industry, rating, text, master_name, city, status) VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved') RETURNING id",
+      [
+        user_id || null,
+        name,
+        industry,
+        rating,
+        text,
+        master_name || null,
+        city || "Не вказано",
+      ]
+    );
+
+    console.log(
+      `✅ Новий відгук з ID ${newReview.rows[0].id} успішно створено.`
+    );
+    res.status(201).json({
+      success: true,
+      message: "Відгук успішно створено",
+      reviewId: newReview.rows[0].id,
+    });
+  } catch (err) {
+    console.error("❌ Помилка при створенні відгуку:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання всіх відгуків
+app.get("/reviews", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT id, user_id, name, industry, rating, text, master_name, city, status, created_at, updated_at
+      FROM reviews
+      WHERE status = 'approved'
+      ORDER BY created_at DESC
+    `);
+
+    res.status(200).json({ reviews: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні відгуків:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання відгуку за ID
+app.get("/reviews/:reviewId", async (req, res) => {
+  const reviewId = req.params.reviewId;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, user_id, name, industry, rating, text, master_name, city, status, created_at, updated_at
+      FROM reviews
+      WHERE id = $1
+    `,
+      [reviewId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Відгук не знайдено" });
+    }
+
+    res.status(200).json({ review: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні відгуку:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Видалення відгуку
+app.delete("/reviews/:reviewId", async (req, res) => {
+  const reviewId = req.params.reviewId;
+
+  try {
+    const result = await executeQuery(
+      "DELETE FROM reviews WHERE id = $1 RETURNING id",
+      [reviewId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Відгук не знайдено" });
+    }
+
+    console.log(`✅ Відгук з ID ${reviewId} успішно видалено.`);
+    res.status(200).json({ message: "Відгук успішно видалено" });
+  } catch (err) {
+    console.error("❌ Помилка при видаленні відгуку:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Оновлення статусу відгуку (для модерації)
+app.put("/reviews/:reviewId/status", async (req, res) => {
+  const reviewId = req.params.reviewId;
+  const { status } = req.body;
+
+  if (!status || !["pending", "approved", "rejected"].includes(status)) {
+    return res.status(400).json({ message: "Невірний статус" });
+  }
+
+  try {
+    const result = await executeQuery(
+      "UPDATE reviews SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id",
+      [status, reviewId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Відгук не знайдено" });
+    }
+
+    console.log(`✅ Статус відгуку з ID ${reviewId} змінено на ${status}.`);
+    res.status(200).json({ message: `Статус відгуку змінено на ${status}` });
+  } catch (err) {
+    console.error("❌ Помилка при оновленні статусу відгуку:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання відгуків за галуззю
+app.get("/reviews/industry/:industry", async (req, res) => {
+  const industry = req.params.industry;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, user_id, name, industry, rating, text, master_name, city, status, created_at, updated_at
+      FROM reviews
+      WHERE industry = $1 AND status = 'approved'
+      ORDER BY created_at DESC
+    `,
+      [industry]
+    );
+
+    res.status(200).json({ reviews: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні відгуків за галуззю:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання відгуків за оцінкою
+app.get("/reviews/rating/:rating", async (req, res) => {
+  const rating = parseInt(req.params.rating);
+
+  if (isNaN(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Невірна оцінка" });
+  }
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, user_id, name, industry, rating, text, master_name, city, status, created_at, updated_at
+      FROM reviews
+      WHERE rating = $1 AND status = 'approved'
+      ORDER BY created_at DESC
+    `,
+      [rating]
+    );
+
+    res.status(200).json({ reviews: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні відгуків за оцінкою:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання статистики відгуків за оцінками
+app.get("/api/review-ratings", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT rating, COUNT(*) as count
+      FROM reviews
+      WHERE status = 'approved'
+      GROUP BY rating
+      ORDER BY rating
+    `);
+
+    // Перетворюємо результат у зручний формат
+    const ratings = {};
+    let totalCount = 0;
+
+    result.rows.forEach((row) => {
+      ratings[row.rating] = parseInt(row.count);
+      totalCount += parseInt(row.count);
+    });
+
+    res.status(200).json({
+      ratings,
+      totalCount,
+      averageRating:
+        totalCount > 0
+          ? (
+              Object.entries(ratings).reduce(
+                (sum, [rating, count]) => sum + parseInt(rating) * count,
+                0
+              ) / totalCount
+            ).toFixed(1)
+          : 0,
+    });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні статистики відгуків:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Отримання статистики відгуків за галузями
+app.get("/api/review-industries", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT industry, COUNT(*) as count
+      FROM reviews
+      WHERE status = 'approved'
+      GROUP BY industry
+      ORDER BY count DESC
+    `);
+
+    // Перетворюємо результат у зручний формат
+    const industries = {};
+
+    result.rows.forEach((row) => {
+      industries[row.industry] = parseInt(row.count);
+    });
+
+    res.status(200).json({ industries });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні статистики відгуків:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -1882,6 +2229,7 @@ app.post(
     }
   }
 );
+
 // Запуск сервера
 app.listen(port, () => {
   console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);

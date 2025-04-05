@@ -18,7 +18,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="manifest" href="/manifest.json" />
-    <link rel="stylesheet" href="./css/index.css" />
+    <link rel="stylesheet" href="css/index.css" />
   </head>
   <body>
     <!-- Login Modal -->
@@ -50,13 +50,15 @@
     <header class="header">
       <div class="header-container">
         <a href="index.html" class="logo">
+          <i class="fas fa-tools"></i>
           <span>ProFix Network Hub</span>
         </a>
         <div class="nav-menu" id="navMenu">
-          
           <a href="index.html" class="nav-link active">Головна</a>
           <a href="#industries" class="nav-link">Галузі</a>
-          <a href="/public/message.html" class="nav-link" id="profileLink">Повідомлення</a>
+          <a href="message.html" class="nav-link" id="profileLink"
+            >Повідомлення</a
+          >
           <a href="#order" class="nav-link" id="orderLink">Замовити</a>
           <a href="profile.html" class="nav-link" id="profileLink">Профіль</a>
           <button class="nav-button" id="loginBtn">
@@ -88,7 +90,7 @@
             завдань
           </p>
           <div class="hero-buttons">
-            <button class="hero-btn pulse" id="orderNowBtn">
+            <button class="hero-btn" id="orderNowBtn">
               <i class="fas fa-clipboard-list"></i>
               Замовити послугу
             </button>
@@ -104,11 +106,9 @@
       <!-- Stats Section -->
       <section class="stats-section" id="stats">
         <div class="container">
-          <h2 class="section-title" data-aos="fade-up">
-            ProFix Network Hub у цифрах
-          </h2>
+          <h2 class="section-title">ProFix Network Hub у цифрах</h2>
           <div class="stats-container">
-            <div class="stats-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="stats-card">
               <div class="stats-number" id="usersCount">0</div>
               <div class="stats-label">Користувачів</div>
               <div class="stats-subtext">Зареєстрованих на платформі</div>
@@ -121,7 +121,7 @@
               </div>
             </div>
 
-            <div class="stats-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="stats-card">
               <div class="stats-number" id="mastersCount">0</div>
               <div class="stats-label">Майстрів</div>
               <div class="stats-subtext">Сертифікованих спеціалістів</div>
@@ -134,7 +134,7 @@
               </div>
             </div>
 
-            <div class="stats-card" data-aos="fade-up" data-aos-delay="300">
+            <div class="stats-card">
               <div class="stats-number" id="ordersCount">0</div>
               <div class="stats-label">Проектів</div>
               <div class="stats-subtext">Успішно виконаних замовлень</div>
@@ -153,7 +153,7 @@
       <!-- Industries Section -->
       <section class="industries-section" id="industries">
         <div class="container">
-          <h2 class="section-title" data-aos="fade-up">Галузі</h2>
+          <h2 class="section-title">Галузі</h2>
           <div class="industries-container" id="industriesContainer">
             <!-- Industries will be dynamically populated -->
           </div>
@@ -163,7 +163,7 @@
       <!-- Testimonials Section -->
       <section class="testimonials-section" id="testimonials">
         <div class="container">
-          <h2 class="section-title" data-aos="fade-up">Відгуки клієнтів</h2>
+          <h2 class="section-title">Відгуки клієнтів</h2>
           <div class="testimonials-slider" id="testimonialsSlider">
             <div class="testimonials-track" id="testimonialsTrack">
               <!-- Testimonials will be dynamically populated -->
@@ -177,15 +177,95 @@
               </button>
             </div>
           </div>
+
+          <!-- Add Review Button -->
+          <div class="add-review-container">
+            <button class="hero-btn" id="addReviewBtn">
+              <i class="fas fa-star"></i>
+              Залишити відгук
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Review Form Section -->
+      <section class="review-section" id="review-form">
+        <div class="container">
+          <h2 class="section-title">Залишити відгук</h2>
+          <div class="review-container">
+            <div class="review-form-container">
+              <form id="reviewForm" class="review-form">
+                <div class="form-group">
+                  <input
+                    type="text"
+                    id="reviewName"
+                    name="name"
+                    required
+                    placeholder=" "
+                  />
+                  <label for="reviewName">Ваше ім'я*</label>
+                </div>
+                <div class="form-group">
+                  <select id="reviewIndustry" name="industry" required>
+                    <option value="" disabled selected></option>
+                    <!-- Industries will be dynamically populated -->
+                  </select>
+                  <label for="reviewIndustry">Галузь*</label>
+                </div>
+                <div class="form-group">
+                  <div class="rating-container">
+                    <label class="rating-label">Оцінка*</label>
+                    <div class="star-rating">
+                      <i class="fas fa-star" data-rating="1"></i>
+                      <i class="fas fa-star" data-rating="2"></i>
+                      <i class="fas fa-star" data-rating="3"></i>
+                      <i class="fas fa-star" data-rating="4"></i>
+                      <i class="fas fa-star" data-rating="5"></i>
+                    </div>
+                    <input
+                      type="hidden"
+                      id="reviewRating"
+                      name="rating"
+                      value=""
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <textarea
+                    id="reviewText"
+                    name="text"
+                    placeholder=" "
+                    required
+                  ></textarea>
+                  <label for="reviewText">Ваш відгук*</label>
+                </div>
+                <div class="form-group">
+                  <input
+                    type="text"
+                    id="reviewMaster"
+                    name="master"
+                    placeholder=" "
+                  />
+                  <label for="reviewMaster">Ім'я майстра (якщо знаєте)</label>
+                </div>
+                <button type="submit" class="submit-btn" id="submitReviewBtn">
+                  <span>Відправити відгук</span>
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+                <div id="reviewFormMessage" class="form-message"></div>
+              </form>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- Order Form Section -->
       <section class="order-section" id="order">
         <div class="container">
-          <h2 class="section-title" data-aos="fade-up">Замовити послугу</h2>
+          <h2 class="section-title">Замовити послугу</h2>
           <div class="order-container">
-            <div class="order-image-container" data-aos="fade-right">
+            <div class="order-image-container">
               <img
                 src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
                 alt="Замовлення послуги"
@@ -205,7 +285,7 @@
                 </div>
               </div>
             </div>
-            <div class="order-form-container" data-aos="fade-left">
+            <div class="order-form-container">
               <h3 class="order-form-title">Залишити заявку</h3>
               <form id="orderForm" class="order-form">
                 <div class="form-group">
@@ -387,14 +467,7 @@
             <div class="contact-info">
               <div class="contact-label">Email</div>
               <div class="contact-value">
-                <a
-                  href="/cdn-cgi/l/email-protection#533a3d353c1323213c353a2b7d2632"
-                  ><span
-                    class="__cf_email__"
-                    data-cfemail="f69f989099b6868499909f8ed88397"
-                    >[email&#160;protected]</span
-                  ></a
-                >
+                <a href="mailto:info@profixhub.com">info@profixhub.com</a>
               </div>
             </div>
           </div>
@@ -416,10 +489,6 @@
       </div>
     </footer>
 
-    <script
-      data-cfasync="false"
-      src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"
-    ></script>
-    <script src="./js/index.js"></script>
+    <script src="js/index.js"></script>
   </body>
 </html>
