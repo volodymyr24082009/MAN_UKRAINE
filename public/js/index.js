@@ -1,3 +1,4 @@
+// Original code from the first file
 // Check if user is logged in
 function checkUserLoggedIn() {
   const userId = localStorage.getItem("userId");
@@ -65,149 +66,162 @@ function logoutUser() {
 }
 
 // Modal close button
-document.addEventListener("DOMContentLoaded", function () {
-  const modalClose = document.getElementById("modalClose");
-  if (modalClose) {
-    modalClose.addEventListener("click", () => {
-      document.getElementById("loginModal").classList.remove("active");
-    });
-  }
+const modalClose = document.getElementById("modalClose");
+if (modalClose) {
+  modalClose.addEventListener("click", () => {
+    document.getElementById("loginModal").classList.remove("active");
+  });
+}
 
-  // Modal login button
-  const modalLoginBtn = document.getElementById("modalLoginBtn");
-  if (modalLoginBtn) {
-    modalLoginBtn.addEventListener("click", redirectToAuth);
-  }
+// Modal login button
+const modalLoginBtn = document.getElementById("modalLoginBtn");
+if (modalLoginBtn) {
+  modalLoginBtn.addEventListener("click", redirectToAuth);
+}
 
-  // Modal register button
-  const modalRegisterBtn = document.getElementById("modalRegisterBtn");
-  if (modalRegisterBtn) {
-    modalRegisterBtn.addEventListener("click", () => {
-      window.location.href = "auth.html?register=true";
-    });
-  }
-
-  // Order Now button
-  const orderNowBtn = document.getElementById("orderNowBtn");
-  if (orderNowBtn) {
-    orderNowBtn.addEventListener("click", () => {
-      if (checkUserLoggedIn()) {
-        document.getElementById("order").scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      } else {
-        document.getElementById("loginModal").classList.add("active");
-      }
-    });
-  }
-
-  // Find Master button
-  const findMasterBtn = document.getElementById("findMasterBtn");
-  if (findMasterBtn) {
-    findMasterBtn.addEventListener("click", () => {
-      document.getElementById("industries").scrollIntoView({
+// Order Now button
+const orderNowBtn = document.getElementById("orderNowBtn");
+if (orderNowBtn) {
+  orderNowBtn.addEventListener("click", () => {
+    if (checkUserLoggedIn()) {
+      document.getElementById("order").scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
-    });
-  }
-
-  // Fetch statistics data
-  fetchStatistics();
-
-  // Render industries
-  renderIndustries();
-  renderIndustriesDropdown();
-
-  // Load testimonials
-  loadTestimonials();
-
-  // Setup animations
-  setupAnimations();
-  setupTypingAnimation();
-
-  // Initialize star rating
-  initStarRating();
-
-  // Back to top button
-  initBackToTop();
-});
+    } else {
+      document.getElementById("loginModal").classList.add("active");
+    }
+  });
+}
 
 // Fetch statistics data
 async function fetchStatistics() {
   try {
     // Fetch user and master count with growth data
-    const userMasterResponse = await fetch("/api/user-master-count").catch(
-      () => null
-    );
-    let userMasterData = {
-      users: 0,
-      masters: 0,
-      usersGrowth: 0,
-      mastersGrowth: 0,
-    };
-
-    if (userMasterResponse && userMasterResponse.ok) {
-      userMasterData = await userMasterResponse.json();
-    } else {
-      // Fallback data
-      userMasterData = {
-        users: Math.floor(Math.random() * 500) + 500,
-        masters: Math.floor(Math.random() * 100) + 100,
-        usersGrowth: Math.floor(Math.random() * 20) + 10,
-        mastersGrowth: Math.floor(Math.random() * 10) + 5,
-      };
-    }
+    const userMasterResponse = await fetch("/api/user-master-count");
+    const userMasterData = await userMasterResponse.json();
 
     // Update user and master counts
-    document.getElementById("usersCount").textContent = userMasterData.users;
+    document.getElementById("usersCount").textContent =
+      userMasterData.users || 0;
     document.getElementById("mastersCount").textContent =
-      userMasterData.masters;
+      userMasterData.masters || 0;
 
     // Update growth rates
-    document.getElementById(
-      "usersGrowth"
-    ).textContent = `+${userMasterData.usersGrowth}`;
-    document.getElementById(
-      "mastersGrowth"
-    ).textContent = `+${userMasterData.mastersGrowth}`;
+    document.getElementById("usersGrowth").textContent = `+${
+      userMasterData.usersGrowth || 0
+    }`;
+    document.getElementById("mastersGrowth").textContent = `+${
+      userMasterData.mastersGrowth || 0
+    }`;
 
     // Fetch orders data
-    const ordersResponse = await fetch("/api/orders-count").catch(() => null);
-    let ordersData = { completed: 0, weeklyGrowth: 0 };
-
-    if (ordersResponse && ordersResponse.ok) {
-      ordersData = await ordersResponse.json();
-    } else {
-      // Fallback data
-      ordersData = {
-        completed: Math.floor(Math.random() * 1000) + 1000,
-        weeklyGrowth: Math.floor(Math.random() * 30) + 20,
-      };
-    }
+    const ordersResponse = await fetch("/api/orders-count");
+    const ordersData = await ordersResponse.json();
 
     // Update orders count
-    document.getElementById("ordersCount").textContent = ordersData.completed;
-    document.getElementById(
-      "ordersGrowth"
-    ).textContent = `+${ordersData.weeklyGrowth}`;
+    document.getElementById("ordersCount").textContent =
+      ordersData.completed || 0;
+    document.getElementById("ordersGrowth").textContent = `+${
+      ordersData.weeklyGrowth || 0
+    }`;
 
-    // Create charts with real or fallback data
-    createFallbackCharts();
+    // Fetch timeline data for charts
+    const timelineResponse = await fetch("/api/user-master-timeline");
+    const timelineData = await timelineResponse.json();
+
+    // Create charts with real data
+    createCharts(timelineData);
   } catch (error) {
     console.error("Error fetching statistics:", error);
     // Set fallback data in case of error
-    document.getElementById("usersCount").textContent = "500";
-    document.getElementById("mastersCount").textContent = "100";
-    document.getElementById("ordersCount").textContent = "1000";
-    document.getElementById("usersGrowth").textContent = "+15";
-    document.getElementById("mastersGrowth").textContent = "+8";
-    document.getElementById("ordersGrowth").textContent = "+25";
+    document.getElementById("usersCount").textContent = "0";
+    document.getElementById("mastersCount").textContent = "0";
+    document.getElementById("ordersCount").textContent = "0";
+    document.getElementById("usersGrowth").textContent = "+0";
+    document.getElementById("mastersGrowth").textContent = "+0";
+    document.getElementById("ordersGrowth").textContent = "+0";
 
     // Create fallback charts
     createFallbackCharts();
   }
+}
+
+// Create charts with real data
+function createCharts(timelineData) {
+  if (!timelineData || timelineData.length === 0) {
+    createFallbackCharts();
+    return;
+  }
+
+  const labels = timelineData.map((item) => {
+    const date = new Date(item.timestamp);
+    return date.toLocaleDateString("uk-UA", { month: "short" });
+  });
+
+  const usersData = timelineData.map((item) => item.users);
+  const mastersData = timelineData.map((item) => item.masters);
+  const ordersData = timelineData.map((item) => item.orders || 0);
+
+  // Users Chart
+  const usersCtx = document.getElementById("usersChart").getContext("2d");
+  new Chart(usersCtx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Користувачі",
+          data: usersData,
+          borderColor: "#3498db",
+          backgroundColor: "rgba(52, 152, 219, 0.1)",
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: getChartOptions(),
+  });
+
+  // Masters Chart
+  const mastersCtx = document.getElementById("mastersChart").getContext("2d");
+  new Chart(mastersCtx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Майстри",
+          data: mastersData,
+          borderColor: "#2980b9",
+          backgroundColor: "rgba(41, 128, 185, 0.1)",
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: getChartOptions(),
+  });
+
+  // Orders Chart
+  const ordersCtx = document.getElementById("ordersChart").getContext("2d");
+  new Chart(ordersCtx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Проекти",
+          data: ordersData,
+          borderColor: "#2ecc71",
+          backgroundColor: "rgba(46, 204, 113, 0.1)",
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: getChartOptions(),
+  });
 }
 
 // Create fallback charts with simulated data
@@ -223,70 +237,64 @@ function createFallbackCharts() {
   };
 
   // Users Chart
-  const usersCtx = document.getElementById("usersChart");
-  if (usersCtx) {
-    new Chart(usersCtx.getContext("2d"), {
-      type: "line",
-      data: {
-        labels: months,
-        datasets: [
-          {
-            label: "Користувачі",
-            data: generateData(80, 10),
-            borderColor: "#3498db",
-            backgroundColor: "rgba(52, 152, 219, 0.1)",
-            tension: 0.4,
-            fill: true,
-          },
-        ],
-      },
-      options: getChartOptions(),
-    });
-  }
+  const usersCtx = document.getElementById("usersChart").getContext("2d");
+  new Chart(usersCtx, {
+    type: "line",
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: "Користувачі",
+          data: generateData(80, 10),
+          borderColor: "#3498db",
+          backgroundColor: "rgba(52, 152, 219, 0.1)",
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: getChartOptions(),
+  });
 
   // Masters Chart
-  const mastersCtx = document.getElementById("mastersChart");
-  if (mastersCtx) {
-    new Chart(mastersCtx.getContext("2d"), {
-      type: "line",
-      data: {
-        labels: months,
-        datasets: [
-          {
-            label: "Майстри",
-            data: generateData(20, 5),
-            borderColor: "#2980b9",
-            backgroundColor: "rgba(41, 128, 185, 0.1)",
-            tension: 0.4,
-            fill: true,
-          },
-        ],
-      },
-      options: getChartOptions(),
-    });
-  }
+  const mastersCtx = document.getElementById("mastersChart").getContext("2d");
+  new Chart(mastersCtx, {
+    type: "line",
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: "Майстри",
+          data: generateData(20, 5),
+          borderColor: "#2980b9",
+          backgroundColor: "rgba(41, 128, 185, 0.1)",
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: getChartOptions(),
+  });
 
   // Orders Chart
-  const ordersCtx = document.getElementById("ordersChart");
-  if (ordersCtx) {
-    new Chart(ordersCtx.getContext("2d"), {
-      type: "line",
-      data: {
-        labels: months,
-        datasets: [
-          {
-            label: "Проекти",
-            data: generateData(150, 20),
-            borderColor: "#2ecc71",
-            backgroundColor: "rgba(46, 204, 113, 0.1)",
-            tension: 0.4,
-            fill: true,
-          },
-        ],
-      },
-      options: getChartOptions(),
-    });
-  }
+  const ordersCtx = document.getElementById("ordersChart").getContext("2d");
+  new Chart(ordersCtx, {
+    type: "line",
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: "Проекти",
+          data: generateData(150, 20),
+          borderColor: "#2ecc71",
+          backgroundColor: "rgba(46, 204, 113, 0.1)",
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: getChartOptions(),
+  });
 }
 
 // Chart options
@@ -327,126 +335,141 @@ function getChartOptions() {
 }
 
 // Theme Toggle
-document.addEventListener("DOMContentLoaded", function () {
-  const themeToggle = document.getElementById("themeToggle");
-  const htmlElement = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const htmlElement = document.documentElement;
 
-  // Check for saved theme preference
-  if (localStorage.getItem("theme") === "light") {
+// Check for saved theme preference
+if (localStorage.getItem("theme") === "light") {
+  htmlElement.classList.remove("dark");
+  htmlElement.classList.add("light");
+  themeToggle.checked = true;
+}
+
+// Toggle theme when switch is clicked
+themeToggle.addEventListener("change", function () {
+  if (this.checked) {
     htmlElement.classList.remove("dark");
     htmlElement.classList.add("light");
-    themeToggle.checked = true;
+    localStorage.setItem("theme", "light");
+  } else {
+    htmlElement.classList.remove("light");
+    htmlElement.classList.add("dark");
+    localStorage.setItem("theme", "dark");
   }
-
-  // Toggle theme when switch is clicked
-  themeToggle.addEventListener("change", function () {
-    if (this.checked) {
-      htmlElement.classList.remove("dark");
-      htmlElement.classList.add("light");
-      localStorage.setItem("theme", "light");
-    } else {
-      htmlElement.classList.remove("light");
-      htmlElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    }
-  });
 });
 
 // Mobile Menu Toggle
-document.addEventListener("DOMContentLoaded", function () {
-  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-  const navMenu = document.getElementById("navMenu");
+const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+const navMenu = document.getElementById("navMenu");
 
-  if (mobileMenuBtn && navMenu) {
-    mobileMenuBtn.addEventListener("click", function () {
-      navMenu.classList.toggle("active");
+mobileMenuBtn.addEventListener("click", function () {
+  navMenu.classList.toggle("active");
 
-      // Change icon based on menu state
-      const icon = this.querySelector("i");
-      if (navMenu.classList.contains("active")) {
-        icon.classList.remove("fa-bars");
-        icon.classList.add("fa-times");
-        icon.style.animation = "rotate 0.5s ease forwards";
-      } else {
-        icon.classList.remove("fa-times");
-        icon.classList.add("fa-bars");
-        icon.style.animation = "rotate-back 0.5s ease forwards";
-      }
-    });
+  // Change icon based on menu state
+  const icon = this.querySelector("i");
+  if (navMenu.classList.contains("active")) {
+    icon.classList.remove("fa-bars");
+    icon.classList.add("fa-times");
+    icon.style.animation = "rotate 0.5s ease forwards";
+  } else {
+    icon.classList.remove("fa-times");
+    icon.classList.add("fa-bars");
+    icon.style.animation = "rotate-back 0.5s ease forwards";
+  }
+});
 
-    // Close mobile menu when clicking outside
-    document.addEventListener("click", function (event) {
-      if (
-        !navMenu.contains(event.target) &&
-        !mobileMenuBtn.contains(event.target) &&
-        navMenu.classList.contains("active")
-      ) {
-        navMenu.classList.remove("active");
-        const icon = mobileMenuBtn.querySelector("i");
-        icon.classList.remove("fa-times");
-        icon.classList.add("fa-bars");
-        icon.style.animation = "rotate-back 0.5s ease forwards";
-      }
-    });
+// Close mobile menu when clicking outside
+document.addEventListener("click", function (event) {
+  if (
+    !navMenu.contains(event.target) &&
+    !mobileMenuBtn.contains(event.target) &&
+    navMenu.classList.contains("active")
+  ) {
+    navMenu.classList.remove("active");
+    const icon = mobileMenuBtn.querySelector("i");
+    icon.classList.remove("fa-times");
+    icon.classList.add("fa-bars");
+    icon.style.animation = "rotate-back 0.5s ease forwards";
   }
 });
 
 // Communication Panel Toggle
-document.addEventListener("DOMContentLoaded", function () {
-  const commToggleBtn = document.getElementById("commToggleBtn");
-  const commMenu = document.getElementById("commMenu");
+const commToggleBtn = document.getElementById("commToggleBtn");
+const commMenu = document.getElementById("commMenu");
 
-  if (commToggleBtn && commMenu) {
-    commToggleBtn.addEventListener("click", function () {
-      commMenu.classList.toggle("active");
-      this.classList.toggle("active");
+commToggleBtn.addEventListener("click", function () {
+  commMenu.classList.toggle("active");
+  this.classList.toggle("active");
 
-      // Change icon based on menu state
-      const icon = this.querySelector("i");
-      if (commMenu.classList.contains("active")) {
-        icon.classList.remove("fa-comments");
-        icon.classList.add("fa-times");
-      } else {
-        icon.classList.remove("fa-times");
-        icon.classList.add("fa-comments");
-      }
-    });
-
-    // Close communication menu when clicking outside
-    document.addEventListener("click", function (event) {
-      if (
-        !commMenu.contains(event.target) &&
-        !commToggleBtn.contains(event.target) &&
-        commMenu.classList.contains("active")
-      ) {
-        commMenu.classList.remove("active");
-        commToggleBtn.classList.remove("active");
-        const icon = commToggleBtn.querySelector("i");
-        icon.classList.remove("fa-times");
-        icon.classList.add("fa-comments");
-      }
-    });
-
-    // Communication buttons with animations
-    const commButtons = ["messageBtn", "chatBtn", "voiceBtn", "videoBtn"];
-    commButtons.forEach((btnId) => {
-      const btn = document.getElementById(btnId);
-      if (btn) {
-        btn.addEventListener("click", function (event) {
-          animateButton(this);
-          setTimeout(() => {
-            if (checkUserLoggedIn()) {
-              alert(
-                `Відкриття ${this.querySelector(".comm-text").textContent}`
-              );
-            } else {
-              document.getElementById("loginModal").classList.add("active");
-            }
-          }, 300);
-        });
-      }
-    });
+  // Change icon based on menu state
+  const icon = this.querySelector("i");
+  if (commMenu.classList.contains("active")) {
+    icon.classList.remove("fa-comments");
+    icon.classList.add("fa-times");
+  } else {
+    icon.classList.remove("fa-times");
+    icon.classList.add("fa-comments");
   }
+});
+
+// Close communication menu when clicking outside
+document.addEventListener("click", function (event) {
+  if (
+    !commMenu.contains(event.target) &&
+    !commToggleBtn.contains(event.target) &&
+    commMenu.classList.contains("active")
+  ) {
+    commMenu.classList.remove("active");
+    commToggleBtn.classList.remove("active");
+    const icon = commToggleBtn.querySelector("i");
+    icon.classList.remove("fa-times");
+    icon.classList.add("fa-comments");
+  }
+});
+
+// Communication buttons with animations
+document.getElementById("messageBtn").addEventListener("click", () => {
+  animateButton(event.currentTarget);
+  setTimeout(() => {
+    if (checkUserLoggedIn()) {
+      alert("Відкриття повідомлень");
+    } else {
+      document.getElementById("loginModal").classList.add("active");
+    }
+  }, 300);
+});
+
+document.getElementById("chatBtn").addEventListener("click", () => {
+  animateButton(event.currentTarget);
+  setTimeout(() => {
+    if (checkUserLoggedIn()) {
+      alert("Відкриття чату");
+    } else {
+      document.getElementById("loginModal").classList.add("active");
+    }
+  }, 300);
+});
+
+document.getElementById("voiceBtn").addEventListener("click", () => {
+  animateButton(event.currentTarget);
+  setTimeout(() => {
+    if (checkUserLoggedIn()) {
+      alert("Голосовий виклик");
+    } else {
+      document.getElementById("loginModal").classList.add("active");
+    }
+  }, 300);
+});
+
+document.getElementById("videoBtn").addEventListener("click", () => {
+  animateButton(event.currentTarget);
+  setTimeout(() => {
+    if (checkUserLoggedIn()) {
+      alert("Відео виклик");
+    } else {
+      document.getElementById("loginModal").classList.add("active");
+    }
+  }, 300);
 });
 
 function animateButton(button) {
@@ -455,6 +478,15 @@ function animateButton(button) {
     button.style.animation = "";
   });
 }
+
+// Find Master button
+document.getElementById("findMasterBtn").addEventListener("click", () => {
+  animateButton(event.currentTarget);
+  document.getElementById("industries").scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+});
 
 // Industry data with icons and descriptions
 const industryData = [
@@ -517,8 +549,6 @@ const industryData = [
 // Render industries with animations
 function renderIndustries() {
   const industriesContainer = document.getElementById("industriesContainer");
-  if (!industriesContainer) return;
-
   industriesContainer.innerHTML = "";
 
   industryData.forEach((industry, index) => {
@@ -528,10 +558,10 @@ function renderIndustries() {
     industryCard.style.transform = "translateY(20px)";
 
     industryCard.innerHTML = `
-      <i class="${industry.icon} industry-icon"></i>
-      <div class="industry-name">${industry.name}</div>
-      <div class="industry-description">${industry.description}</div>
-    `;
+    <i class="${industry.icon} industry-icon"></i>
+    <div class="industry-name">${industry.name}</div>
+    <div class="industry-description">${industry.description}</div>
+  `;
 
     industriesContainer.appendChild(industryCard);
 
@@ -584,391 +614,361 @@ function renderIndustriesDropdown() {
   });
 }
 
-// Initialize star rating
-function initStarRating() {
-  const stars = document.querySelectorAll(".star-rating i");
+// UPDATED: Order Form Submission with validation and animations
+const orderForm = document.getElementById("orderForm");
+const orderFormMessage = document.getElementById("orderFormMessage");
+
+if (orderForm) {
+  // Phone number validation
+  const phoneInput = document.getElementById("orderPhone");
+  phoneInput.addEventListener("input", function () {
+    let phoneNumber = this.value.replace(/\D/g, "");
+
+    if (phoneNumber.startsWith("380")) {
+      phoneNumber = "+" + phoneNumber;
+    } else if (phoneNumber.startsWith("0")) {
+      phoneNumber = "+38" + phoneNumber;
+    }
+
+    // Format the phone number
+    if (phoneNumber.length > 12) {
+      phoneNumber = phoneNumber.substring(0, 13);
+    }
+
+    this.value = phoneNumber;
+  });
+
+  orderForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById("submitOrderBtn");
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading"></span> Відправка...';
+
+    const title = document.getElementById("orderTitle").value;
+    const industry = document.getElementById("industrySelect").value;
+    const description = document.getElementById("orderDescription").value;
+    const phone = document.getElementById("orderPhone").value;
+
+    // Validate phone number
+    const phoneRegex = /^\+380\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      orderFormMessage.textContent =
+        "Введіть коректний номер телефону у форматі +380XXXXXXXXX";
+      orderFormMessage.className = "form-message error";
+      submitBtn.disabled = false;
+      submitBtn.innerHTML =
+        '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
+
+      // Shake the phone input
+      phoneInput.style.animation = "shake 0.5s";
+      phoneInput.addEventListener("animationend", () => {
+        phoneInput.style.animation = "";
+      });
+
+      return;
+    }
+
+    // Check if user is logged in
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      orderFormMessage.textContent =
+        "Будь ласка, авторизуйтесь для відправки заявки";
+      orderFormMessage.className = "form-message error";
+      submitBtn.disabled = false;
+      submitBtn.innerHTML =
+        '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
+
+      // Show login modal
+      document.getElementById("loginModal").classList.add("active");
+      return;
+    }
+
+    try {
+      // Create order data
+      const orderData = {
+        user_id: userId,
+        title,
+        industry,
+        description,
+        phone,
+      };
+
+      // Send order to server
+      const response = await fetch("/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Success response
+        orderFormMessage.textContent =
+          "Заявку успішно відправлено! Наші майстри зв'яжуться з вами найближчим часом.";
+        orderFormMessage.className = "form-message success";
+        orderForm.reset();
+
+        // Success animation
+        const formContainer = document.querySelector(".order-form-container");
+        formContainer.style.animation = "pulse 1s";
+        formContainer.addEventListener("animationend", () => {
+          formContainer.style.animation = "";
+        });
+
+        // Add link to view orders
+        const viewOrdersLink = document.createElement("a");
+        viewOrdersLink.href = "order.html";
+        viewOrdersLink.className = "view-orders-link";
+        viewOrdersLink.innerHTML =
+          '<i class="fas fa-list"></i> Переглянути мої заявки';
+        orderFormMessage.appendChild(document.createElement("br"));
+        orderFormMessage.appendChild(viewOrdersLink);
+      } else {
+        // Error response
+        orderFormMessage.textContent =
+          data.message || "Помилка при відправці заявки";
+        orderFormMessage.className = "form-message error";
+      }
+    } catch (error) {
+      console.error("Помилка:", error);
+      orderFormMessage.textContent = "Помилка з'єднання з сервером";
+      orderFormMessage.className = "form-message error";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML =
+        '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
+
+      // Hide message after 5 seconds with fade out
+      setTimeout(() => {
+        orderFormMessage.style.animation = "fadeOut 1s forwards";
+        orderFormMessage.addEventListener("animationend", () => {
+          orderFormMessage.style.display = "none";
+          orderFormMessage.style.animation = "";
+          setTimeout(() => {
+            orderFormMessage.style.display = "block";
+            orderFormMessage.textContent = "";
+            orderFormMessage.className = "form-message";
+          }, 500);
+        });
+      }, 10000);
+    }
+  });
+}
+
+// NEW: Review Form Functionality
+const reviewForm = document.getElementById("reviewForm");
+const reviewFormMessage = document.getElementById("reviewFormMessage");
+const addReviewBtn = document.getElementById("addReviewBtn");
+const reviewSection = document.getElementById("review-form");
+
+// Star rating functionality
+const starRating = document.querySelector(".star-rating");
+if (starRating) {
+  const stars = starRating.querySelectorAll("i");
   const ratingInput = document.getElementById("reviewRating");
 
-  if (!stars.length || !ratingInput) return;
-
   stars.forEach((star) => {
-    star.addEventListener("mouseover", () => {
-      const currentRating = star.getAttribute("data-rating");
-      stars.forEach((s) => {
-        s.classList.remove("hovered");
-        if (s.getAttribute("data-rating") <= currentRating) {
-          s.classList.add("hovered");
-        }
-      });
-    });
-
-    star.addEventListener("mouseout", () => {
-      stars.forEach((s) => s.classList.remove("hovered"));
-    });
-
     star.addEventListener("click", () => {
-      const selectedRating = star.getAttribute("data-rating");
-      ratingInput.value = selectedRating;
+      const rating = star.getAttribute("data-rating");
+      ratingInput.value = rating;
+
+      // Reset all stars
+      stars.forEach((s) => s.classList.remove("active"));
+
+      // Activate stars up to the selected one
       stars.forEach((s) => {
-        s.classList.remove("selected");
-        if (s.getAttribute("data-rating") <= selectedRating) {
-          s.classList.add("selected");
+        if (s.getAttribute("data-rating") <= rating) {
+          s.classList.add("active");
         }
       });
     });
   });
 }
 
-// Order Form Submission
-document.addEventListener("DOMContentLoaded", function () {
-  const orderForm = document.getElementById("orderForm");
-  const orderFormMessage = document.getElementById("orderFormMessage");
-
-  if (orderForm) {
-    // Phone number validation
-    const phoneInput = document.getElementById("orderPhone");
-    if (phoneInput) {
-      phoneInput.addEventListener("input", function () {
-        let phoneNumber = this.value.replace(/\D/g, "");
-
-        if (phoneNumber.startsWith("380")) {
-          phoneNumber = "+" + phoneNumber;
-        } else if (phoneNumber.startsWith("0")) {
-          phoneNumber = "+38" + phoneNumber;
-        }
-
-        // Format the phone number
-        if (phoneNumber.length > 12) {
-          phoneNumber = phoneNumber.substring(0, 13);
-        }
-
-        this.value = phoneNumber;
+// Show/hide review form when "Add Review" button is clicked
+if (addReviewBtn) {
+  addReviewBtn.addEventListener("click", () => {
+    if (checkUserLoggedIn()) {
+      reviewSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
       });
+    } else {
+      document.getElementById("loginModal").classList.add("active");
+    }
+  });
+}
+
+// Handle review form submission
+if (reviewForm) {
+  reviewForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById("submitReviewBtn");
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading"></span> Відправка...';
+
+    const name = document.getElementById("reviewName").value;
+    const industry = document.getElementById("reviewIndustry").value;
+    const rating = document.getElementById("reviewRating").value;
+    const text = document.getElementById("reviewText").value;
+    const master = document.getElementById("reviewMaster").value;
+
+    // Validate rating
+    if (!rating) {
+      reviewFormMessage.textContent = "Будь ласка, виберіть оцінку";
+      reviewFormMessage.className = "form-message error";
+      submitBtn.disabled = false;
+      submitBtn.innerHTML =
+        '<span>Відправити відгук</span><i class="fas fa-paper-plane"></i>';
+      return;
     }
 
-    orderForm.addEventListener("submit", async function (e) {
-      e.preventDefault();
+    // Check if user is logged in
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      reviewFormMessage.textContent =
+        "Будь ласка, авторизуйтесь для відправки відгуку";
+      reviewFormMessage.className = "form-message error";
+      submitBtn.disabled = false;
+      submitBtn.innerHTML =
+        '<span>Відправити відгук</span><i class="fas fa-paper-plane"></i>';
 
-      const submitBtn = document.getElementById("submitOrderBtn");
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loading"></span> Відправка...';
+      // Show login modal
+      document.getElementById("loginModal").classList.add("active");
+      return;
+    }
 
-      const title = document.getElementById("orderTitle").value;
-      const industry = document.getElementById("industrySelect").value;
-      const description = document.getElementById("orderDescription").value;
-      const phone = document.getElementById("orderPhone").value;
+    try {
+      // Create review data
+      const reviewData = {
+        user_id: userId,
+        name,
+        industry,
+        rating: parseInt(rating),
+        text,
+        master_name: master,
+      };
 
-      // Validate phone number
-      const phoneRegex = /^\+380\d{9}$/;
-      if (!phoneRegex.test(phone)) {
-        orderFormMessage.textContent =
-          "Введіть коректний номер телефону у форматі +380XXXXXXXXX";
-        orderFormMessage.className = "form-message error";
-        submitBtn.disabled = false;
-        submitBtn.innerHTML =
-          '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
+      // Send review to server
+      const response = await fetch("/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reviewData),
+      });
 
-        // Shake the phone input
-        phoneInput.style.animation = "shake 0.5s";
-        phoneInput.addEventListener("animationend", () => {
-          phoneInput.style.animation = "";
-        });
+      const data = await response.json();
 
-        return;
-      }
-
-      // Check if user is logged in
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        orderFormMessage.textContent =
-          "Будь ласка, авторизуйтесь для відправки заявки";
-        orderFormMessage.className = "form-message error";
-        submitBtn.disabled = false;
-        submitBtn.innerHTML =
-          '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
-
-        // Show login modal
-        document.getElementById("loginModal").classList.add("active");
-        return;
-      }
-
-      try {
-        // Simulate successful order submission
-        setTimeout(() => {
-          // Success response
-          orderFormMessage.textContent =
-            "Заявку успішно відправлено! Наші майстри зв'яжуться з вами найближчим часом.";
-          orderFormMessage.className = "form-message success";
-          orderForm.reset();
-
-          // Success animation
-          const formContainer = document.querySelector(".order-form-container");
-          formContainer.style.animation = "pulse 1s";
-          formContainer.addEventListener("animationend", () => {
-            formContainer.style.animation = "";
-          });
-
-          // Add link to view orders
-          const viewOrdersLink = document.createElement("a");
-          viewOrdersLink.href = "order.html";
-          viewOrdersLink.className = "view-orders-link";
-          viewOrdersLink.innerHTML =
-            '<i class="fas fa-list"></i> Переглянути мої заявки';
-          orderFormMessage.appendChild(document.createElement("br"));
-          orderFormMessage.appendChild(viewOrdersLink);
-
-          submitBtn.disabled = false;
-          submitBtn.innerHTML =
-            '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
-
-          // Hide message after 10 seconds with fade out
-          setTimeout(() => {
-            orderFormMessage.style.animation = "fadeOut 1s forwards";
-            orderFormMessage.addEventListener("animationend", () => {
-              orderFormMessage.style.display = "none";
-              orderFormMessage.style.animation = "";
-              setTimeout(() => {
-                orderFormMessage.style.display = "block";
-                orderFormMessage.textContent = "";
-                orderFormMessage.className = "form-message";
-              }, 500);
-            });
-          }, 10000);
-        }, 1500);
-      } catch (error) {
-        console.error("Помилка:", error);
-        orderFormMessage.textContent = "Помилка з'єднання з сервером";
-        orderFormMessage.className = "form-message error";
-        submitBtn.disabled = false;
-        submitBtn.innerHTML =
-          '<span>Відправити заявку</span><i class="fas fa-paper-plane"></i>';
-      }
-    });
-  }
-});
-
-// Review Form Submission
-document.addEventListener("DOMContentLoaded", function () {
-  const reviewForm = document.getElementById("reviewForm");
-  const reviewFormMessage = document.getElementById("reviewFormMessage");
-  const addReviewBtn = document.getElementById("addReviewBtn");
-  const reviewSection = document.getElementById("review-form");
-
-  // Show/hide review form when "Add Review" button is clicked
-  if (addReviewBtn && reviewSection) {
-    addReviewBtn.addEventListener("click", () => {
-      if (checkUserLoggedIn()) {
-        reviewSection.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      } else {
-        document.getElementById("loginModal").classList.add("active");
-      }
-    });
-  }
-
-  // Handle review form submission
-  if (reviewForm) {
-    reviewForm.addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const submitBtn = document.getElementById("submitReviewBtn");
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loading"></span> Відправка...';
-
-      const name = document.getElementById("reviewName").value;
-      const industry = document.getElementById("reviewIndustry").value;
-      const rating = document.getElementById("reviewRating").value;
-      const text = document.getElementById("reviewText").value;
-      const master = document.getElementById("reviewMaster").value;
-
-      // Validate rating
-      if (!rating) {
-        reviewFormMessage.textContent = "Будь ласка, виберіть оцінку";
-        reviewFormMessage.className = "form-message error";
-        submitBtn.disabled = false;
-        submitBtn.innerHTML =
-          '<span>Відправити відгук</span><i class="fas fa-paper-plane"></i>';
-        return;
-      }
-
-      // Check if user is logged in
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
+      if (data.success) {
+        // Success response
         reviewFormMessage.textContent =
-          "Будь ласка, авторизуйтесь для відправки відгуку";
+          "Відгук успішно відправлено! Дякуємо за ваш відгук.";
+        reviewFormMessage.className = "form-message success";
+        reviewForm.reset();
+
+        // Reset star rating
+        const stars = document.querySelectorAll(".star-rating i");
+        stars.forEach((star) => star.classList.remove("active"));
+        document.getElementById("reviewRating").value = "";
+
+        // Success animation
+        const formContainer = document.querySelector(".review-form-container");
+        formContainer.style.animation = "pulse 1s";
+        formContainer.addEventListener("animationend", () => {
+          formContainer.style.animation = "";
+        });
+
+        // Reload testimonials
+        loadTestimonials();
+      } else {
+        // Error response
+        reviewFormMessage.textContent =
+          data.message || "Помилка при відправці відгуку";
         reviewFormMessage.className = "form-message error";
-        submitBtn.disabled = false;
-        submitBtn.innerHTML =
-          '<span>Відправити відгук</span><i class="fas fa-paper-plane"></i>';
-
-        // Show login modal
-        document.getElementById("loginModal").classList.add("active");
-        return;
       }
+    } catch (error) {
+      console.error("Помилка:", error);
+      reviewFormMessage.textContent = "Помилка з'єднання з сервером";
+      reviewFormMessage.className = "form-message error";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML =
+        '<span>Відправити відгук</span><i class="fas fa-paper-plane"></i>';
 
-      try {
-        // Simulate successful review submission
-        setTimeout(() => {
-          // Success response
-          reviewFormMessage.textContent =
-            "Відгук успішно відправлено! Дякуємо за ваш відгук.";
-          reviewFormMessage.className = "form-message success";
-          reviewForm.reset();
-
-          // Reset star rating
-          const stars = document.querySelectorAll(".star-rating i");
-          stars.forEach((star) => star.classList.remove("selected", "active"));
-          document.getElementById("reviewRating").value = "";
-
-          // Success animation
-          const formContainer = document.querySelector(
-            ".review-form-container"
-          );
-          formContainer.style.animation = "pulse 1s";
-          formContainer.addEventListener("animationend", () => {
-            formContainer.style.animation = "";
-          });
-
-          // Add new review to testimonials
-          addNewTestimonial({
-            name,
-            industry,
-            rating: parseInt(rating),
-            text,
-            master_name: master,
-            created_at: new Date().toISOString(),
-          });
-
-          submitBtn.disabled = false;
-          submitBtn.innerHTML =
-            '<span>Відправити відгук</span><i class="fas fa-paper-plane"></i>';
-
-          // Hide message after 10 seconds with fade out
+      // Hide message after 5 seconds with fade out
+      setTimeout(() => {
+        reviewFormMessage.style.animation = "fadeOut 1s forwards";
+        reviewFormMessage.addEventListener("animationend", () => {
+          reviewFormMessage.style.display = "none";
+          reviewFormMessage.style.animation = "";
           setTimeout(() => {
-            reviewFormMessage.style.animation = "fadeOut 1s forwards";
-            reviewFormMessage.addEventListener("animationend", () => {
-              reviewFormMessage.style.display = "none";
-              reviewFormMessage.style.animation = "";
-              setTimeout(() => {
-                reviewFormMessage.style.display = "block";
-                reviewFormMessage.textContent = "";
-                reviewFormMessage.className = "form-message";
-              }, 500);
-            });
-          }, 10000);
-        }, 1500);
-      } catch (error) {
-        console.error("Помилка:", error);
-        reviewFormMessage.textContent = "Помилка з'єднання з сервером";
-        reviewFormMessage.className = "form-message error";
-        submitBtn.disabled = false;
-        submitBtn.innerHTML =
-          '<span>Відправити відгук</span><i class="fas fa-paper-plane"></i>';
-      }
-    });
-  }
-});
-
-// Add new testimonial to the slider
-function addNewTestimonial(review) {
-  const testimonialsTrack = document.getElementById("testimonialsTrack");
-  if (!testimonialsTrack) return;
-
-  // Create stars string
-  const stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
-  const date = new Date(review.created_at).toLocaleDateString("uk-UA");
-
-  // Create new testimonial card
-  const testimonialCard = document.createElement("div");
-  testimonialCard.className = "testimonial-card";
-  testimonialCard.innerHTML = `
-    <div class="testimonial-rating">${stars}</div>
-    <div class="testimonial-industry">${review.industry}</div>
-    <div class="testimonial-quote">${review.text}</div>
-    <div class="testimonial-author">${review.name}</div>
-    ${
-      review.master_name
-        ? `<div class="testimonial-role">Майстер: ${review.master_name}</div>`
-        : ""
+            reviewFormMessage.style.display = "block";
+            reviewFormMessage.textContent = "";
+            reviewFormMessage.className = "form-message";
+          }, 500);
+        });
+      }, 10000);
     }
-    <div class="testimonial-date">${date}</div>
-  `;
-
-  // Add to the beginning of the track
-  if (testimonialsTrack.firstChild) {
-    testimonialsTrack.insertBefore(
-      testimonialCard,
-      testimonialsTrack.firstChild
-    );
-  } else {
-    testimonialsTrack.appendChild(testimonialCard);
-  }
-
-  // Reinitialize testimonial slider
-  initTestimonialSlider();
+  });
 }
 
-// Load testimonials
-function loadTestimonials() {
+// Load testimonials from server
+async function loadTestimonials() {
   const testimonialsTrack = document.getElementById("testimonialsTrack");
   if (!testimonialsTrack) return;
 
-  // Sample testimonials data
-  const sampleTestimonials = [
-    {
-      name: "Олександр Петренко",
-      industry: "Інформаційні технології",
-      rating: 5,
-      text: "Дуже задоволений роботою майстра. Швидко та якісно налаштував мою комп'ютерну мережу. Рекомендую!",
-      master_name: "Іван Коваленко",
-      created_at: "2024-03-15T10:30:00Z",
-    },
-    {
-      name: "Марія Іванова",
-      industry: "Будівництво та нерухомість",
-      rating: 4,
-      text: "Майстер виконав ремонт вчасно та професійно. Єдиний мінус - трохи перевищив бюджет, але результат того вартий.",
-      master_name: "Петро Сидоренко",
-      created_at: "2024-03-10T14:20:00Z",
-    },
-    {
-      name: "Андрій Ковальчук",
-      industry: "Енергетика",
-      rating: 5,
-      text: "Встановлення сонячних панелей пройшло ідеально. Тепер маю власне джерело енергії і значно менші рахунки за електроенергію.",
-      master_name: "Микола Шевченко",
-      created_at: "2024-03-05T09:15:00Z",
-    },
-  ];
+  try {
+    const response = await fetch("/reviews");
+    const data = await response.json();
 
-  testimonialsTrack.innerHTML = "";
+    if (data.reviews && data.reviews.length > 0) {
+      testimonialsTrack.innerHTML = "";
 
-  sampleTestimonials.forEach((review) => {
-    const stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
-    const date = new Date(review.created_at).toLocaleDateString("uk-UA");
+      data.reviews.forEach((review) => {
+        const stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+        const date = new Date(review.created_at).toLocaleDateString("uk-UA");
 
-    const testimonialCard = document.createElement("div");
-    testimonialCard.className = "testimonial-card";
-    testimonialCard.innerHTML = `
-      <div class="testimonial-rating">${stars}</div>
-      <div class="testimonial-industry">${review.industry}</div>
-      <div class="testimonial-quote">${review.text}</div>
-      <div class="testimonial-author">${review.name}</div>
-      ${
-        review.master_name
-          ? `<div class="testimonial-role">Майстер: ${review.master_name}</div>`
-          : ""
-      }
-      <div class="testimonial-date">${date}</div>
+        const testimonialCard = document.createElement("div");
+        testimonialCard.className = "testimonial-card";
+        testimonialCard.innerHTML = `
+          <div class="testimonial-rating">${stars}</div>
+          <div class="testimonial-industry">${review.industry}</div>
+          <div class="testimonial-quote">${review.text}</div>
+          <div class="testimonial-author">${review.name}</div>
+          ${
+            review.master_name
+              ? `<div class="testimonial-role">Майстер: ${review.master_name}</div>`
+              : ""
+          }
+          <div class="testimonial-date">${date}</div>
+        `;
+
+        testimonialsTrack.appendChild(testimonialCard);
+      });
+
+      // Initialize testimonial slider
+      initTestimonialSlider();
+    } else {
+      testimonialsTrack.innerHTML = `
+        <div class="testimonial-card">
+          <div class="testimonial-quote">Поки що немає відгуків. Будьте першим, хто залишить відгук!</div>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error("Помилка при завантаженні відгуків:", error);
+    testimonialsTrack.innerHTML = `
+      <div class="testimonial-card">
+        <div class="testimonial-quote">Не вдалося завантажити відгуки. Спробуйте пізніше.</div>
+      </div>
     `;
-
-    testimonialsTrack.appendChild(testimonialCard);
-  });
-
-  // Initialize testimonial slider
-  initTestimonialSlider();
+  }
 }
 
 // Initialize testimonial slider
@@ -1003,11 +1003,6 @@ function initTestimonialSlider() {
     updateSlider();
   });
 
-  nextBtn.addEventListener("click", () => {
-    currentIndex = (currentIndex + 1) % testimonials.length;
-    updateSlider();
-  });
-
   // Auto-slide every 5 seconds
   let slideInterval = setInterval(() => {
     currentIndex = (currentIndex + 1) % testimonials.length;
@@ -1034,32 +1029,11 @@ window.addEventListener("scroll", function () {
   const hero = document.querySelector(".hero");
   const heroContent = document.querySelector(".hero-content");
 
-  if (hero && heroContent && scrollPosition < 600) {
+  if (scrollPosition < 600) {
     hero.style.backgroundPosition = `center ${scrollPosition * 0.4}px`;
     heroContent.style.transform = `translateY(${scrollPosition * 0.2}px)`;
   }
 });
-
-// Back to top button
-function initBackToTop() {
-  const backToTopBtn = document.getElementById("backToTop");
-  if (!backToTopBtn) return;
-
-  window.addEventListener("scroll", () => {
-    if (window.scrollY > 300) {
-      backToTopBtn.classList.add("visible");
-    } else {
-      backToTopBtn.classList.remove("visible");
-    }
-  });
-
-  backToTopBtn.addEventListener("click", () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  });
-}
 
 // Scroll Animation with Intersection Observer
 const observerOptions = {
@@ -1089,11 +1063,97 @@ function setupAnimations() {
   });
 }
 
+// Add CSS for intersection observer animations
+const style = document.createElement("style");
+style.textContent = `
+.to-animate {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(90deg); }
+}
+
+@keyframes rotate-back {
+  from { transform: rotate(90deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes jello {
+  0%, 11.1%, 100% {
+    transform: none;
+  }
+  22.2% {
+    transform: skewX(-12.5deg) skewY(-12.5deg);
+  }
+  33.3% {
+    transform: skewX(6.25deg) skewY(6.25deg);
+  }
+  44.4% {
+    transform: skewX(-3.125deg) skewY(-3.125deg);
+  }
+  55.5% {
+    transform: skewX(1.5625deg) skewY(1.5625deg);
+  }
+  66.6% {
+    transform: skewX(-0.78125deg) skewY(-0.78125deg);
+  }
+  77.7% {
+    transform: skewX(0.390625deg) skewY(0.390625deg);
+  }
+  88.8% {
+    transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
+  }
+}
+
+.view-orders-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.view-orders-link:hover {
+  color: var(--primary-dark);
+  transform: translateX(5px);
+}
+
+.view-orders-link i {
+  margin-right: 5px;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+`;
+document.head.appendChild(style);
+
 // Typing animation for hero title
 function setupTypingAnimation() {
   const heroTitle = document.querySelector(".hero-title");
-  if (!heroTitle) return;
-
   const originalText = heroTitle.textContent;
   heroTitle.textContent = "";
 
@@ -1111,5 +1171,73 @@ function setupTypingAnimation() {
   // Start typing after a short delay
   setTimeout(typeWriter, 500);
 }
+
+// Initialize
+document.addEventListener("DOMContentLoaded", () => {
+  // Update UI based on login status
+  updateUIForLoginStatus();
+
+  // Fetch statistics data
+  fetchStatistics();
+
+  // Render industries
+  renderIndustries();
+  renderIndustriesDropdown();
+
+  // Load testimonials
+  loadTestimonials();
+
+  // Setup animations
+  setupAnimations();
+  setupTypingAnimation();
+
+  // Add hover effects to buttons
+  const buttons = document.querySelectorAll(
+    ".hero-btn, .nav-button, .submit-btn, .modal-btn"
+  );
+  buttons.forEach((button) => {
+    button.addEventListener("mouseenter", () => {
+      button.style.transform = "translateY(-5px)";
+      button.style.boxShadow = "0 10px 20px rgba(52, 152, 219, 0.4)";
+    });
+
+    button.addEventListener("mouseleave", () => {
+      button.style.transform = "";
+      button.style.boxShadow = "";
+    });
+  });
+});
+document.addEventListener("DOMContentLoaded", function () {
+  const stars = document.querySelectorAll(".star-rating i");
+  const ratingInput = document.getElementById("reviewRating");
+
+  stars.forEach((star) => {
+    star.addEventListener("mouseover", () => {
+      stars.forEach((s) => s.classList.remove("hovered"));
+      star.classList.add("hovered");
+      let currentRating = star.getAttribute("data-rating");
+      stars.forEach((s) => {
+        if (s.getAttribute("data-rating") <= currentRating) {
+          s.classList.add("hovered");
+        }
+      });
+    });
+
+    star.addEventListener("mouseout", () => {
+      stars.forEach((s) => s.classList.remove("hovered"));
+    });
+
+    star.addEventListener("click", () => {
+      let selectedRating = star.getAttribute("data-rating");
+      ratingInput.value = selectedRating;
+      stars.forEach((s) => s.classList.remove("selected"));
+      stars.forEach((s) => {
+        if (s.getAttribute("data-rating") <= selectedRating) {
+          s.classList.add("selected");
+        }
+      });
+    });
+  });
+});
 
 console.log("ProFix Network Hub script loaded successfully!");
