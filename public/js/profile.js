@@ -1183,3 +1183,154 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 });
+async function saveProfile(event) {
+  event.preventDefault();
+
+  const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("token");
+
+  if (!userId || !token) {
+    showError("Необхідно авторизуватися для збереження профілю");
+    return;
+  }
+
+  // Get form data
+  const formData = {
+    first_name: document.getElementById("first_name").value,
+    last_name: document.getElementById("last_name").value,
+    email: document.getElementById("email").value,
+    phone: document.getElementById("phone").value,
+    address: document.getElementById("address").value,
+    date_of_birth: document.getElementById("date_of_birth").value,
+    role_master: document.getElementById("role_master").checked,
+  };
+
+  try {
+    // Update user profile
+    const profileResponse = await fetch(`/profile/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (!profileResponse.ok) {
+      throw new Error("Помилка при оновленні профілю");
+    }
+
+    const profileData = await profileResponse.json();
+
+    // If user is a master, save selected industries
+    if (formData.role_master) {
+      // Get all industry checkboxes
+      const industryCheckboxes = document.querySelectorAll(
+        'input[name="industry"]'
+      );
+
+      // First, get existing services to identify which ones to delete
+      const existingServicesResponse = await fetch(`/services/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!existingServicesResponse.ok) {
+        throw new Error("Помилка при отриманні послуг");
+      }
+
+      const existingServicesData = await existingServicesResponse.json();
+      const existingIndustries = existingServicesData.services.filter(
+        (service) => service.service_type === "industry"
+      );
+
+      // Delete all existing industries
+      for (const industry of existingIndustries) {
+        await fetch(`/services/${industry.id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+
+      // Add only the selected industries
+      for (const checkbox of industryCheckboxes) {
+        if (checkbox.checked) {
+          await fetch(`/services/${userId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              service_name: checkbox.value,
+              service_type: "industry",
+            }),
+          });
+        }
+      }
+
+      // Now handle services for each selected industry
+      for (const checkbox of industryCheckboxes) {
+        if (checkbox.checked) {
+          const industryName = checkbox.value;
+          const serviceCheckboxes = document.querySelectorAll(
+            `input[name="service-${industryName}"]`
+          );
+
+          // Delete existing services for this industry
+          const existingIndustryServices = existingServicesData.services.filter(
+            (service) =>
+              service.service_type === "service" &&
+              document.querySelector(
+                `input[name="service-${industryName}"][value="${service.service_name}"]`
+              )
+          );
+
+          for (const service of existingIndustryServices) {
+            await fetch(`/services/${service.id}`, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+          }
+
+          // Add selected services
+          for (const serviceCheckbox of serviceCheckboxes) {
+            if (serviceCheckbox.checked) {
+              await fetch(`/services/${userId}`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  service_name: serviceCheckbox.value,
+                  service_type: "service",
+                }),
+              });
+            }
+          }
+        }
+      }
+    }
+
+    showSuccess("Профіль успішно оновлено");
+
+    // If profile requires approval, show message
+    if (profileData.requiresApproval) {
+      showInfo(
+        "Ваш запит на роль майстра відправлено на розгляд адміністратору"
+      );
+    }
+
+    // Reload profile data
+    loadProfileData();
+  } catch (error) {
+    console.error("Error saving profile:", error);
+    showError("Помилка при збереженні профілю: " + error.message);
+  }
+}

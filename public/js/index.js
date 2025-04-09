@@ -1241,3 +1241,14 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 console.log("ProFix Network Hub script loaded successfully!");
+
+// Find the admin panel link in the footer and add an event listener
+document.addEventListener("DOMContentLoaded", function () {
+  // Find all links to admin.html in the footer
+  const adminLinks = document.querySelectorAll('footer a[href="admin.html"]');
+
+  adminLinks.forEach((link) => {
+    // Change the href attribute to point to admin-login.html
+    link.setAttribute("href", "admin-login.html");
+  });
+});

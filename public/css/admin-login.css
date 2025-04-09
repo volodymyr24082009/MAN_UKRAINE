@@ -1,0 +1,324 @@
+:root {
+  --background-dark: #1a2238;
+  --background-light: #f8f9fa;
+  --text-dark: #e9e9ea;
+  --text-light: #2c3e50;
+  --primary-color: #3498db;
+  --secondary-color: #2980b9;
+  --danger-color: #e74c3c;
+  --shadow-dark: 0 5px 15px rgba(0, 0, 0, 0.3);
+  --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.1);
+  --gradient-dark: linear-gradient(145deg, #1e2a45, #243047);
+  --gradient-light: linear-gradient(145deg, #f0f0f0, #ffffff);
+  --border-radius-md: 8px;
+  --border-radius-lg: 15px;
+  --font-family: "Montserrat", sans-serif;
+  --transition-medium: 0.5s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-dark);
+  background-image: radial-gradient(
+      rgba(52, 152, 219, 0.05) 1px,
+      transparent 1px
+    ),
+    radial-gradient(rgba(52, 152, 219, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: 0 0, 25px 25px;
+  color: var(--text-dark);
+  font-family: var(--font-family);
+  padding: 20px;
+}
+
+html.light body {
+  background: var(--background-light);
+  color: var(--text-light);
+}
+
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  background: var(--gradient-dark);
+  border-radius: var(--border-radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow-dark);
+  text-align: center;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+html.light .login-container {
+  background: var(--gradient-light);
+  box-shadow: var(--shadow-light);
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 30px;
+}
+
+.login-logo i {
+  font-size: 2rem;
+  animation: pulse 2s infinite;
+}
+
+.login-title {
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+}
+
+.form-group {
+  margin-bottom: 25px;
+  position: relative;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 15px 15px 15px 45px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-dark);
+  font-size: 1rem;
+  transition: all var(--transition-medium);
+  font-family: var(--font-family);
+}
+
+html.light .form-group input {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--text-light);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+  transform: translateY(-3px);
+}
+
+.form-group i {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-color);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.login-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--secondary-color),
+    var(--primary-color)
+  );
+  transition: all var(--transition-medium);
+  z-index: -1;
+}
+
+.login-btn:hover::before {
+  left: 0;
+}
+
+.login-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 20px;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all var(--transition-medium);
+}
+
+.back-link:hover {
+  color: var(--secondary-color);
+  transform: translateX(-5px);
+}
+
+.error-message {
+  color: var(--danger-color);
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: var(--border-radius-md);
+  background-color: rgba(231, 76, 60, 0.1);
+  display: none;
+  animation: shake 0.5s ease-in-out;
+}
+
+.theme-switch {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+}
+
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #34495e;
+  transition: 0.4s;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px;
+  overflow: hidden;
+}
+
+html.light .slider {
+  background-color: #bdc3c7;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.slider .moon,
+.slider .sun {
+  z-index: 1;
+  font-size: 14px;
+  transition: transform 0.4s ease;
+  color: white;
+}
+
+.slider .moon {
+  margin-right: 5px;
+  transform: translateX(30px);
+}
+
+.slider .sun {
+  margin-left: 5px;
+  transform: translateX(-30px);
+}
+
+input:checked + .slider:before {
+  transform: translateX(30px);
+}
+
+input:checked + .slider .moon {
+  transform: translateX(0);
+}
+
+input:checked + .slider .sun {
+  transform: translateX(0);
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}

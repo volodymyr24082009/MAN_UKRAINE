@@ -19,7 +19,7 @@ const socketIo = require("socket.io");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 34549;
+const port = process.env.PORT || 3000;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -826,36 +826,37 @@ app.put("/master-requests/:requestId", async (req, res) => {
         [status, userId]
       );
 
-      // Add default industries for the master if they don't exist
-      const industries = [
-        "Інформаційні технології",
-        "Медицина",
-        "Енергетика",
-        "Аграрна галузь",
-        "Фінанси та банківська справа",
-        "Освіта",
-        "Туризм і гостинність",
-        "Будівництво та нерухомість",
-        "Транспорт",
-        "Мистецтво і культура",
-      ];
-
-      for (const industry of industries) {
-        // Check if the industry already exists for this master
-        const existingIndustry = await executeQuery(
-          `
-          SELECT * FROM user_services 
-          WHERE user_id = $1 AND service_name = $2 AND service_type = 'industry'
+      // Check if the master already has any industries
+      const existingIndustriesResult = await executeQuery(
+        `
+        SELECT * FROM user_services 
+        WHERE user_id = $1 AND service_type = 'industry'
         `,
-          [userId, industry]
-        );
+        [userId]
+      );
 
-        if (existingIndustry.rows.length === 0) {
+      // Only add default industries if the master has no industries yet
+      if (existingIndustriesResult.rows.length === 0) {
+        // Add default industries for the master
+        const industries = [
+          "Інформаційні технології",
+          "Медицина",
+          "Енергетика",
+          "Аграрна галузь",
+          "Фінанси та банківська справа",
+          "Освіта",
+          "Туризм і гостинність",
+          "Будівництво та нерухомість",
+          "Транспорт",
+          "Мистецтво і культура",
+        ];
+
+        for (const industry of industries) {
           await executeQuery(
             `
             INSERT INTO user_services (user_id, service_name, service_type)
             VALUES ($1, $2, 'industry')
-          `,
+            `,
             [userId, industry]
           );
         }

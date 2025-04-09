@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Вхід до адмін-панелі - ProFix Network Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/admin-login.css">
+</head>
+<body>
+    <label class="theme-switch">
+        <input type="checkbox" id="themeToggle" />
+        <span class="slider">
+            <span class="moon"><i class="fas fa-moon"></i></span>
+            <span class="sun"><i class="fas fa-sun"></i></span>
+        </span>
+    </label>
+
+    <div class="login-container">
+        <div class="login-logo">
+            <i class="fas fa-tools"></i>
+            <span>ProFix Network</span>
+        </div>
+        <h1 class="login-title">Вхід до адмін-панелі</h1>
+        
+        <form id="adminLoginForm">
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="adminPassword" placeholder="Введіть пароль" required>
+            </div>
+            
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Увійти</span>
+            </button>
+        </form>
+        
+        <div id="errorMessage" class="error-message">
+            Невірний пароль. Спробуйте ще раз.
+        </div>
+        
+        <a href="index.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> Повернутися на головну
+        </a>
+    </div>
+
+    <script src="js/admin-login.js"></script>
+</body>
+</html>

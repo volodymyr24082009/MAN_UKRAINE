@@ -2,12 +2,43 @@
 <html lang="uk" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>ProFix Network Hub - Професійні послуги</title>
     <meta
       name="description"
       content="ProFix Network Hub - платформа, що з'єднує клієнтів з професійними майстрами для різних галузей"
     />
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#3498db" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="ProFix Network" />
+
+    <!-- PWA Icons -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="196x196"
+      href="/icons/favicon-196.png"
+    />
+    <link rel="apple-touch-icon" href="/icons/apple-icon-180.png" />
+    <link
+      rel="apple-touch-startup-image"
+      href="/icons/apple-splash-2048-2732.jpg"
+      media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+    />
+
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Stylesheets -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -17,10 +48,28 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="css/index.css" />
   </head>
   <body>
+    <!-- PWA Install Banner -->
+    <div id="installBanner" class="pwa-install-banner" style="display: none">
+      <div class="install-content">
+        <div class="install-icon">
+          <i class="fas fa-download"></i>
+        </div>
+        <div class="install-text">
+          <h3>Встановіть додаток</h3>
+          <p>Встановіть ProFix Network Hub для швидкого доступу</p>
+        </div>
+      </div>
+      <div class="install-actions">
+        <button id="installPwa" class="install-btn">Встановити</button>
+        <button id="closeInstallBanner" class="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
     <!-- Login Modal -->
     <div class="modal-overlay" id="loginModal">
       <div class="login-modal">
@@ -215,7 +264,6 @@
                 </div>
                 <div class="form-group">
                   <div class="rating-container">
-                    
                     <div class="star-rating">
                       <i class="fas fa-star" data-rating="1"></i>
                       <i class="fas fa-star" data-rating="2"></i>
@@ -433,7 +481,7 @@
               </a>
             </li>
             <li class="footer-link">
-              <a href="admin.html">
+              <a href="./admin-login.html">
                 <i class="fas fa-chevron-right"></i> Адмін-панель
               </a>
             </li>
@@ -491,5 +539,6 @@
     </footer>
 
     <script src="js/index.js"></script>
+    <script src="js/pwa.js"></script>
   </body>
 </html>

@@ -1859,3 +1859,30 @@ cardIconStyle.textContent = `
 document.head.appendChild(cardIconStyle);
 
 console.log("✅ Admin panel review functionality has been added successfully!");
+
+// Authentication check for admin panel
+document.addEventListener("DOMContentLoaded", function () {
+  // Check if user is authenticated
+  if (localStorage.getItem("adminAuthenticated") !== "true") {
+    // Redirect to login page if not authenticated
+    window.location.href = "admin-login.html";
+  }
+});
+
+// Add logout functionality
+function logoutAdmin() {
+  localStorage.removeItem("adminAuthenticated");
+  window.location.href = "admin-login.html";
+}
+
+// Add logout button event listener
+document.addEventListener("DOMContentLoaded", function () {
+  const logoutLinks = document.querySelectorAll('a[href="auth.html"]');
+
+  logoutLinks.forEach((link) => {
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      logoutAdmin();
+    });
+  });
+});
