@@ -1,17 +1,43 @@
-const express = require("express")
-const bodyParser = require("body-parser")
-const { Pool } = require("pg")
-const path = require("path")
-const dotenv = require("dotenv")
-const bcrypt = require("bcryptjs")
-const jwt = require("jsonwebtoken")
-const cors = require("cors")
-dotenv.config()
+const express = require("express");
+const bodyParser = require("body-parser");
+const { Pool } = require("pg");
+const path = require("path");
+const dotenv = require("dotenv");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const cors = require("cors");
+const multer = require("multer");
+const { sendMessage } = require("./bot");
+const fs = require("fs");
+const punycode = require("punycode/");
+const session = require("express-session");
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
-const app = express()
-const port = process.env.PORT || 3003
+// Load environment variables
+dotenv.config();
 
-// Підключення до бази даних
+// Check for required environment variables
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  console.warn(
+    "⚠️ Warning: Google OAuth credentials not found in environment variables."
+  );
+  console.warn("   Authentication with Google may not work properly.");
+}
+
+if (!process.env.SESSION_SECRET) {
+  console.warn(
+    "⚠️ Warning: SESSION_SECRET not found in environment variables."
+  );
+  console.warn("   Using a default secret. This is not secure for production.");
+  process.env.SESSION_SECRET =
+    "default_session_secret_" + Math.random().toString(36).substring(2);
+}
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Improved database connection configuration
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -19,17 +45,195 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
   ssl: { rejectUnauthorized: false },
-})
+  // Add connection timeout and retry settings
+  connectionTimeoutMillis: 10000,
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000,
+});
 
-// Функція для створення таблиць
+// Test database connection
+pool
+  .connect()
+  .then((client) => {
+    console.log("✅ Successfully connected to PostgreSQL database!");
+    console.log(`   Host: ${process.env.DB_HOST}`);
+    console.log(`   Database: ${process.env.DB_NAME}`);
+    client.release();
+  })
+  .catch((err) => {
+    console.error("❌ Database connection error:", err.message);
+    console.error(
+      "   Please check your database credentials and network connection."
+    );
+    // Continue running the server even if DB connection fails initially
+  });
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname)));
+
+// Session middleware setup for Passport
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: process.env.NODE_ENV === "production" }, // Use secure cookies in production
+  })
+);
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Serialize and deserialize user for passport
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
+      id,
+    ]);
+    if (userResult.rows.length === 0) {
+      return done(null, false);
+    }
+    done(null, userResult.rows[0]);
+  } catch (err) {
+    done(err, null);
+  }
+});
+
+// Helper function for database queries with retry logic
+const executeQuery = async (queryText, params = [], retries = 3) => {
+  let lastError;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const result = await pool.query(queryText, params);
+      return result;
+    } catch (err) {
+      console.error(`Query attempt ${attempt} failed:`, err.message);
+      lastError = err;
+
+      // If this isn't the last attempt, wait before retrying
+      if (attempt < retries) {
+        const delay = 1000 * attempt; // Exponential backoff
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  // If we get here, all attempts failed
+  throw lastError;
+};
+
+// Function to check and fix the reviews table
+const fixReviewsTable = async () => {
+  try {
+    // Check if the reviews table exists
+    const tableExists = await executeQuery(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'reviews'
+      );
+    `);
+
+    if (tableExists.rows[0].exists) {
+      console.log("Reviews table exists, checking for required columns...");
+
+      // Get all columns in the reviews table
+      const columnsResult = await executeQuery(`
+        SELECT column_name, is_nullable, data_type
+        FROM information_schema.columns
+        WHERE table_name = 'reviews';
+      `);
+
+      const columns = columnsResult.rows.map((row) => row.column_name);
+      console.log("Existing columns:", columns);
+
+      // Check for city column with NOT NULL constraint
+      const cityColumnCheck = columnsResult.rows.find(
+        (row) => row.column_name === "city" && row.is_nullable === "NO"
+      );
+
+      if (cityColumnCheck) {
+        console.log("Found city column with NOT NULL constraint, modifying...");
+        await executeQuery(`
+          ALTER TABLE reviews ALTER COLUMN city DROP NOT NULL;
+        `);
+        console.log("✅ Modified city column to allow NULL values");
+      }
+
+      // Add missing columns if needed
+      const requiredColumns = [
+        { name: "name", type: "VARCHAR(100)", default: "'Анонім'" },
+        { name: "industry", type: "VARCHAR(100)", default: "'Загальне'" },
+        { name: "rating", type: "INTEGER", default: "5" },
+        { name: "text", type: "TEXT", default: "''" },
+        { name: "master_name", type: "VARCHAR(100)", default: "NULL" },
+        { name: "status", type: "VARCHAR(20)", default: "'approved'" },
+        { name: "created_at", type: "TIMESTAMP", default: "CURRENT_TIMESTAMP" },
+        { name: "updated_at", type: "TIMESTAMP", default: "CURRENT_TIMESTAMP" },
+        { name: "city", type: "VARCHAR(100)", default: "'Не вказано'" },
+      ];
+
+      for (const column of requiredColumns) {
+        if (!columns.includes(column.name)) {
+          console.log(
+            `Adding missing '${column.name}' column to reviews table...`
+          );
+          await executeQuery(`
+            ALTER TABLE reviews ADD COLUMN ${column.name} ${column.type} DEFAULT ${column.default}
+          `);
+          console.log(
+            `✅ Added missing '${column.name}' column to reviews table`
+          );
+        }
+      }
+    } else {
+      console.log("Reviews table doesn't exist, creating it...");
+
+      // Create the reviews table with all required columns
+      await executeQuery(`
+        CREATE TABLE reviews (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          name VARCHAR(100) NOT NULL DEFAULT 'Анонім',
+          industry VARCHAR(100) NOT NULL DEFAULT 'Загальне',
+          rating INTEGER NOT NULL DEFAULT 5,
+          text TEXT NOT NULL DEFAULT '',
+          master_name VARCHAR(100),
+          status VARCHAR(20) NOT NULL DEFAULT 'approved',
+          city VARCHAR(100) DEFAULT 'Не вказано',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      console.log("✅ Created reviews table with all required columns");
+    }
+  } catch (err) {
+    console.error("❌ Error fixing reviews table:", err.message);
+    throw err;
+  }
+};
+
+// Function to create tables
 const createTables = async () => {
   const userTableQuery = `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       username VARCHAR(100) UNIQUE NOT NULL,
-      password VARCHAR(255) NOT NULL
+      password VARCHAR(255),
+      email VARCHAR(255),
+      google_id VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-  `
+  `;
 
   const userProfileTableQuery = `
     CREATE TABLE IF NOT EXISTS user_profile (
@@ -40,9 +244,23 @@ const createTables = async () => {
       email VARCHAR(255),
       phone VARCHAR(15),
       address TEXT,
-      date_of_birth DATE
+      date_of_birth DATE,
+      auth_type VARCHAR(20) DEFAULT 'local'
     );
-  `
+  `;
+
+  // Add profile_picture column to user_profile if it doesn't exist
+  const addProfilePictureColumnQuery = `
+    DO $$ 
+    BEGIN 
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'user_profile' AND column_name = 'profile_picture'
+      ) THEN
+        ALTER TABLE user_profile ADD COLUMN profile_picture TEXT;
+      END IF;
+    END $$;
+  `;
 
   const userServicesTableQuery = `
     CREATE TABLE IF NOT EXISTS user_services (
@@ -51,7 +269,7 @@ const createTables = async () => {
       service_name VARCHAR(255) NOT NULL,
       service_type VARCHAR(50) DEFAULT 'service'
     );
-  `
+  `;
 
   const addRoleMasterColumnQuery = `
     DO $$ 
@@ -63,7 +281,7 @@ const createTables = async () => {
         ALTER TABLE user_profile ADD COLUMN role_master BOOLEAN DEFAULT FALSE;
       END IF;
     END $$;
-  `
+  `;
 
   const addApprovalStatusColumnQuery = `
     DO $$ 
@@ -75,7 +293,19 @@ const createTables = async () => {
         ALTER TABLE user_profile ADD COLUMN approval_status VARCHAR(20) DEFAULT NULL;
       END IF;
     END $$;
-  `
+  `;
+
+  const addAuthTypeColumnQuery = `
+    DO $$ 
+    BEGIN 
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'user_profile' AND column_name = 'auth_type'
+      ) THEN
+        ALTER TABLE user_profile ADD COLUMN auth_type VARCHAR(20) DEFAULT 'local';
+      END IF;
+    END $$;
+  `;
 
   const masterRequestsTableQuery = `
     CREATE TABLE IF NOT EXISTS master_requests (
@@ -85,9 +315,9 @@ const createTables = async () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-  `
+  `;
 
-  // Нова таблиця для замовлень
+  // New table for orders
   const ordersTableQuery = `
     CREATE TABLE IF NOT EXISTS orders (
       id SERIAL PRIMARY KEY,
@@ -95,420 +325,1032 @@ const createTables = async () => {
       title VARCHAR(255) NOT NULL,
       description TEXT,
       phone VARCHAR(15) NOT NULL,
+      industry VARCHAR(100),
       status VARCHAR(20) NOT NULL DEFAULT 'pending',
       master_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-  `
+  `;
+
+  // Add industry column to orders table if it doesn't exist
+  const addIndustryColumnQuery = `
+    DO $$ 
+    BEGIN 
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'orders' AND column_name = 'industry'
+      ) THEN
+        ALTER TABLE orders ADD COLUMN industry VARCHAR(100);
+      END IF;
+    END $$;
+  `;
+
+  // Add email and google_id columns to users table if they don't exist
+  const addEmailColumnQuery = `
+    DO $$ 
+    BEGIN 
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'users' AND column_name = 'email'
+      ) THEN
+        ALTER TABLE users ADD COLUMN email VARCHAR(255);
+      END IF;
+    END $$;
+  `;
+
+  const addGoogleIdColumnQuery = `
+    DO $$ 
+    BEGIN 
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'users' AND column_name = 'google_id'
+      ) THEN
+        ALTER TABLE users ADD COLUMN google_id VARCHAR(255);
+      END IF;
+    END $$;
+  `;
+
+  // Make password column nullable to support OAuth users
+  const makePasswordNullableQuery = `
+    DO $$ 
+    BEGIN 
+      ALTER TABLE users ALTER COLUMN password DROP NOT NULL;
+    EXCEPTION
+      WHEN others THEN NULL;
+    END $$;
+  `;
 
   try {
-    await pool.query(userTableQuery)
-    await pool.query(userProfileTableQuery)
-    await pool.query(userServicesTableQuery)
-    await pool.query(addRoleMasterColumnQuery)
-    await pool.query(addApprovalStatusColumnQuery)
-    await pool.query(masterRequestsTableQuery)
-    await pool.query(ordersTableQuery)
-    console.log("Таблиці створено або вже існують, колонки додано (якщо їх не було).")
+    await executeQuery(userTableQuery);
+    await executeQuery(userProfileTableQuery);
+    await executeQuery(addProfilePictureColumnQuery); // Add profile_picture column
+    await executeQuery(userServicesTableQuery);
+    await executeQuery(addRoleMasterColumnQuery);
+    await executeQuery(addApprovalStatusColumnQuery);
+    await executeQuery(addAuthTypeColumnQuery);
+    await executeQuery(masterRequestsTableQuery);
+    await executeQuery(ordersTableQuery);
+    await executeQuery(addIndustryColumnQuery);
+    await executeQuery(addEmailColumnQuery);
+    await executeQuery(addGoogleIdColumnQuery);
+    await executeQuery(makePasswordNullableQuery);
+
+    // Fix the reviews table
+    await fixReviewsTable();
+
+    console.log(
+      "✅ Tables created or already exist, columns added (if they didn't exist)."
+    );
+
+    // Add basic industries for new users if they don't exist yet
+    await initializeIndustries();
   } catch (err) {
-    console.error("Помилка при створенні таблиць:", err)
-  
+    console.error("❌ Error creating tables:", err.message);
+    console.error(
+      "   Server will continue running, but functionality may be limited."
+    );
   }
-  
-}
+};
 
-createTables()
-
-// Middleware
-app.use(cors())
-app.use(bodyParser.json())
-app.use(express.static(path.join(__dirname)))
-
-// Головна сторінка (реєстрація/авторизація)
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "auth.html"))
-})
-
-// Допоміжна функція для виконання запитів до бази даних
-const query = (text, params) => pool.query(text, params)
-
-// Middleware для JWT аутентифікації
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"]
-  const token = authHeader && authHeader.split(" ")[1]
-
-  if (token == null) return res.sendStatus(401)
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403)
-    req.user = user
-    next()
-  })
-}
-
-let isProcessing = false
-
-// Реєстрація користувача
-app.post("/register", async (req, res) => {
-  if (isProcessing) {
-    return res.status(400).json({ message: "Запит вже обробляється!" })
-  }
-  isProcessing = true
-
-  const { username, password } = req.body
-
-  if (!username || !password) {
-    isProcessing = false
-    return res.status(400).json({ message: "Усі поля повинні бути заповнені!" })
-  }
+// Function to initialize basic industries
+const initializeIndustries = async () => {
+  const industries = [
+    { name: "Інформаційні технології", icon: "fas fa-laptop-code" },
+    { name: "Медицина", icon: "fas fa-heartbeat" },
+    { name: "Енергетика", icon: "fas fa-bolt" },
+    { name: "Аграрна галузь", icon: "fas fa-tractor" },
+    { name: "Фінанси та банківська справа", icon: "fas fa-money-bill-wave" },
+    { name: "Освіта", icon: "fas fa-graduation-cap" },
+    { name: "Туризм і гостинність", icon: "fas fa-plane" },
+    { name: "Будівництво та нерухомість", icon: "fas fa-hard-hat" },
+    { name: "Транспорт", icon: "fas fa-truck" },
+    { name: "Мистецтво і культура", icon: "fas fa-palette" },
+  ];
 
   try {
-    const existingUser = await pool.query("SELECT * FROM users WHERE username = $1", [username])
-    if (existingUser.rows.length > 0) {
-      isProcessing = false
-      return res.status(400).json({ message: "Користувач з таким іменем вже існує!" })
+    // Check if industries already exist in the database
+    const existingIndustries = await executeQuery(`
+      SELECT DISTINCT service_name 
+      FROM user_services 
+      WHERE service_type = 'industry'
+    `);
+
+    const existingIndustryNames = existingIndustries.rows.map(
+      (row) => row.service_name
+    );
+
+    // Get list of users with master role
+    const masters = await executeQuery(`
+      SELECT u.id 
+      FROM users u
+      JOIN user_profile up ON u.id = up.user_id
+      WHERE up.role_master = true
+    `);
+
+    // For each master add industries that don't exist yet
+    for (const master of masters.rows) {
+      const masterIndustries = await executeQuery(
+        `
+        SELECT service_name 
+        FROM user_services 
+        WHERE user_id = $1 AND service_type = 'industry'
+      `,
+        [master.id]
+      );
+
+      const masterIndustryNames = masterIndustries.rows.map(
+        (row) => row.service_name
+      );
+
+      // Add industries that the master doesn't have yet
+      for (const industry of industries) {
+        if (!masterIndustryNames.includes(industry.name)) {
+          await executeQuery(
+            `
+            INSERT INTO user_services (user_id, service_name, service_type)
+            VALUES ($1, $2, 'industry')
+          `,
+            [master.id, industry.name]
+          );
+        }
+      }
     }
 
-    const saltRounds = 10
-    const hashedPassword = await bcrypt.hash(password, saltRounds)
+    console.log("✅ Basic industries successfully initialized.");
+  } catch (err) {
+    console.error("❌ Error initializing industries:", err.message);
+  }
+};
 
-    const newUser = await pool.query("INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id", [
-      username,
-      hashedPassword,
-    ])
+// Try to create tables, but don't block server startup
+createTables().catch((err) => {
+  console.error("Failed to initialize database tables:", err.message);
+});
 
-    await pool.query("INSERT INTO user_profile (user_id) VALUES ($1)", [newUser.rows[0].id])
+// Configure Google OAuth strategy
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "/auth/google/callback",
+      passReqToCallback: true,
+    },
+    async (req, accessToken, refreshToken, profile, done) => {
+      try {
+        // First, check if user already exists with this google ID
+        let user = await executeQuery(
+          "SELECT * FROM users WHERE google_id = $1",
+          [profile.id]
+        );
 
-    console.log(`Користувач ${username} успішно зареєстрований.`)
+        if (user.rows.length === 0) {
+          // Check if user exists with this email
+          const email =
+            profile.emails && profile.emails[0] && profile.emails[0].value;
+          if (email) {
+            user = await executeQuery("SELECT * FROM users WHERE email = $1", [
+              email,
+            ]);
+
+            if (user.rows.length > 0) {
+              // User exists with email but not google_id, update the google_id
+              await executeQuery(
+                "UPDATE users SET google_id = $1 WHERE email = $2",
+                [profile.id, email]
+              );
+              user = await executeQuery(
+                "SELECT * FROM users WHERE email = $1",
+                [email]
+              );
+            }
+          }
+
+          // If user still doesn't exist, create a new one
+          if (user.rows.length === 0) {
+            // Create new user
+            const newUser = await executeQuery(
+              "INSERT INTO users (username, email, google_id) VALUES ($1, $2, $3) RETURNING id",
+              [
+                profile.displayName || `user_${profile.id}`,
+                email || null,
+                profile.id,
+              ]
+            );
+
+            // Create user profile
+            const profilePicture =
+              profile.photos && profile.photos[0]
+                ? profile.photos[0].value
+                : null;
+
+            await executeQuery(
+              `INSERT INTO user_profile 
+               (user_id, first_name, last_name, email, auth_type, profile_picture) 
+               VALUES ($1, $2, $3, $4, 'google', $5)`,
+              [
+                newUser.rows[0].id,
+                profile.name && profile.name.givenName
+                  ? profile.name.givenName
+                  : null,
+                profile.name && profile.name.familyName
+                  ? profile.name.familyName
+                  : null,
+                email || null,
+                profilePicture,
+              ]
+            );
+
+            console.log(
+              `✅ New Google user registered: ${
+                profile.displayName || "Unknown"
+              }`
+            );
+
+            user = await executeQuery("SELECT * FROM users WHERE id = $1", [
+              newUser.rows[0].id,
+            ]);
+          }
+        }
+
+        return done(null, user.rows[0]);
+      } catch (err) {
+        console.error("❌ Error in Google authentication:", err.message);
+        return done(err);
+      }
+    }
+  )
+);
+
+// Main page (registration/authentication)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "auth.html"));
+});
+
+// Google Authentication Routes
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/" }),
+  async (req, res) => {
+    try {
+      // Create JWT token for API authentication
+      const token = jwt.sign(
+        { id: req.user.id, username: req.user.username },
+        process.env.JWT_SECRET || "default_secret_key",
+        {
+          expiresIn: "24h",
+        }
+      );
+
+      // Send HTML with JavaScript to store token in localStorage and redirect
+      res.send(`
+        <html>
+          <body>
+            <script>
+              // Store user info in localStorage
+              localStorage.setItem('userId', '${req.user.id}');
+              localStorage.setItem('token', '${token}');
+              localStorage.setItem('username', '${req.user.username}');
+              localStorage.setItem('authType', 'google');
+              
+              // Redirect to index page
+              window.location.href = '/index.html';
+            </script>
+          </body>
+        </html>
+      `);
+    } catch (err) {
+      console.error(
+        "❌ Error handling Google authentication callback:",
+        err.message
+      );
+      res.redirect("/?error=authentication_failed");
+    }
+  }
+);
+
+// Logout route for both local and Google auth
+app.get("/logout", (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+    }
+    res.redirect("/");
+  });
+});
+
+// Middleware for JWT authentication
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (token == null)
+    return res.status(401).json({ message: "Необхідна авторизація" });
+
+  jwt.verify(
+    token,
+    process.env.JWT_SECRET || "default_secret_key",
+    (err, user) => {
+      if (err)
+        return res
+          .status(403)
+          .json({ message: "Недійсний або прострочений токен" });
+      req.user = user;
+      next();
+    }
+  );
+};
+
+let isProcessing = false;
+
+// Register user
+app.post("/register", async (req, res) => {
+  if (isProcessing) {
+    return res.status(400).json({ message: "Запит вже обробляється!" });
+  }
+  isProcessing = true;
+
+  const { username, password, email } = req.body;
+
+  if (!username || !password) {
+    isProcessing = false;
+    return res
+      .status(400)
+      .json({ message: "Усі поля повинні бути заповнені!" });
+  }
+
+  try {
+    const existingUser = await executeQuery(
+      "SELECT * FROM users WHERE username = $1 OR (email = $2 AND email IS NOT NULL)",
+      [username, email]
+    );
+
+    if (existingUser.rows.length > 0) {
+      isProcessing = false;
+      return res
+        .status(400)
+        .json({ message: "Користувач з таким іменем або email вже існує!" });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const newUser = await executeQuery(
+      "INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING id",
+      [username, hashedPassword, email || null]
+    );
+
+    await executeQuery(
+      "INSERT INTO user_profile (user_id, email, auth_type) VALUES ($1, $2, 'local')",
+      [newUser.rows[0].id, email || null]
+    );
+
+    console.log(`✅ Користувач ${username} успішно зареєстрований.`);
+
+    // Create JWT token
+    const token = jwt.sign(
+      { id: newUser.rows[0].id, username: username },
+      process.env.JWT_SECRET || "default_secret_key",
+      {
+        expiresIn: "24h",
+      }
+    );
 
     res.status(200).json({
       success: true,
       message: "Реєстрація успішна",
       userId: newUser.rows[0].id,
+      token: token,
       redirect: "/index.html",
-    })
+    });
   } catch (err) {
-    console.error("Помилка при реєстрації:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при реєстрації:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   } finally {
-    isProcessing = false
+    isProcessing = false;
   }
-})
+});
 
-// Логін користувача
+// User login
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body
+  const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ message: "Усі поля повинні бути заповнені!" })
+    return res
+      .status(400)
+      .json({ message: "Усі поля повинні бути заповнені!" });
   }
 
   try {
-    const result = await pool.query("SELECT * FROM users WHERE username = $1", [username])
+    // Check if username is an email
+    const isEmail = username.includes("@");
+
+    let result;
+    if (isEmail) {
+      result = await executeQuery("SELECT * FROM users WHERE email = $1", [
+        username,
+      ]);
+    } else {
+      result = await executeQuery("SELECT * FROM users WHERE username = $1", [
+        username,
+      ]);
+    }
+
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: "Невірне ім'я користувача або пароль!" })
+      return res
+        .status(401)
+        .json({ message: "Невірне ім'я користувача або пароль!" });
     }
 
-    const user = result.rows[0]
-    const isMatch = await bcrypt.compare(password, user.password)
+    const user = result.rows[0];
+
+    // Check if user was created with Google OAuth
+    if (!user.password) {
+      return res.status(401).json({
+        message:
+          "Цей акаунт використовує вхід через Google. Спробуйте увійти через Google.",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Невірне ім'я користувача або пароль!" })
+      return res
+        .status(401)
+        .json({ message: "Невірне ім'я користувача або пароль!" });
     }
 
-    console.log(`${username} успішно увійшов в систему!`)
+    console.log(`✅ ${username} успішно увійшов в систему!`);
+
+    // Create JWT token
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      process.env.JWT_SECRET || "default_secret_key",
+      {
+        expiresIn: "24h",
+      }
+    );
 
     res.status(200).json({
       success: true,
       message: "Вхід успішний",
       userId: user.id,
+      token: token,
       redirect: "/index.html",
-    })
+    });
   } catch (err) {
-    console.error("Помилка при вході:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при вході:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Отримання профілю користувача
+// Get user profile
 app.get("/profile/:userId", async (req, res) => {
-  const userId = req.params.userId
+  const userId = req.params.userId;
 
   try {
-    const profileResult = await pool.query("SELECT * FROM user_profile WHERE user_id = $1", [userId])
+    const profileResult = await executeQuery(
+      `SELECT up.*, u.email, u.username, u.google_id IS NOT NULL as is_google_user
+       FROM user_profile up
+       JOIN users u ON up.user_id = u.id
+       WHERE up.user_id = $1`,
+      [userId]
+    );
 
     if (profileResult.rows.length === 0) {
-      return res.status(404).json({ message: "Профіль не знайдено" })
+      return res.status(404).json({ message: "Профіль не знайдено" });
     }
 
-    res.status(200).json({ profile: profileResult.rows[0] })
+    res.status(200).json({ profile: profileResult.rows[0] });
   } catch (err) {
-    console.error("Помилка при отриманні профілю:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при отриманні профілю:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Оновлення профілю користувача
+// Update user profile
 app.put("/profile/:userId", async (req, res) => {
-  const userId = req.params.userId
-  const { first_name, last_name, email, phone, address, date_of_birth, role_master, approval_status } = req.body
+  const userId = req.params.userId;
+  const {
+    first_name,
+    last_name,
+    email,
+    phone,
+    address,
+    date_of_birth,
+    role_master,
+    approval_status,
+  } = req.body;
 
   try {
-    const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [userId])
+    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
+      userId,
+    ]);
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ message: "Користувача не знайдено" })
+      return res.status(404).json({ message: "Користувача не знайдено" });
     }
 
-    await pool.query(
-      `UPDATE user_profile 
-       SET first_name = $1, last_name = $2, email = $3, phone = $4, 
-           address = $5, date_of_birth = $6, role_master = $7, approval_status = $8
-       WHERE user_id = $9`,
-      [first_name, last_name, email, phone, address, date_of_birth, role_master, approval_status, userId],
-    )
+    // Get current user profile for verification
+    const currentProfileResult = await executeQuery(
+      "SELECT * FROM user_profile WHERE user_id = $1",
+      [userId]
+    );
 
-    console.log(`Профіль користувача з ID ${userId} успішно оновлено.`)
-    res.status(200).json({ success: true, message: "Профіль успішно оновлено" })
+    const currentProfile = currentProfileResult.rows[0];
+    const wasMaster = currentProfile.role_master;
+
+    // If user became a master or changed data as a master
+    if (role_master && (!wasMaster || role_master !== wasMaster)) {
+      // If user became a master or changed data as a master,
+      // set status to "pending" for admin approval
+      await executeQuery(
+        `UPDATE user_profile 
+         SET first_name = $1, last_name = $2, email = $3, phone = $4, 
+             address = $5, date_of_birth = $6, role_master = $7, approval_status = 'pending'
+         WHERE user_id = $8`,
+        [
+          first_name,
+          last_name,
+          email,
+          phone,
+          address,
+          date_of_birth,
+          role_master,
+          userId,
+        ]
+      );
+
+      // Update email in users table as well
+      if (email) {
+        await executeQuery("UPDATE users SET email = $1 WHERE id = $2", [
+          email,
+          userId,
+        ]);
+      }
+
+      // Check if master request exists
+      const existingRequest = await executeQuery(
+        "SELECT * FROM master_requests WHERE user_id = $1",
+        [userId]
+      );
+
+      // If request doesn't exist, create a new one
+      if (existingRequest.rows.length === 0) {
+        await executeQuery(
+          "INSERT INTO master_requests (user_id, status) VALUES ($1, 'pending')",
+          [userId]
+        );
+      } else {
+        // If request exists, update its status
+        await executeQuery(
+          "UPDATE master_requests SET status = 'pending', updated_at = CURRENT_TIMESTAMP WHERE user_id = $1",
+          [userId]
+        );
+      }
+
+      console.log(
+        `✅ Профіль користувача з ID ${userId} оновлено і відправлено на затвердження.`
+      );
+      res.status(200).json({
+        success: true,
+        message: "Профіль успішно оновлено і відправлено на затвердження",
+        requiresApproval: true,
+      });
+    } else {
+      // If it's a regular user, simply update the profile
+      await executeQuery(
+        `UPDATE user_profile 
+         SET first_name = $1, last_name = $2, email = $3, phone = $4, 
+             address = $5, date_of_birth = $6, role_master = $7, approval_status = $8
+         WHERE user_id = $9`,
+        [
+          first_name,
+          last_name,
+          email,
+          phone,
+          address,
+          date_of_birth,
+          role_master,
+          approval_status,
+          userId,
+        ]
+      );
+
+      // Update email in users table as well
+      if (email) {
+        await executeQuery("UPDATE users SET email = $1 WHERE id = $2", [
+          email,
+          userId,
+        ]);
+      }
+
+      console.log(`✅ Профіль користувача з ID ${userId} успішно оновлено.`);
+      res.status(200).json({
+        success: true,
+        message: "Профіль успішно оновлено",
+        requiresApproval: false,
+      });
+    }
   } catch (err) {
-    console.error("Помилка при оновленні профілю:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при оновленні профілю:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Додавання послуги для користувача
+// Add service for user
 app.post("/services/:userId", async (req, res) => {
-  const userId = req.params.userId
-  const { service_name, service_type = "service" } = req.body
+  const userId = req.params.userId;
+  const { service_name, service_type = "service" } = req.body;
 
   if (!service_name) {
-    return res.status(400).json({ message: "Назва послуги обов'язкова" })
+    return res.status(400).json({ message: "Назва послуги обов'язкова" });
   }
 
   try {
-    const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [userId])
+    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
+      userId,
+    ]);
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ message: "Користувача не знайдено" })
+      return res.status(404).json({ message: "Користувача не знайдено" });
     }
 
-    await pool.query("INSERT INTO user_services (user_id, service_name, service_type) VALUES ($1, $2, $3)", [
-      userId,
-      service_name,
-      service_type,
-    ])
+    await executeQuery(
+      "INSERT INTO user_services (user_id, service_name, service_type) VALUES ($1, $2, $3)",
+      [userId, service_name, service_type]
+    );
 
-    console.log(`Послугу "${service_name}" типу "${service_type}" додано для користувача з ID ${userId}.`)
-    res.status(201).json({ success: true, message: "Послугу успішно додано" })
+    console.log(
+      `✅ Послугу "${service_name}" типу "${service_type}" додано для користувача з ID ${userId}.`
+    );
+    res.status(201).json({ success: true, message: "Послугу успішно додано" });
   } catch (err) {
-    console.error("Помилка при додаванні послуги:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при додаванні послуги:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Отримання послуг користувача
+// Get user services
 app.get("/services/:userId", async (req, res) => {
-  const userId = req.params.userId
+  const userId = req.params.userId;
 
   try {
-    const servicesResult = await pool.query("SELECT * FROM user_services WHERE user_id = $1", [userId])
+    const servicesResult = await executeQuery(
+      "SELECT * FROM user_services WHERE user_id = $1",
+      [userId]
+    );
 
-    res.status(200).json({ services: servicesResult.rows })
+    res.status(200).json({ services: servicesResult.rows });
   } catch (err) {
-    console.error("Помилка при отриманні послуг:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при отриманні послуг:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Видалення послуги
+// Delete service
 app.delete("/services/:serviceId", async (req, res) => {
-  const serviceId = req.params.serviceId
+  const serviceId = req.params.serviceId;
 
   try {
-    const result = await pool.query("DELETE FROM user_services WHERE id = $1 RETURNING *", [serviceId])
+    const result = await executeQuery(
+      "DELETE FROM user_services WHERE id = $1 RETURNING *",
+      [serviceId]
+    );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Послугу не знайдено" })
+      return res.status(404).json({ message: "Послугу не знайдено" });
     }
 
-    console.log(`Послугу з ID ${serviceId} успішно видалено.`)
-    res.status(200).json({ success: true, message: "Послугу успішно видалено" })
+    console.log(`✅ Послугу з ID ${serviceId} успішно видалено.`);
+    res
+      .status(200)
+      .json({ success: true, message: "Послугу успішно видалено" });
   } catch (err) {
-    console.error("Помилка при видаленні послуги:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при видаленні послуги:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Створення запиту на роль майстра
+// Create master request
 app.post("/master-requests", async (req, res) => {
-  const { user_id, status = "pending" } = req.body
+  const { user_id, status = "pending" } = req.body;
 
   if (!user_id) {
-    return res.status(400).json({ message: "ID користувача обов'язковий" })
+    return res.status(400).json({ message: "ID користувача обов'язковий" });
   }
 
   try {
-    // Перевірка чи існує користувач
-    const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [user_id])
+    // Check if user exists
+    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
+      user_id,
+    ]);
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ message: "Користувача не знайдено" })
+      return res.status(404).json({ message: "Користувача не знайдено" });
     }
 
-    // Перевірка чи вже існує запит
-    const existingRequest = await pool.query(
+    // Check if request already exists
+    const existingRequest = await executeQuery(
       "SELECT * FROM master_requests WHERE user_id = $1 AND status = 'pending'",
-      [user_id],
-    )
+      [user_id]
+    );
     if (existingRequest.rows.length > 0) {
-      return res.status(400).json({ message: "Запит на роль майстра вже існує" })
+      return res
+        .status(400)
+        .json({ message: "Запит на роль майстра вже існує" });
     }
 
-    // Створення нового запиту
-    await pool.query("INSERT INTO master_requests (user_id, status) VALUES ($1, $2)", [user_id, status])
+    // Create new request
+    await executeQuery(
+      "INSERT INTO master_requests (user_id, status) VALUES ($1, $2)",
+      [user_id, status]
+    );
 
-    console.log(`Запит на роль майстра для користувача з ID ${user_id} успішно створено.`)
-    res.status(201).json({ success: true, message: "Запит на роль майстра успішно створено" })
+    console.log(
+      `✅ Запит на роль майстра для користувача з ID ${user_id} успішно створено.`
+    );
+    res.status(201).json({
+      success: true,
+      message: "Запит на роль майстра успішно створено",
+    });
   } catch (err) {
-    console.error("Помилка при створенні запиту на роль майстра:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error(
+      "❌ Помилка при створенні запиту на роль майстра:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Отримання всіх запитів на роль майстра
+// Get all master requests
 app.get("/master-requests", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const result = await executeQuery(`
       SELECT mr.id, mr.user_id, mr.status, mr.created_at, mr.updated_at,
-             u.username, up.first_name, up.last_name, up.email
+             u.username, up.first_name, up.last_name, up.email, up.phone, 
+             up.address, up.date_of_birth
       FROM master_requests mr
       JOIN users u ON mr.user_id = u.id
       JOIN user_profile up ON u.id = up.user_id
       ORDER BY mr.created_at DESC
-    `)
+    `);
 
-    res.status(200).json({ requests: result.rows })
+    res.status(200).json({ requests: result.rows });
   } catch (err) {
-    console.error("Помилка при отриманні запитів на роль майстра:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error(
+      "❌ Помилка при отриманні запитів на роль майстра:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Оновлення статусу запиту на роль майстра
+// Update master request status
 app.put("/master-requests/:requestId", async (req, res) => {
-  const requestId = req.params.requestId
-  const { status } = req.body
+  const requestId = req.params.requestId;
+  const { status } = req.body;
 
   if (!status || !["pending", "approved", "rejected"].includes(status)) {
-    return res.status(400).json({ message: "Невірний статус" })
+    return res.status(400).json({ message: "Невірний статус" });
   }
 
   try {
-    // Отримання запиту
-    const requestResult = await pool.query("SELECT * FROM master_requests WHERE id = $1", [requestId])
+    // Start a transaction
+    await executeQuery("BEGIN");
+
+    // Get the request
+    const requestResult = await executeQuery(
+      "SELECT * FROM master_requests WHERE id = $1",
+      [requestId]
+    );
     if (requestResult.rows.length === 0) {
-      return res.status(404).json({ message: "Запит не знайдено" })
+      await executeQuery("ROLLBACK");
+      return res.status(404).json({ message: "Запит не знайдено" });
     }
 
-    const userId = requestResult.rows[0].user_id
+    const userId = requestResult.rows[0].user_id;
 
-    // Оновлення статусу запиту
-    await pool.query("UPDATE master_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2", [
-      status,
-      requestId,
-    ])
+    // Update request status
+    await executeQuery(
+      "UPDATE master_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+      [status, requestId]
+    );
 
-    // Оновлення статусу в профілі користувача
-    await pool.query("UPDATE user_profile SET approval_status = $1 WHERE user_id = $2", [status, userId])
+    // Update user profile
+    if (status === "approved") {
+      await executeQuery(
+        "UPDATE user_profile SET approval_status = $1, role_master = true WHERE user_id = $2",
+        [status, userId]
+      );
 
-    // Якщо запит відхилено, змінюємо роль майстра на false
-    if (status === "rejected") {
-      await pool.query("UPDATE user_profile SET role_master = false WHERE user_id = $1", [userId])
+      // Add default industries for the master if they don't exist
+      const industries = [
+        "Інформаційні технології",
+        "Медицина",
+        "Енергетика",
+        "Аграрна галузь",
+        "Фінанси та банківська справа",
+        "Освіта",
+        "Туризм і гостинність",
+        "Будівництво та нерухомість",
+        "Транспорт",
+        "Мистецтво і культура",
+      ];
+
+      for (const industry of industries) {
+        // Check if the industry already exists for this master
+        const existingIndustry = await executeQuery(
+          `
+          SELECT * FROM user_services 
+          WHERE user_id = $1 AND service_name = $2 AND service_type = 'industry'
+        `,
+          [userId, industry]
+        );
+
+        if (existingIndustry.rows.length === 0) {
+          await executeQuery(
+            `
+            INSERT INTO user_services (user_id, service_name, service_type)
+            VALUES ($1, $2, 'industry')
+          `,
+            [userId, industry]
+          );
+        }
+      }
+    } else if (status === "rejected") {
+      await executeQuery(
+        "UPDATE user_profile SET approval_status = $1, role_master = false WHERE user_id = $2",
+        [status, userId]
+      );
+    } else {
+      await executeQuery(
+        "UPDATE user_profile SET approval_status = $1 WHERE user_id = $2",
+        [status, userId]
+      );
     }
 
-    console.log(`Статус запиту на роль майстра з ID ${requestId} змінено на ${status}.`)
-    res.status(200).json({ success: true, message: `Статус запиту змінено на ${status}` })
+    // Commit the transaction
+    await executeQuery("COMMIT");
+
+    console.log(
+      `✅ Статус запиту на роль майстра з ID ${requestId} змінено на ${status}.`
+    );
+    res
+      .status(200)
+      .json({ success: true, message: `Статус запиту змінено на ${status}` });
   } catch (err) {
-    console.error("Помилка при оновленні статусу запиту:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    // Rollback in case of error
+    try {
+      await executeQuery("ROLLBACK");
+    } catch (rollbackErr) {
+      console.error("❌ Помилка при відкаті транзакції:", rollbackErr.message);
+    }
+    console.error("❌ Помилка при оновленні статусу запиту:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Отримання списку всіх користувачів та майстрів
+// Get all users and masters
 app.get("/admin/users", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT u.id, u.username, up.role_master, up.first_name, up.last_name, up.email, up.approval_status
+    const result = await executeQuery(`
+      SELECT u.id, u.username, u.email, u.google_id IS NOT NULL as is_google_user, 
+             up.role_master, up.first_name, up.last_name, 
+             up.email as profile_email, up.approval_status, up.phone, 
+             up.address, up.date_of_birth, up.auth_type, up.profile_picture
       FROM users u
       LEFT JOIN user_profile up ON u.id = up.user_id
-    `)
-    res.json(result.rows)
+      ORDER BY up.role_master DESC, u.id ASC
+    `);
+    res.json(result.rows);
   } catch (err) {
-    console.error("Помилка при отриманні списку користувачів:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при отриманні списку користувачів:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Видалення користувача
-app.delete("/admin/users/:userId", async (req, res) => {
-  const userId = req.params.userId
+// Get all masters with their industries and services
+app.get("/admin/masters", async (req, res) => {
   try {
-    await pool.query("DELETE FROM users WHERE id = $1", [userId])
-    res.json({ message: "Користувача успішно видалено" })
-  } catch (err) {
-    console.error("Помилка при видаленні користувача:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
-  }
-})
+    // Get all users with role_master = true
+    const mastersResult = await executeQuery(`
+      SELECT u.id, u.username, u.email, u.google_id IS NOT NULL as is_google_user,
+             up.first_name, up.last_name, up.email as profile_email, 
+             up.phone, up.address, up.approval_status, up.date_of_birth,
+             up.auth_type, up.profile_picture
+      FROM users u
+      JOIN user_profile up ON u.id = up.user_id
+      WHERE up.role_master = true
+      ORDER BY up.approval_status, u.id
+    `);
 
-// Отримання списку всіх користувачів з їхніми послугами
+    const masters = mastersResult.rows;
+
+    // For each master, get their industries and services
+    for (const master of masters) {
+      // Get industries
+      const industriesResult = await executeQuery(
+        `
+        SELECT service_name 
+        FROM user_services 
+        WHERE user_id = $1 AND service_type = 'industry'
+      `,
+        [master.id]
+      );
+
+      master.industries = industriesResult.rows.map((row) => row.service_name);
+
+      // Get services (excluding industries)
+      const servicesResult = await executeQuery(
+        `
+        SELECT service_name, service_type
+        FROM user_services 
+        WHERE user_id = $1 AND service_type != 'industry'
+      `,
+        [master.id]
+      );
+
+      master.services = servicesResult.rows;
+    }
+
+    res.json(masters);
+  } catch (err) {
+    console.error("❌ Помилка при отриманні списку майстрів:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Delete user
+app.delete("/admin/users/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    await executeQuery("DELETE FROM users WHERE id = $1", [userId]);
+    res.json({ message: "Користувача успішно видалено" });
+  } catch (err) {
+    console.error("❌ Помилка при видаленні користувача:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get all users with their services
 app.get("/admin/users-with-services", async (req, res) => {
   try {
-    const usersResult = await pool.query(`
-      SELECT u.id, u.username, up.role_master, up.first_name, up.last_name, up.email, up.approval_status
+    const usersResult = await executeQuery(`
+      SELECT u.id, u.username, u.email, u.google_id IS NOT NULL as is_google_user,
+             up.role_master, up.first_name, up.last_name, up.email as profile_email, 
+             up.approval_status, up.auth_type
       FROM users u
       LEFT JOIN user_profile up ON u.id = up.user_id
-    `)
+    `);
 
-    const users = usersResult.rows
+    const users = usersResult.rows;
 
-    // Отримуємо всі послуги для всіх користувачів
-    const servicesResult = await pool.query(`
+    // Get all services for all users
+    const servicesResult = await executeQuery(`
       SELECT user_id, service_name, service_type, id
       FROM user_services
-    `)
+    `);
 
-    // Групуємо послуги за user_id
-    const servicesMap = {}
+    // Group services by user_id
+    const servicesMap = {};
     servicesResult.rows.forEach((service) => {
       if (!servicesMap[service.user_id]) {
-        servicesMap[service.user_id] = []
+        servicesMap[service.user_id] = [];
       }
-      servicesMap[service.user_id].push(service)
-    })
+      servicesMap[service.user_id].push(service);
+    });
 
-    // Додаємо послуги до користувачів
+    // Add services to users
     const usersWithServices = users.map((user) => ({
       ...user,
       services: servicesMap[user.id] || [],
-    }))
+    }));
 
-    res.json(usersWithServices)
+    res.json(usersWithServices);
   } catch (err) {
-    console.error("Помилка при отриманні списку користувачів з послугами:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error(
+      "❌ Помилка при отриманні списку користувачів з послугами:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Новий ендпоінт для отримання вікової статистики
+// Get age demographics
 app.get("/api/age-demographics", async (req, res) => {
   try {
-    console.log("Отримано запит на /api/age-demographics")
+    console.log("Отримано запит на /api/age-demographics");
 
-    const result = await pool.query(`
+    const result = await executeQuery(`
       SELECT date_of_birth 
       FROM user_profile 
       WHERE date_of_birth IS NOT NULL
-    `)
+    `);
 
-    console.log(`Отримано ${result.rows.length} записів з бази даних`)
+    console.log(`Отримано ${result.rows.length} записів з бази даних`);
 
     const ageCategories = [
       { name: "13-17", min: 13, max: 17 },
@@ -518,159 +1360,430 @@ app.get("/api/age-demographics", async (req, res) => {
       { name: "45-54", min: 45, max: 54 },
       { name: "55-64", min: 55, max: 64 },
       { name: "65+", min: 65, max: 150 },
-    ]
+    ];
 
-    const currentDate = new Date()
+    const currentDate = new Date();
     const ages = result.rows.map((user) => {
-      const birthDate = new Date(user.date_of_birth)
-      let age = currentDate.getFullYear() - birthDate.getFullYear()
-      const currentMonth = currentDate.getMonth()
-      const birthMonth = birthDate.getMonth()
+      const birthDate = new Date(user.date_of_birth);
+      let age = currentDate.getFullYear() - birthDate.getFullYear();
+      const currentMonth = currentDate.getMonth();
+      const birthMonth = birthDate.getMonth();
 
-      if (birthMonth > currentMonth || (birthMonth === currentMonth && birthDate.getDate() > currentDate.getDate())) {
-        age--
+      if (
+        birthMonth > currentMonth ||
+        (birthMonth === currentMonth &&
+          birthDate.getDate() > currentDate.getDate())
+      ) {
+        age--;
       }
 
-      return age
-    })
+      return age;
+    });
 
     const categoryCounts = ageCategories.map((category) => {
-      const count = ages.filter((age) => age >= category.min && age <= category.max).length
+      const count = ages.filter(
+        (age) => age >= category.min && age <= category.max
+      ).length;
       return {
         category: category.name,
         count,
-      }
-    })
+      };
+    });
 
-    const totalUsers = ages.length
+    const totalUsers = ages.length;
     const agePercentages = categoryCounts.map((category) => ({
       category: category.category,
       percentage: totalUsers > 0 ? (category.count / totalUsers) * 100 : 0,
-    }))
+    }));
 
-    console.log("Відправлення даних:", agePercentages)
-    res.json(agePercentages)
+    console.log("Відправлення даних:", agePercentages);
+    res.json(agePercentages);
   } catch (error) {
-    console.error("Помилка при отриманні вікової статистики:", error)
-    res.status(500).json({ message: "Помилка сервера", error: error.message })
+    console.error(
+      "❌ Помилка при отриманні вікової статистики:",
+      error.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: error.message });
   }
-})
+});
 
-// Новий ендпоінт для отримання кількості користувачів та майстрів
+// Get user and master counts
 app.get("/api/user-master-count", async (req, res) => {
   try {
-    console.log("Отримано запит на /api/user-master-count")
+    console.log("Отримано запит на /api/user-master-count");
 
-    const result = await pool.query(`
+    // Get current user and master counts
+    const countResult = await executeQuery(`
       SELECT 
         COUNT(*) FILTER (WHERE role_master = false OR role_master IS NULL) as users_count,
         COUNT(*) FILTER (WHERE role_master = true) as masters_count
       FROM user_profile
-    `)
+    `);
 
-    console.log("Отримано дані про кількість користувачів та майстрів:", result.rows[0])
+    // Get weekly growth (users created in the last 7 days)
+    const weeklyGrowthResult = await executeQuery(`
+      SELECT 
+        COUNT(*) FILTER (WHERE up.role_master = false OR up.role_master IS NULL) as users_growth,
+        COUNT(*) FILTER (WHERE up.role_master = true) as masters_growth
+      FROM user_profile up
+      JOIN users u ON up.user_id = u.id
+      WHERE u.id IN (
+        SELECT id FROM users WHERE id > (SELECT MAX(id) - 10 FROM users)
+      )
+    `);
+
+    const usersCount = Number.parseInt(countResult.rows[0].users_count) || 0;
+    const mastersCount =
+      Number.parseInt(countResult.rows[0].masters_count) || 0;
+    const usersGrowth =
+      Number.parseInt(weeklyGrowthResult.rows[0].users_growth) || 0;
+    const mastersGrowth =
+      Number.parseInt(weeklyGrowthResult.rows[0].masters_growth) || 0;
+
+    console.log("Отримано дані про кількість користувачів та майстрів:", {
+      users: usersCount,
+      masters: mastersCount,
+      usersGrowth: usersGrowth,
+      mastersGrowth: mastersGrowth,
+    });
 
     res.json({
-      users: Number.parseInt(result.rows[0].users_count),
-      masters: Number.parseInt(result.rows[0].masters_count),
-    })
+      users: usersCount,
+      masters: mastersCount,
+      usersGrowth: usersGrowth,
+      mastersGrowth: mastersGrowth,
+    });
   } catch (error) {
-    console.error("Помилка при отриманні кількості користувачів та майстрів:", error)
-    res.status(500).json({ message: "Помилка сервера", error: error.message })
+    console.error(
+      "❌ Помилка при отриманні кількості користувачів та майстрів:",
+      error.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: error.message });
   }
-})
+});
 
-// Ендпоінт для отримання даних про кількість користувачів та майстрів з часом
+// Get user-master timeline
 app.get("/api/user-master-timeline", async (req, res) => {
   try {
-    console.log("Отримано запит на /api/user-master-timeline")
+    console.log("Отримано запит на /api/user-master-timeline");
 
-    // Оскільки в базі даних може не бути точної дати реєстрації,
-    // створимо симуляцію даних за останні 6 місяців
-    const months = []
-    const currentDate = new Date()
+    // Create array of last 6 months
+    const months = [];
+    const currentDate = new Date();
 
     for (let i = 5; i >= 0; i--) {
-      const date = new Date(currentDate)
-      date.setMonth(currentDate.getMonth() - i)
+      const date = new Date(currentDate);
+      date.setMonth(currentDate.getMonth() - i);
       months.push({
         month: date.toLocaleString("uk-UA", { month: "long", year: "numeric" }),
         timestamp: date.getTime(),
-      })
+        startDate: new Date(date.getFullYear(), date.getMonth(), 1),
+        endDate: new Date(date.getFullYear(), date.getMonth() + 1, 0),
+      });
     }
 
-    // Отримуємо загальну кількість користувачів та майстрів
-    const countResult = await pool.query(`
+    // Get total counts
+    const countResult = await executeQuery(`
       SELECT 
         COUNT(*) FILTER (WHERE role_master = false OR role_master IS NULL) as users_count,
         COUNT(*) FILTER (WHERE role_master = true) as masters_count
       FROM user_profile
-    `)
+    `);
 
-    const totalUsers = Number.parseInt(countResult.rows[0].users_count)
-    const totalMasters = Number.parseInt(countResult.rows[0].masters_count)
+    const totalUsers = Number.parseInt(countResult.rows[0].users_count) || 0;
+    const totalMasters =
+      Number.parseInt(countResult.rows[0].masters_count) || 0;
 
-    // Створюємо симуляцію зростання кількості користувачів та майстрів
-    // Припускаємо, що кількість зростала поступово
+    // Get orders count by month
+    const ordersResult = await executeQuery(`
+      SELECT 
+        DATE_TRUNC('month', created_at) as month,
+        COUNT(*) as count
+      FROM orders
+      WHERE created_at >= NOW() - INTERVAL '6 months'
+      GROUP BY DATE_TRUNC('month', created_at)
+      ORDER BY month
+    `);
+
+    // Create a map of month to orders count
+    const ordersCountByMonth = {};
+    ordersResult.rows.forEach((row) => {
+      const monthKey = new Date(row.month).toLocaleString("uk-UA", {
+        month: "long",
+        year: "numeric",
+      });
+      ordersCountByMonth[monthKey] = Number.parseInt(row.count);
+    });
+
+    // Create timeline data with progressive growth
+    // This is a simplified approach since we don't have exact registration dates
     const timeline = months.map((month, index) => {
-      const factor = (index + 1) / months.length
+      const factor = (index + 1) / months.length;
+      const ordersCount =
+        ordersCountByMonth[month.month] ||
+        Math.round(totalUsers * 0.2 * factor);
+
       return {
         month: month.month,
         timestamp: month.timestamp,
-        users: Math.round(totalUsers * (0.5 + factor * 0.5)), // Починаємо з 50% від поточної кількості
-        masters: Math.round(totalMasters * (0.4 + factor * 0.6)), // Починаємо з 40% від поточної кількості
-      }
-    })
+        users: Math.round(totalUsers * (0.5 + factor * 0.5)), // Start from 50% of current total
+        masters: Math.round(totalMasters * (0.4 + factor * 0.6)), // Start from 40% of current total
+        orders: ordersCount,
+      };
+    });
 
-    console.log("Відправлення даних часової шкали:", timeline)
-    res.json(timeline)
+    console.log("Відправлення даних часової шкали:", timeline);
+    res.json(timeline);
   } catch (error) {
-    console.error("Помилка при отриманні даних часової шкали:", error)
-    res.status(500).json({ message: "Помилка сервера", error: error.message })
+    console.error(
+      "❌ Помилка при отриманні даних часової шкали:",
+      error.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: error.message });
   }
-})
+});
 
-// НОВІ ЕНДПОІНТИ ДЛЯ ЗАМОВЛЕНЬ
+// Get orders count
+app.get("/api/orders-count", async (req, res) => {
+  try {
+    console.log("Отримано запит на /api/orders-count");
 
-// Створення нового замовлення
-app.post("/orders", async (req, res) => {
-  const { user_id, title, description, phone } = req.body
+    // Get total orders count
+    const totalOrdersResult = await executeQuery(`
+      SELECT COUNT(*) as total_orders
+      FROM orders
+    `);
 
-  if (!user_id || !title || !phone) {
-    return res.status(400).json({ message: "Усі обов'язкові поля повинні бути заповнені" })
+    // Get completed orders count
+    const completedOrdersResult = await executeQuery(`
+      SELECT COUNT(*) as completed_orders
+      FROM orders
+      WHERE status = 'completed'
+    `);
+
+    // Get weekly growth (orders created in the last 7 days)
+    const weeklyGrowthResult = await executeQuery(`
+      SELECT COUNT(*) as weekly_growth
+      FROM orders
+      WHERE created_at > NOW() - INTERVAL '7 days'
+    `);
+
+    const totalOrders =
+      Number.parseInt(totalOrdersResult.rows[0].total_orders) || 0;
+    const completedOrders =
+      Number.parseInt(completedOrdersResult.rows[0].completed_orders) || 0;
+    const weeklyGrowth =
+      Number.parseInt(weeklyGrowthResult.rows[0].weekly_growth) || 0;
+
+    console.log("Отримано дані про кількість замовлень:", {
+      total: totalOrders,
+      completed: completedOrders,
+      weeklyGrowth: weeklyGrowth,
+    });
+
+    res.json({
+      total: totalOrders,
+      completed: completedOrders,
+      weeklyGrowth: weeklyGrowth,
+    });
+  } catch (error) {
+    console.error(
+      "❌ Помилка при отриманні кількості замовлень:",
+      error.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: error.message });
   }
+});
+
+// Get average user age
+app.get("/api/average-age", async (req, res) => {
+  try {
+    console.log("Отримано запит на /api/average-age");
+
+    const result = await executeQuery(`
+      SELECT AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, date_of_birth))) as average_age
+      FROM user_profile 
+      WHERE date_of_birth IS NOT NULL
+    `);
+
+    const averageAge = result.rows[0].average_age
+      ? Number.parseFloat(result.rows[0].average_age).toFixed(1)
+      : "N/A";
+
+    console.log("Середній вік користувачів:", averageAge);
+    res.json({ averageAge });
+  } catch (error) {
+    console.error("❌ Помилка при обчисленні середнього віку:", error.message);
+    res.status(500).json({ message: "Помилка сервера", error: error.message });
+  }
+});
+
+// Get industries list
+app.get("/api/industries", async (req, res) => {
+  try {
+    console.log("Отримано запит на /api/industries");
+
+    const industries = [
+      {
+        name: "Інформаційні технології",
+        icon: "fas fa-laptop-code",
+        description:
+          "Розробка програмного забезпечення, веб-сайтів, мобільних додатків та IT-консультації",
+      },
+      {
+        name: "Медицина",
+        icon: "fas fa-heartbeat",
+        description:
+          "Медичні консультації, догляд за пацієнтами та медичне обладнання",
+      },
+      {
+        name: "Енергетика",
+        icon: "fas fa-bolt",
+        description:
+          "Енергетичні рішення, відновлювані джерела енергії та енергоефективність",
+      },
+      {
+        name: "Аграрна галузь",
+        icon: "fas fa-tractor",
+        description: "Сільськогосподарські послуги, агрономія та тваринництво",
+      },
+      {
+        name: "Фінанси та банківська справа",
+        icon: "fas fa-money-bill-wave",
+        description:
+          "Фінансові консультації, бухгалтерія та інвестиційні поради",
+      },
+      {
+        name: "Освіта",
+        icon: "fas fa-graduation-cap",
+        description: "Навчання, тренінги та освітні програми",
+      },
+      {
+        name: "Туризм і гостинність",
+        icon: "fas fa-plane",
+        description:
+          "Туристичні послуги, організація подорожей та готельний бізнес",
+      },
+      {
+        name: "Будівництво та нерухомість",
+        icon: "fas fa-hard-hat",
+        description: "Будівельні роботи, ремонт та консультації з нерухомості",
+      },
+      {
+        name: "Транспорт",
+        icon: "fas fa-truck",
+        description: "Транспортні послуги, логістика та доставка",
+      },
+      {
+        name: "Мистецтво і культура",
+        icon: "fas fa-palette",
+        description: "Творчі послуги, дизайн та організація культурних заходів",
+      },
+    ];
+
+    res.json(industries);
+  } catch (error) {
+    console.error("❌ Помилка при отриманні списку галузей:", error.message);
+    res.status(500).json({ message: "Помилка сервера", error: error.message });
+  }
+});
+
+// Get services by industry
+app.get("/api/services-by-industry/:industry", async (req, res) => {
+  const industry = req.params.industry;
 
   try {
-    // Перевірка чи існує користувач
-    const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [user_id])
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ message: "Користувача не знайдено" })
+    console.log(`Отримано запит на /api/services-by-industry/${industry}`);
+
+    // Get all masters with specified industry
+    const mastersResult = await executeQuery(
+      `
+      SELECT u.id
+      FROM users u
+      JOIN user_profile up ON u.id = up.user_id
+      JOIN user_services us ON u.id = us.user_id
+      WHERE up.role_master = true 
+      AND up.approval_status = 'approved'
+      AND us.service_type = 'industry'
+      AND us.service_name = $1
+    `,
+      [industry]
+    );
+
+    const masterIds = mastersResult.rows.map((row) => row.id);
+
+    if (masterIds.length === 0) {
+      return res.json([]);
     }
 
-    // Створення нового замовлення
-    const newOrder = await pool.query(
-      "INSERT INTO orders (user_id, title, description, phone, status) VALUES ($1, $2, $3, $4, 'pending') RETURNING id",
-      [user_id, title, description, phone]
-    )
+    // Get all services of these masters
+    const servicesResult = await executeQuery(
+      `
+      SELECT service_name, COUNT(*) as count
+      FROM user_services
+      WHERE user_id = ANY($1)
+      AND service_type != 'industry'
+      GROUP BY service_name
+      ORDER BY count DESC
+    `,
+      [masterIds]
+    );
 
-    console.log(`Нове замовлення з ID ${newOrder.rows[0].id} успішно створено.`)
-    res.status(201).json({ 
-      success: true, 
-      message: "Замовлення успішно створено", 
-      orderId: newOrder.rows[0].id 
-    })
-  } catch (err) {
-    console.error("Помилка при створенні замовлення:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    res.json(servicesResult.rows);
+  } catch (error) {
+    console.error("❌ Помилка при отриманні послуг за галуззю:", error.message);
+    res.status(500).json({ message: "Помилка сервера", error: error.message });
   }
-})
+});
 
-// Отримання всіх замовлень
+// ORDERS ENDPOINTS
+
+// Create new order
+app.post("/orders", async (req, res) => {
+  const { user_id, title, description, phone, industry } = req.body;
+
+  if (!user_id || !title || !phone) {
+    return res
+      .status(400)
+      .json({ message: "Усі обов'язкові поля повинні бути заповнені" });
+  }
+
+  try {
+    // Check if user exists
+    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
+      user_id,
+    ]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "Користувача не знайдено" });
+    }
+
+    // Create new order
+    const newOrder = await executeQuery(
+      "INSERT INTO orders (user_id, title, description, phone, industry, status) VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id",
+      [user_id, title, description, phone, industry]
+    );
+
+    console.log(
+      `✅ Нове замовлення з ID ${newOrder.rows[0].id} успішно створено.`
+    );
+    res.status(201).json({
+      success: true,
+      message: "Замовлення успішно створено",
+      orderId: newOrder.rows[0].id,
+    });
+  } catch (err) {
+    console.error("❌ Помилка при створенні замовлення:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get all orders
 app.get("/orders", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const result = await executeQuery(`
       SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
-             o.master_id, o.created_at, o.updated_at,
+             o.industry, o.master_id, o.created_at, o.  o.title, o.description, o.phone, o.status, 
+             o.industry, o.master_id, o.created_at, o.updated_at,
              u.username as user_username, 
              up.first_name as user_first_name, 
              up.last_name as user_last_name,
@@ -684,23 +1797,24 @@ app.get("/orders", async (req, res) => {
       LEFT JOIN users m ON o.master_id = m.id
       LEFT JOIN user_profile mp ON m.id = mp.user_id
       ORDER BY o.created_at DESC
-    `)
+    `);
 
-    res.status(200).json({ orders: result.rows })
+    res.status(200).json({ orders: result.rows });
   } catch (err) {
-    console.error("Помилка при отриманні замовлень:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при отриманні замовлень:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Отримання замовлень користувача
+// Get user orders
 app.get("/orders/user/:userId", async (req, res) => {
-  const userId = req.params.userId
+  const userId = req.params.userId;
 
   try {
-    const result = await pool.query(`
+    const result = await executeQuery(
+      `
       SELECT o.id, o.title, o.description, o.phone, o.status, 
-             o.master_id, o.created_at, o.updated_at,
+             o.industry, o.master_id, o.created_at, o.updated_at,
              m.username as master_username,
              mp.first_name as master_first_name,
              mp.last_name as master_last_name
@@ -709,23 +1823,29 @@ app.get("/orders/user/:userId", async (req, res) => {
       LEFT JOIN user_profile mp ON m.id = mp.user_id
       WHERE o.user_id = $1
       ORDER BY o.created_at DESC
-    `, [userId])
+    `,
+      [userId]
+    );
 
-    res.status(200).json({ orders: result.rows })
+    res.status(200).json({ orders: result.rows });
   } catch (err) {
-    console.error("Помилка при отриманні замовлень користувача:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error(
+      "❌ Помилка при отриманні замовлень користувача:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Отримання замовлень, оброблених майстром
+// Get master orders
 app.get("/orders/master/:masterId", async (req, res) => {
-  const masterId = req.params.masterId
+  const masterId = req.params.masterId;
 
   try {
-    const result = await pool.query(`
+    const result = await executeQuery(
+      `
       SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
-             o.created_at, o.updated_at,
+             o.industry, o.created_at, o.updated_at,
              u.username as user_username, 
              up.first_name as user_first_name, 
              up.last_name as user_last_name,
@@ -735,59 +1855,718 @@ app.get("/orders/master/:masterId", async (req, res) => {
       JOIN user_profile up ON u.id = up.user_id
       WHERE o.master_id = $1
       ORDER BY o.updated_at DESC
-    `, [masterId])
+    `,
+      [masterId]
+    );
 
-    res.status(200).json({ orders: result.rows })
+    res.status(200).json({ orders: result.rows });
   } catch (err) {
-    console.error("Помилка при отриманні замовлень майстра:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при отриманні замовлень майстра:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
-})
+});
 
-// Оновлення статусу замовлення
+// Update order status
 app.put("/orders/:orderId", async (req, res) => {
-  const orderId = req.params.orderId
-  const { status, master_id } = req.body
+  const orderId = req.params.orderId;
+  const { status, master_id } = req.body;
 
-  if (!status || !["pending", "approved", "rejected", "completed"].includes(status)) {
-    return res.status(400).json({ message: "Невірний статус" })
+  if (
+    !status ||
+    !["pending", "approved", "in_progress", "rejected", "completed"].includes(
+      status
+    )
+  ) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Невірний статус. Допустимі значення: pending, approved, in_progress, rejected, completed",
+    });
   }
 
   try {
-    // Перевірка чи існує замовлення
-    const orderResult = await pool.query("SELECT * FROM orders WHERE id = $1", [orderId])
+    // Check if order exists
+    const orderResult = await executeQuery(
+      "SELECT * FROM orders WHERE id = $1",
+      [orderId]
+    );
+
     if (orderResult.rows.length === 0) {
-      return res.status(404).json({ message: "Замовлення не знайдено" })
+      return res.status(404).json({
+        success: false,
+        message: "Замовлення не знайдено",
+      });
     }
 
-    // Перевірка чи користувач є майстром
+    // Check if user is a master, if master_id is provided
     if (master_id) {
-      const masterResult = await pool.query(`
+      const masterResult = await executeQuery(
+        `
         SELECT * FROM user_profile 
-        WHERE user_id = $1 AND role_master = true AND approval_status = 'approved'
-      `, [master_id])
-      
+        WHERE user_id = $1 AND role_master = true
+        `,
+        [master_id]
+      );
+
       if (masterResult.rows.length === 0) {
-        return res.status(403).json({ message: "Тільки затверджені майстри можуть обробляти замовлення" })
+        return res.status(403).json({
+          success: false,
+          message: "Тільки майстри можуть обробляти замовлення",
+        });
+      }
+
+      // Check master approval status only if master is found
+      if (masterResult.rows[0].approval_status !== "approved") {
+        return res.status(403).json({
+          success: false,
+          message: "Тільки затверджені майстри можуть обробляти замовлення",
+        });
       }
     }
 
-    // Оновлення статусу замовлення
-    await pool.query(`
+    // Update order status
+    const updateResult = await executeQuery(
+      `
       UPDATE orders 
-      SET status = $1, master_id = $2, updated_at = CURRENT_TIMESTAMP 
+      SET status = $1, 
+          master_id = $2, 
+          updated_at = CURRENT_TIMESTAMP 
       WHERE id = $3
-    `, [status, master_id, orderId])
+      RETURNING id, status, master_id
+      `,
+      [status, master_id || orderResult.rows[0].master_id, orderId]
+    );
 
-    console.log(`Статус замовлення з ID ${orderId} змінено на ${status}.`)
-    res.status(200).json({ success: true, message: `Статус замовлення змінено на ${status}` })
+    if (updateResult.rows.length === 0) {
+      throw new Error("Не вдалося оновити замовлення");
+    }
+
+    console.log(`✅ Статус замовлення з ID ${orderId} змінено на ${status}.`);
+
+    res.status(200).json({
+      success: true,
+      message: `Статус замовлення змінено на ${status}`,
+      order: updateResult.rows[0],
+    });
   } catch (err) {
-    console.error("Помилка при оновленні статусу замовлення:", err)
-    res.status(500).json({ message: "Помилка сервера", error: err.message })
+    console.error("❌ Помилка при оновленні статусу замовлення:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Помилка при оновленні статусу заявки",
+      error: err.message,
+    });
   }
-})
+});
 
-// Запуск сервера
+// Get orders by industry
+app.get("/orders/industry/:industry", async (req, res) => {
+  const industry = req.params.industry;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.industry, o.master_id, o.created_at, o.updated_at
+      FROM orders o
+      WHERE o.industry = $1
+      ORDER BY o.created_at DESC
+    `,
+      [industry]
+    );
+
+    res.status(200).json({ orders: result.rows });
+  } catch (err) {
+    console.error(
+      "❌ Помилка при отриманні замовлень за галуззю:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get order statistics
+app.get("/orders/stats", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected
+      FROM orders
+    `);
+
+    res.status(200).json({ stats: result.rows[0] });
+  } catch (err) {
+    console.error(
+      "❌ Помилка при отриманні статистики замовлень:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get orders by status
+app.get("/orders/status/:status", async (req, res) => {
+  const status = req.params.status;
+
+  if (!["pending", "completed", "rejected", "all"].includes(status)) {
+    return res.status(400).json({ message: "Невірний статус" });
+  }
+
+  try {
+    let query = `
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.industry, o.master_id, o.created_at, o.updated_at,
+             u.username as user_username, 
+             up.first_name as user_first_name, 
+             up.last_name as user_last_name,
+             up.email as user_email,
+             m.username as master_username,
+             mp.first_name as master_first_name,
+             mp.last_name as master_last_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      LEFT JOIN users m ON o.master_id = m.id
+      LEFT JOIN user_profile mp ON m.id = mp.user_id
+    `;
+
+    if (status !== "all") {
+      query += ` WHERE o.status = $1`;
+    }
+
+    query += ` ORDER BY o.created_at DESC`;
+
+    const result =
+      status === "all"
+        ? await executeQuery(query)
+        : await executeQuery(query, [status]);
+
+    res.status(200).json({ orders: result.rows });
+  } catch (err) {
+    console.error(
+      "❌ Помилка при отриманні замовлень за статусом:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get order details by ID
+app.get("/orders/:orderId", async (req, res) => {
+  const orderId = req.params.orderId;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.industry, o.master_id, o.created_at, o.updated_at,
+             u.username as user_username, 
+             up.first_name as user_first_name, 
+             up.last_name as user_last_name,
+             up.email as user_email,
+             m.username as master_username,
+             mp.first_name as master_first_name,
+             mp.last_name as master_last_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      LEFT JOIN users m ON o.master_id = m.id
+      LEFT JOIN user_profile mp ON m.id = mp.user_id
+      WHERE o.id = $1
+    `,
+      [orderId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Замовлення не знайдено" });
+    }
+
+    res.status(200).json({ order: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні деталей замовлення:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Search orders
+app.get("/orders/search/:query", async (req, res) => {
+  const query = req.params.query;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
+             o.industry, o.master_id, o.created_at, o.updated_at,
+             u.username as user_username, 
+             up.first_name as user_first_name, 
+             up.last_name as user_last_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      WHERE 
+        o.title ILIKE $1 OR 
+        o.description ILIKE $1 OR 
+        o.industry ILIKE $1 OR
+        u.username ILIKE $1 OR
+        up.first_name ILIKE $1 OR
+        up.last_name ILIKE $1
+      ORDER BY o.created_at DESC
+    `,
+      [`%${query}%`]
+    );
+
+    res.status(200).json({ orders: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при пошуку замовлень:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get order statistics by industry
+app.get("/orders/stats/by-industry", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT 
+        industry, 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'pending') as pending,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected
+      FROM orders
+      GROUP BY industry
+      ORDER BY total DESC
+    `);
+
+    res.status(200).json({ stats: result.rows });
+  } catch (err) {
+    console.error(
+      "❌ Помилка при отриманні статистики за галузями:",
+      err.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get latest orders (for dashboard)
+app.get("/orders/latest/:limit", async (req, res) => {
+  const limit = Number.parseInt(req.params.limit) || 5;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT o.id, o.title, o.status, o.industry, o.created_at,
+             u.username as user_username,
+             up.first_name as user_first_name,
+             up.last_name as user_last_name
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      JOIN user_profile up ON u.id = up.user_id
+      ORDER BY o.created_at DESC
+      LIMIT $1
+    `,
+      [limit]
+    );
+
+    res.status(200).json({ orders: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні останніх замовлень:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get order count by status
+app.get("/orders/count/by-status", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM orders
+      GROUP BY status
+    `);
+
+    // Convert result to convenient format
+    const counts = {
+      pending: 0,
+      completed: 0,
+      rejected: 0,
+      total: 0,
+    };
+
+    result.rows.forEach((row) => {
+      counts[row.status] = Number.parseInt(row.count);
+      counts.total += Number.parseInt(row.count);
+    });
+
+    res.status(200).json(counts);
+  } catch (err) {
+    console.error("❌ Помилка при отриманні кількості замовлень:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// REVIEWS ENDPOINTS
+
+// Create new review
+app.post("/reviews", async (req, res) => {
+  const { user_id, name, industry, rating, text, master_name, city } = req.body;
+
+  if (!name || !industry || !rating || !text) {
+    return res
+      .status(400)
+      .json({ message: "Усі обов'язкові поля повинні бути заповнені" });
+  }
+
+  if (rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Оцінка повинна бути від 1 до 5" });
+  }
+
+  try {
+    // Check if user exists, if user_id is provided
+    if (user_id) {
+      const userResult = await executeQuery(
+        "SELECT * FROM users WHERE id = $1",
+        [user_id]
+      );
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ message: "Користувача не знайдено" });
+      }
+    }
+
+    // Create new review
+    const newReview = await executeQuery(
+      "INSERT INTO reviews (user_id, name, industry, rating, text, master_name, city, status) VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved') RETURNING id",
+      [
+        user_id || null,
+        name,
+        industry,
+        rating,
+        text,
+        master_name || null,
+        city || "Не вказано",
+      ]
+    );
+
+    console.log(
+      `✅ Новий відгук з ID ${newReview.rows[0].id} успішно створено.`
+    );
+    res.status(201).json({
+      success: true,
+      message: "Відгук успішно створено",
+      reviewId: newReview.rows[0].id,
+    });
+  } catch (err) {
+    console.error("❌ Помилка при створенні відгуку:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get all reviews
+app.get("/reviews", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT id, user_id, name, industry, rating, text, master_name, city, status, created_at, updated_at
+      FROM reviews
+      WHERE status = 'approved'
+      ORDER BY created_at DESC
+    `);
+
+    res.status(200).json({ reviews: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні відгуків:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get review by ID
+app.get("/reviews/:reviewId", async (req, res) => {
+  const reviewId = req.params.reviewId;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, user_id, name, industry, rating, text, master_name, city, status, created_at, updated_at
+      FROM reviews
+      WHERE id = $1
+    `,
+      [reviewId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Відгук не знайдено" });
+    }
+
+    res.status(200).json({ review: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні відгуку:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Delete review
+app.delete("/reviews/:reviewId", async (req, res) => {
+  const reviewId = req.params.reviewId;
+
+  try {
+    const result = await executeQuery(
+      "DELETE FROM reviews WHERE id = $1 RETURNING id",
+      [reviewId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Відгук не знайдено" });
+    }
+
+    console.log(`✅ Відгук з ID ${reviewId} успішно видалено.`);
+    res.status(200).json({ message: "Відгук успішно видалено" });
+  } catch (err) {
+    console.error("❌ Помилка при видаленні відгуку:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Update review status (for moderation)
+app.put("/reviews/:reviewId/status", async (req, res) => {
+  const reviewId = req.params.reviewId;
+  const { status } = req.body;
+
+  if (!status || !["pending", "approved", "rejected"].includes(status)) {
+    return res.status(400).json({ message: "Невірний статус" });
+  }
+
+  try {
+    const result = await executeQuery(
+      "UPDATE reviews SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id",
+      [status, reviewId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Відгук не знайдено" });
+    }
+
+    console.log(`✅ Статус відгуку з ID ${reviewId} змінено на ${status}.`);
+    res.status(200).json({ message: `Статус відгуку змінено на ${status}` });
+  } catch (err) {
+    console.error("❌ Помилка при оновленні статусу відгуку:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get reviews by industry
+app.get("/reviews/industry/:industry", async (req, res) => {
+  const industry = req.params.industry;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, user_id, name, industry, rating, text, master_name, city, status, created_at, updated_at
+      FROM reviews
+      WHERE industry = $1 AND status = 'approved'
+      ORDER BY created_at DESC
+    `,
+      [industry]
+    );
+
+    res.status(200).json({ reviews: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні відгуків за галуззю:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get reviews by rating
+app.get("/reviews/rating/:rating", async (req, res) => {
+  const rating = Number.parseInt(req.params.rating);
+
+  if (isNaN(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Невірна оцінка" });
+  }
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, user_id, name, industry, rating, text, master_name, city, status, created_at, updated_at
+      FROM reviews
+      WHERE rating = $1 AND status = 'approved'
+      ORDER BY created_at DESC
+    `,
+      [rating]
+    );
+
+    res.status(200).json({ reviews: result.rows });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні відгуків за оцінкою:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get review statistics by ratings
+app.get("/api/review-ratings", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT rating, COUNT(*) as count
+      FROM reviews
+      WHERE status = 'approved'
+      GROUP BY rating
+      ORDER BY rating
+    `);
+
+    // Convert result to convenient format
+    const ratings = {};
+    let totalCount = 0;
+
+    result.rows.forEach((row) => {
+      ratings[row.rating] = Number.parseInt(row.count);
+      totalCount += Number.parseInt(row.count);
+    });
+
+    res.status(200).json({
+      ratings,
+      totalCount,
+      averageRating:
+        totalCount > 0
+          ? (
+              Object.entries(ratings).reduce(
+                (sum, [rating, count]) => sum + Number.parseInt(rating) * count,
+                0
+              ) / totalCount
+            ).toFixed(1)
+          : 0,
+    });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні статистики відгуків:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Get review statistics by industries
+app.get("/api/review-industries", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT industry, COUNT(*) as count
+      FROM reviews
+      WHERE status = 'approved'
+      GROUP BY industry
+      ORDER BY count DESC
+    `);
+
+    // Convert result to convenient format
+    const industries = {};
+
+    result.rows.forEach((row) => {
+      industries[row.industry] = Number.parseInt(row.count);
+    });
+
+    res.status(200).json({ industries });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні статистики відгуків:", err.message);
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, "uploads");
+
+    // Create uploads directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max file size
+  },
+});
+
+// Handle form submissions
+app.post(
+  "/send-message",
+  upload.fields([
+    { name: "voiceMessage", maxCount: 1 },
+    { name: "videoMessage", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const { username, email, messageType } = req.body;
+
+      if (!username || !email || !messageType) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      let messageContent;
+      let filePath;
+
+      // Process message based on type
+      if (messageType === "text") {
+        const { textMessage } = req.body;
+
+        if (!textMessage) {
+          return res.status(400).json({ error: "Missing text message" });
+        }
+
+        messageContent = textMessage;
+      } else if (messageType === "voice") {
+        if (!req.files.voiceMessage) {
+          return res.status(400).json({ error: "Missing voice message" });
+        }
+
+        filePath = req.files.voiceMessage[0].path;
+      } else if (messageType === "video") {
+        if (!req.files.videoMessage) {
+          return res.status(400).json({ error: "Missing video message" });
+        }
+
+        filePath = req.files.videoMessage[0].path;
+      } else {
+        return res.status(400).json({ error: "Invalid message type" });
+      }
+
+      // Send message to Telegram
+      const result = await sendMessage({
+        username,
+        email,
+        messageType,
+        messageContent,
+        filePath,
+      });
+
+      // Clean up file after sending
+      if (filePath && fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      res
+        .status(200)
+        .json({ success: true, message: "Message sent successfully" });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res
+        .status(500)
+        .json({ error: error.message || "Failed to send message" });
+    }
+  }
+);
+
+// Start server
 app.listen(port, () => {
-  console.log(`Сервер запущено на http://localhost:${port}`)
-})
+  console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);
+  console.log(
+    `   Google OAuth налаштовано та інтегровано з основною аутентифікацією`
+  );
+  console.log(`   Google Client ID: ${process.env.GOOGLE_CLIENT_ID}`);
+  console.log(`   Session Secret: ${process.env.SESSION_SECRET}`);
+});
