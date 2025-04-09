@@ -10,29 +10,9 @@ const multer = require("multer");
 const { sendMessage } = require("./bot");
 const fs = require("fs");
 const punycode = require("punycode/");
-const session = require("express-session");
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 // Load environment variables
 dotenv.config();
-
-// Check for required environment variables
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  console.warn(
-    "⚠️ Warning: Google OAuth credentials not found in environment variables."
-  );
-  console.warn("   Authentication with Google may not work properly.");
-}
-
-if (!process.env.SESSION_SECRET) {
-  console.warn(
-    "⚠️ Warning: SESSION_SECRET not found in environment variables."
-  );
-  console.warn("   Using a default secret. This is not secure for production.");
-  process.env.SESSION_SECRET =
-    "default_session_secret_" + Math.random().toString(36).substring(2);
-}
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -73,39 +53,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname)));
-
-// Session middleware setup for Passport
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: process.env.NODE_ENV === "production" }, // Use secure cookies in production
-  })
-);
-
-// Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Serialize and deserialize user for passport
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  try {
-    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
-      id,
-    ]);
-    if (userResult.rows.length === 0) {
-      return done(null, false);
-    }
-    done(null, userResult.rows[0]);
-  } catch (err) {
-    done(err, null);
-  }
-});
 
 // Helper function for database queries with retry logic
 const executeQuery = async (queryText, params = [], retries = 3) => {
@@ -222,16 +169,13 @@ const fixReviewsTable = async () => {
   }
 };
 
-// Function to create tables
+// Функція для створення таблиць
 const createTables = async () => {
   const userTableQuery = `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       username VARCHAR(100) UNIQUE NOT NULL,
-      password VARCHAR(255),
-      email VARCHAR(255),
-      google_id VARCHAR(255),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      password VARCHAR(255) NOT NULL
     );
   `;
 
@@ -244,22 +188,8 @@ const createTables = async () => {
       email VARCHAR(255),
       phone VARCHAR(15),
       address TEXT,
-      date_of_birth DATE,
-      auth_type VARCHAR(20) DEFAULT 'local'
+      date_of_birth DATE
     );
-  `;
-
-  // Add profile_picture column to user_profile if it doesn't exist
-  const addProfilePictureColumnQuery = `
-    DO $$ 
-    BEGIN 
-      IF NOT EXISTS (
-        SELECT FROM information_schema.columns 
-        WHERE table_name = 'user_profile' AND column_name = 'profile_picture'
-      ) THEN
-        ALTER TABLE user_profile ADD COLUMN profile_picture TEXT;
-      END IF;
-    END $$;
   `;
 
   const userServicesTableQuery = `
@@ -295,18 +225,6 @@ const createTables = async () => {
     END $$;
   `;
 
-  const addAuthTypeColumnQuery = `
-    DO $$ 
-    BEGIN 
-      IF NOT EXISTS (
-        SELECT FROM information_schema.columns 
-        WHERE table_name = 'user_profile' AND column_name = 'auth_type'
-      ) THEN
-        ALTER TABLE user_profile ADD COLUMN auth_type VARCHAR(20) DEFAULT 'local';
-      END IF;
-    END $$;
-  `;
-
   const masterRequestsTableQuery = `
     CREATE TABLE IF NOT EXISTS master_requests (
       id SERIAL PRIMARY KEY,
@@ -317,7 +235,7 @@ const createTables = async () => {
     );
   `;
 
-  // New table for orders
+  // Нова таблиця для замовлень
   const ordersTableQuery = `
     CREATE TABLE IF NOT EXISTS orders (
       id SERIAL PRIMARY KEY,
@@ -333,7 +251,7 @@ const createTables = async () => {
     );
   `;
 
-  // Add industry column to orders table if it doesn't exist
+  // Додаємо колонку industry до таблиці orders, якщо вона не існує
   const addIndustryColumnQuery = `
     DO $$ 
     BEGIN 
@@ -346,74 +264,34 @@ const createTables = async () => {
     END $$;
   `;
 
-  // Add email and google_id columns to users table if they don't exist
-  const addEmailColumnQuery = `
-    DO $$ 
-    BEGIN 
-      IF NOT EXISTS (
-        SELECT FROM information_schema.columns 
-        WHERE table_name = 'users' AND column_name = 'email'
-      ) THEN
-        ALTER TABLE users ADD COLUMN email VARCHAR(255);
-      END IF;
-    END $$;
-  `;
-
-  const addGoogleIdColumnQuery = `
-    DO $$ 
-    BEGIN 
-      IF NOT EXISTS (
-        SELECT FROM information_schema.columns 
-        WHERE table_name = 'users' AND column_name = 'google_id'
-      ) THEN
-        ALTER TABLE users ADD COLUMN google_id VARCHAR(255);
-      END IF;
-    END $$;
-  `;
-
-  // Make password column nullable to support OAuth users
-  const makePasswordNullableQuery = `
-    DO $$ 
-    BEGIN 
-      ALTER TABLE users ALTER COLUMN password DROP NOT NULL;
-    EXCEPTION
-      WHEN others THEN NULL;
-    END $$;
-  `;
-
   try {
     await executeQuery(userTableQuery);
     await executeQuery(userProfileTableQuery);
-    await executeQuery(addProfilePictureColumnQuery); // Add profile_picture column
     await executeQuery(userServicesTableQuery);
     await executeQuery(addRoleMasterColumnQuery);
     await executeQuery(addApprovalStatusColumnQuery);
-    await executeQuery(addAuthTypeColumnQuery);
     await executeQuery(masterRequestsTableQuery);
     await executeQuery(ordersTableQuery);
     await executeQuery(addIndustryColumnQuery);
-    await executeQuery(addEmailColumnQuery);
-    await executeQuery(addGoogleIdColumnQuery);
-    await executeQuery(makePasswordNullableQuery);
 
     // Fix the reviews table
     await fixReviewsTable();
 
     console.log(
-      "✅ Tables created or already exist, columns added (if they didn't exist)."
+      "✅ Таблиці створено або вже існують, колонки додано (якщо їх не було)."
     );
 
-    // Add basic industries for new users if they don't exist yet
+    // Додаємо базові галузі для нових користувачів, якщо вони ще не існують
     await initializeIndustries();
   } catch (err) {
-    console.error("❌ Error creating tables:", err.message);
+    console.error("❌ Помилка при створенні таблиць:", err.message);
     console.error(
-      "   Server will continue running, but functionality may be limited."
+      "   Сервер продовжить роботу, але функціональність може бути обмежена."
     );
   }
 };
 
-// Function to initialize basic industries
+// Функція для ініціалізації базових галузей
 const initializeIndustries = async () => {
   const industries = [
     { name: "Інформаційні технології", icon: "fas fa-laptop-code" },
@@ -429,7 +307,7 @@ const initializeIndustries = async () => {
   ];
 
   try {
-    // Check if industries already exist in the database
+    // Перевіряємо, чи є вже галузі в базі даних
     const existingIndustries = await executeQuery(`
       SELECT DISTINCT service_name 
       FROM user_services 
@@ -440,7 +318,7 @@ const initializeIndustries = async () => {
       (row) => row.service_name
     );
 
-    // Get list of users with master role
+    // Отримуємо список користувачів з роллю майстра
     const masters = await executeQuery(`
       SELECT u.id 
       FROM users u
@@ -448,7 +326,7 @@ const initializeIndustries = async () => {
       WHERE up.role_master = true
     `);
 
-    // For each master add industries that don't exist yet
+    // Для кожного майстра додаємо галузі, які ще не існують
     for (const master of masters.rows) {
       const masterIndustries = await executeQuery(
         `
@@ -463,7 +341,7 @@ const initializeIndustries = async () => {
         (row) => row.service_name
       );
 
-      // Add industries that the master doesn't have yet
+      // Додаємо галузі, яких ще немає у майстра
       for (const industry of industries) {
         if (!masterIndustryNames.includes(industry.name)) {
           await executeQuery(
@@ -477,9 +355,9 @@ const initializeIndustries = async () => {
       }
     }
 
-    console.log("✅ Basic industries successfully initialized.");
+    console.log("✅ Базові галузі успішно ініціалізовано.");
   } catch (err) {
-    console.error("❌ Error initializing industries:", err.message);
+    console.error("❌ Помилка при ініціалізації галузей:", err.message);
   }
 };
 
@@ -488,164 +366,12 @@ createTables().catch((err) => {
   console.error("Failed to initialize database tables:", err.message);
 });
 
-// Configure Google OAuth strategy
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/auth/google/callback",
-      passReqToCallback: true,
-    },
-    async (req, accessToken, refreshToken, profile, done) => {
-      try {
-        // First, check if user already exists with this google ID
-        let user = await executeQuery(
-          "SELECT * FROM users WHERE google_id = $1",
-          [profile.id]
-        );
-
-        if (user.rows.length === 0) {
-          // Check if user exists with this email
-          const email =
-            profile.emails && profile.emails[0] && profile.emails[0].value;
-          if (email) {
-            user = await executeQuery("SELECT * FROM users WHERE email = $1", [
-              email,
-            ]);
-
-            if (user.rows.length > 0) {
-              // User exists with email but not google_id, update the google_id
-              await executeQuery(
-                "UPDATE users SET google_id = $1 WHERE email = $2",
-                [profile.id, email]
-              );
-              user = await executeQuery(
-                "SELECT * FROM users WHERE email = $1",
-                [email]
-              );
-            }
-          }
-
-          // If user still doesn't exist, create a new one
-          if (user.rows.length === 0) {
-            // Create new user
-            const newUser = await executeQuery(
-              "INSERT INTO users (username, email, google_id) VALUES ($1, $2, $3) RETURNING id",
-              [
-                profile.displayName || `user_${profile.id}`,
-                email || null,
-                profile.id,
-              ]
-            );
-
-            // Create user profile
-            const profilePicture =
-              profile.photos && profile.photos[0]
-                ? profile.photos[0].value
-                : null;
-
-            await executeQuery(
-              `INSERT INTO user_profile 
-               (user_id, first_name, last_name, email, auth_type, profile_picture) 
-               VALUES ($1, $2, $3, $4, 'google', $5)`,
-              [
-                newUser.rows[0].id,
-                profile.name && profile.name.givenName
-                  ? profile.name.givenName
-                  : null,
-                profile.name && profile.name.familyName
-                  ? profile.name.familyName
-                  : null,
-                email || null,
-                profilePicture,
-              ]
-            );
-
-            console.log(
-              `✅ New Google user registered: ${
-                profile.displayName || "Unknown"
-              }`
-            );
-
-            user = await executeQuery("SELECT * FROM users WHERE id = $1", [
-              newUser.rows[0].id,
-            ]);
-          }
-        }
-
-        return done(null, user.rows[0]);
-      } catch (err) {
-        console.error("❌ Error in Google authentication:", err.message);
-        return done(err);
-      }
-    }
-  )
-);
-
-// Main page (registration/authentication)
+// Головна сторінка (реєстрація/авторизація)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "auth.html"));
 });
 
-// Google Authentication Routes
-app.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
-  async (req, res) => {
-    try {
-      // Create JWT token for API authentication
-      const token = jwt.sign(
-        { id: req.user.id, username: req.user.username },
-        process.env.JWT_SECRET || "default_secret_key",
-        {
-          expiresIn: "24h",
-        }
-      );
-
-      // Send HTML with JavaScript to store token in localStorage and redirect
-      res.send(`
-        <html>
-          <body>
-            <script>
-              // Store user info in localStorage
-              localStorage.setItem('userId', '${req.user.id}');
-              localStorage.setItem('token', '${token}');
-              localStorage.setItem('username', '${req.user.username}');
-              localStorage.setItem('authType', 'google');
-              
-              // Redirect to index page
-              window.location.href = '/index.html';
-            </script>
-          </body>
-        </html>
-      `);
-    } catch (err) {
-      console.error(
-        "❌ Error handling Google authentication callback:",
-        err.message
-      );
-      res.redirect("/?error=authentication_failed");
-    }
-  }
-);
-
-// Logout route for both local and Google auth
-app.get("/logout", (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      console.error("Logout error:", err);
-    }
-    res.redirect("/");
-  });
-});
-
-// Middleware for JWT authentication
+// Middleware для JWT аутентифікації
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -669,14 +395,14 @@ const authenticateToken = (req, res, next) => {
 
 let isProcessing = false;
 
-// Register user
+// Реєстрація користувача
 app.post("/register", async (req, res) => {
   if (isProcessing) {
     return res.status(400).json({ message: "Запит вже обробляється!" });
   }
   isProcessing = true;
 
-  const { username, password, email } = req.body;
+  const { username, password } = req.body;
 
   if (!username || !password) {
     isProcessing = false;
@@ -687,46 +413,34 @@ app.post("/register", async (req, res) => {
 
   try {
     const existingUser = await executeQuery(
-      "SELECT * FROM users WHERE username = $1 OR (email = $2 AND email IS NOT NULL)",
-      [username, email]
+      "SELECT * FROM users WHERE username = $1",
+      [username]
     );
-
     if (existingUser.rows.length > 0) {
       isProcessing = false;
       return res
         .status(400)
-        .json({ message: "Користувач з таким іменем або email вже існує!" });
+        .json({ message: "Користувач з таким іменем вже існує!" });
     }
 
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const newUser = await executeQuery(
-      "INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING id",
-      [username, hashedPassword, email || null]
+      "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id",
+      [username, hashedPassword]
     );
 
-    await executeQuery(
-      "INSERT INTO user_profile (user_id, email, auth_type) VALUES ($1, $2, 'local')",
-      [newUser.rows[0].id, email || null]
-    );
+    await executeQuery("INSERT INTO user_profile (user_id) VALUES ($1)", [
+      newUser.rows[0].id,
+    ]);
 
     console.log(`✅ Користувач ${username} успішно зареєстрований.`);
-
-    // Create JWT token
-    const token = jwt.sign(
-      { id: newUser.rows[0].id, username: username },
-      process.env.JWT_SECRET || "default_secret_key",
-      {
-        expiresIn: "24h",
-      }
-    );
 
     res.status(200).json({
       success: true,
       message: "Реєстрація успішна",
       userId: newUser.rows[0].id,
-      token: token,
       redirect: "/index.html",
     });
   } catch (err) {
@@ -737,7 +451,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// User login
+// Логін користувача
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -748,20 +462,10 @@ app.post("/login", async (req, res) => {
   }
 
   try {
-    // Check if username is an email
-    const isEmail = username.includes("@");
-
-    let result;
-    if (isEmail) {
-      result = await executeQuery("SELECT * FROM users WHERE email = $1", [
-        username,
-      ]);
-    } else {
-      result = await executeQuery("SELECT * FROM users WHERE username = $1", [
-        username,
-      ]);
-    }
-
+    const result = await executeQuery(
+      "SELECT * FROM users WHERE username = $1",
+      [username]
+    );
     if (result.rows.length === 0) {
       return res
         .status(401)
@@ -769,15 +473,6 @@ app.post("/login", async (req, res) => {
     }
 
     const user = result.rows[0];
-
-    // Check if user was created with Google OAuth
-    if (!user.password) {
-      return res.status(401).json({
-        message:
-          "Цей акаунт використовує вхід через Google. Спробуйте увійти через Google.",
-      });
-    }
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res
@@ -809,16 +504,13 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Get user profile
+// Отримання профілю користувача
 app.get("/profile/:userId", async (req, res) => {
   const userId = req.params.userId;
 
   try {
     const profileResult = await executeQuery(
-      `SELECT up.*, u.email, u.username, u.google_id IS NOT NULL as is_google_user
-       FROM user_profile up
-       JOIN users u ON up.user_id = u.id
-       WHERE up.user_id = $1`,
+      "SELECT * FROM user_profile WHERE user_id = $1",
       [userId]
     );
 
@@ -833,7 +525,7 @@ app.get("/profile/:userId", async (req, res) => {
   }
 });
 
-// Update user profile
+// Оновлення профілю користувача
 app.put("/profile/:userId", async (req, res) => {
   const userId = req.params.userId;
   const {
@@ -855,7 +547,7 @@ app.put("/profile/:userId", async (req, res) => {
       return res.status(404).json({ message: "Користувача не знайдено" });
     }
 
-    // Get current user profile for verification
+    // Отримуємо поточний профіль користувача для перевірки
     const currentProfileResult = await executeQuery(
       "SELECT * FROM user_profile WHERE user_id = $1",
       [userId]
@@ -864,10 +556,10 @@ app.put("/profile/:userId", async (req, res) => {
     const currentProfile = currentProfileResult.rows[0];
     const wasMaster = currentProfile.role_master;
 
-    // If user became a master or changed data as a master
+    // Перевіряємо, чи користувач став майстром або змінив дані як майстер
     if (role_master && (!wasMaster || role_master !== wasMaster)) {
-      // If user became a master or changed data as a master,
-      // set status to "pending" for admin approval
+      // Якщо користувач став майстром або змінив дані як майстер,
+      // встановлюємо статус "pending" для затвердження адміністратором
       await executeQuery(
         `UPDATE user_profile 
          SET first_name = $1, last_name = $2, email = $3, phone = $4, 
@@ -885,28 +577,20 @@ app.put("/profile/:userId", async (req, res) => {
         ]
       );
 
-      // Update email in users table as well
-      if (email) {
-        await executeQuery("UPDATE users SET email = $1 WHERE id = $2", [
-          email,
-          userId,
-        ]);
-      }
-
-      // Check if master request exists
+      // Перевіряємо, чи існує запит на роль майстра
       const existingRequest = await executeQuery(
         "SELECT * FROM master_requests WHERE user_id = $1",
         [userId]
       );
 
-      // If request doesn't exist, create a new one
+      // Якщо запит не існує, створюємо новий
       if (existingRequest.rows.length === 0) {
         await executeQuery(
           "INSERT INTO master_requests (user_id, status) VALUES ($1, 'pending')",
           [userId]
         );
       } else {
-        // If request exists, update its status
+        // Якщо запит існує, оновлюємо його статус
         await executeQuery(
           "UPDATE master_requests SET status = 'pending', updated_at = CURRENT_TIMESTAMP WHERE user_id = $1",
           [userId]
@@ -922,7 +606,7 @@ app.put("/profile/:userId", async (req, res) => {
         requiresApproval: true,
       });
     } else {
-      // If it's a regular user, simply update the profile
+      // Якщо це звичайний користувач, просто оновлюємо профіль
       await executeQuery(
         `UPDATE user_profile 
          SET first_name = $1, last_name = $2, email = $3, phone = $4, 
@@ -941,14 +625,6 @@ app.put("/profile/:userId", async (req, res) => {
         ]
       );
 
-      // Update email in users table as well
-      if (email) {
-        await executeQuery("UPDATE users SET email = $1 WHERE id = $2", [
-          email,
-          userId,
-        ]);
-      }
-
       console.log(`✅ Профіль користувача з ID ${userId} успішно оновлено.`);
       res.status(200).json({
         success: true,
@@ -962,7 +638,7 @@ app.put("/profile/:userId", async (req, res) => {
   }
 });
 
-// Add service for user
+// Додавання послуги для користувача
 app.post("/services/:userId", async (req, res) => {
   const userId = req.params.userId;
   const { service_name, service_type = "service" } = req.body;
@@ -994,7 +670,7 @@ app.post("/services/:userId", async (req, res) => {
   }
 });
 
-// Get user services
+// Отримання послуг користувача
 app.get("/services/:userId", async (req, res) => {
   const userId = req.params.userId;
 
@@ -1011,7 +687,7 @@ app.get("/services/:userId", async (req, res) => {
   }
 });
 
-// Delete service
+// Видалення послуги
 app.delete("/services/:serviceId", async (req, res) => {
   const serviceId = req.params.serviceId;
 
@@ -1025,7 +701,7 @@ app.delete("/services/:serviceId", async (req, res) => {
       return res.status(404).json({ message: "Послугу не знайдено" });
     }
 
-    console.log(`✅ Послугу з ID ${serviceId} успішно видалено.`);
+    console.log(`✅ Послугу з ID ${serviceId} усп��шно видалено.`);
     res
       .status(200)
       .json({ success: true, message: "Послугу успішно видалено" });
@@ -1035,7 +711,7 @@ app.delete("/services/:serviceId", async (req, res) => {
   }
 });
 
-// Create master request
+// Створення запиту на роль майстра
 app.post("/master-requests", async (req, res) => {
   const { user_id, status = "pending" } = req.body;
 
@@ -1044,7 +720,7 @@ app.post("/master-requests", async (req, res) => {
   }
 
   try {
-    // Check if user exists
+    // Перевірка чи існує користувач
     const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
       user_id,
     ]);
@@ -1052,7 +728,7 @@ app.post("/master-requests", async (req, res) => {
       return res.status(404).json({ message: "Користувача не знайдено" });
     }
 
-    // Check if request already exists
+    // Перевірка чи вже існує запит
     const existingRequest = await executeQuery(
       "SELECT * FROM master_requests WHERE user_id = $1 AND status = 'pending'",
       [user_id]
@@ -1063,7 +739,7 @@ app.post("/master-requests", async (req, res) => {
         .json({ message: "Запит на роль майстра вже існує" });
     }
 
-    // Create new request
+    // Створення нового запиту
     await executeQuery(
       "INSERT INTO master_requests (user_id, status) VALUES ($1, $2)",
       [user_id, status]
@@ -1085,7 +761,7 @@ app.post("/master-requests", async (req, res) => {
   }
 });
 
-// Get all master requests
+// Отримання всіх запитів на роль майстра
 app.get("/master-requests", async (req, res) => {
   try {
     const result = await executeQuery(`
@@ -1108,7 +784,7 @@ app.get("/master-requests", async (req, res) => {
   }
 });
 
-// Update master request status
+// Оновлення статусу запиту на роль майстра
 app.put("/master-requests/:requestId", async (req, res) => {
   const requestId = req.params.requestId;
   const { status } = req.body;
@@ -1213,14 +889,12 @@ app.put("/master-requests/:requestId", async (req, res) => {
   }
 });
 
-// Get all users and masters
+// Отримання списку всіх користувачів та майстрів
 app.get("/admin/users", async (req, res) => {
   try {
     const result = await executeQuery(`
-      SELECT u.id, u.username, u.email, u.google_id IS NOT NULL as is_google_user, 
-             up.role_master, up.first_name, up.last_name, 
-             up.email as profile_email, up.approval_status, up.phone, 
-             up.address, up.date_of_birth, up.auth_type, up.profile_picture
+      SELECT u.id, u.username, up.role_master, up.first_name, up.last_name, 
+             up.email, up.approval_status, up.phone, up.address, up.date_of_birth
       FROM users u
       LEFT JOIN user_profile up ON u.id = up.user_id
       ORDER BY up.role_master DESC, u.id ASC
@@ -1232,15 +906,13 @@ app.get("/admin/users", async (req, res) => {
   }
 });
 
-// Get all masters with their industries and services
+// Add a new endpoint to get all masters with their industries and services
 app.get("/admin/masters", async (req, res) => {
   try {
     // Get all users with role_master = true
     const mastersResult = await executeQuery(`
-      SELECT u.id, u.username, u.email, u.google_id IS NOT NULL as is_google_user,
-             up.first_name, up.last_name, up.email as profile_email, 
-             up.phone, up.address, up.approval_status, up.date_of_birth,
-             up.auth_type, up.profile_picture
+      SELECT u.id, u.username, up.first_name, up.last_name, up.email, 
+             up.phone, up.address, up.approval_status, up.date_of_birth
       FROM users u
       JOIN user_profile up ON u.id = up.user_id
       WHERE up.role_master = true
@@ -1283,7 +955,7 @@ app.get("/admin/masters", async (req, res) => {
   }
 });
 
-// Delete user
+// Видалення користувача
 app.delete("/admin/users/:userId", async (req, res) => {
   const userId = req.params.userId;
   try {
@@ -1295,26 +967,24 @@ app.delete("/admin/users/:userId", async (req, res) => {
   }
 });
 
-// Get all users with their services
+// Отримання списку всіх користувачів з їхніми послугами
 app.get("/admin/users-with-services", async (req, res) => {
   try {
     const usersResult = await executeQuery(`
-      SELECT u.id, u.username, u.email, u.google_id IS NOT NULL as is_google_user,
-             up.role_master, up.first_name, up.last_name, up.email as profile_email, 
-             up.approval_status, up.auth_type
+      SELECT u.id, u.username, up.role_master, up.first_name, up.last_name, up.email, up.approval_status
       FROM users u
       LEFT JOIN user_profile up ON u.id = up.user_id
     `);
 
     const users = usersResult.rows;
 
-    // Get all services for all users
+    // Отримуємо всі послуги для всіх користувачів
     const servicesResult = await executeQuery(`
       SELECT user_id, service_name, service_type, id
       FROM user_services
     `);
 
-    // Group services by user_id
+    // Групуємо послуги за user_id
     const servicesMap = {};
     servicesResult.rows.forEach((service) => {
       if (!servicesMap[service.user_id]) {
@@ -1323,7 +993,7 @@ app.get("/admin/users-with-services", async (req, res) => {
       servicesMap[service.user_id].push(service);
     });
 
-    // Add services to users
+    // Додаємо послуги до користувачів
     const usersWithServices = users.map((user) => ({
       ...user,
       services: servicesMap[user.id] || [],
@@ -1339,7 +1009,7 @@ app.get("/admin/users-with-services", async (req, res) => {
   }
 });
 
-// Get age demographics
+// Новий ендпоінт для отримання вікової статистики
 app.get("/api/age-demographics", async (req, res) => {
   try {
     console.log("Отримано запит на /api/age-demographics");
@@ -1407,7 +1077,7 @@ app.get("/api/age-demographics", async (req, res) => {
   }
 });
 
-// Get user and master counts
+// Новий ендпоінт для отримання кількості користувачів та майстрів
 app.get("/api/user-master-count", async (req, res) => {
   try {
     console.log("Отримано запит на /api/user-master-count");
@@ -1462,7 +1132,7 @@ app.get("/api/user-master-count", async (req, res) => {
   }
 });
 
-// Get user-master timeline
+// Improve the user-master-timeline endpoint to use real data
 app.get("/api/user-master-timeline", async (req, res) => {
   try {
     console.log("Отримано запит на /api/user-master-timeline");
@@ -1543,7 +1213,7 @@ app.get("/api/user-master-timeline", async (req, res) => {
   }
 });
 
-// Get orders count
+// Add this new endpoint to get the count of orders/projects
 app.get("/api/orders-count", async (req, res) => {
   try {
     console.log("Отримано запит на /api/orders-count");
@@ -1595,7 +1265,7 @@ app.get("/api/orders-count", async (req, res) => {
   }
 });
 
-// Get average user age
+// Ендпоінт для отримання середнього віку користувачів
 app.get("/api/average-age", async (req, res) => {
   try {
     console.log("Отримано запит на /api/average-age");
@@ -1618,7 +1288,7 @@ app.get("/api/average-age", async (req, res) => {
   }
 });
 
-// Get industries list
+// Ендпоінт для отримання списку галузей
 app.get("/api/industries", async (req, res) => {
   try {
     console.log("Отримано запит на /api/industries");
@@ -1688,14 +1358,14 @@ app.get("/api/industries", async (req, res) => {
   }
 });
 
-// Get services by industry
+// Ендпоінт для отримання послуг за галуззю
 app.get("/api/services-by-industry/:industry", async (req, res) => {
   const industry = req.params.industry;
 
   try {
     console.log(`Отримано запит на /api/services-by-industry/${industry}`);
 
-    // Get all masters with specified industry
+    // Отримуємо всіх майстрів з вказаною галуззю
     const mastersResult = await executeQuery(
       `
       SELECT u.id
@@ -1716,7 +1386,7 @@ app.get("/api/services-by-industry/:industry", async (req, res) => {
       return res.json([]);
     }
 
-    // Get all services of these masters
+    // Отримуємо всі послуги цих майстрів
     const servicesResult = await executeQuery(
       `
       SELECT service_name, COUNT(*) as count
@@ -1736,9 +1406,9 @@ app.get("/api/services-by-industry/:industry", async (req, res) => {
   }
 });
 
-// ORDERS ENDPOINTS
+// ЕНДПОІНТИ ДЛЯ ЗАМОВЛЕНЬ
 
-// Create new order
+// Створення нового замовлення
 app.post("/orders", async (req, res) => {
   const { user_id, title, description, phone, industry } = req.body;
 
@@ -1749,7 +1419,7 @@ app.post("/orders", async (req, res) => {
   }
 
   try {
-    // Check if user exists
+    // Перевірка чи існує користувач
     const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
       user_id,
     ]);
@@ -1757,7 +1427,7 @@ app.post("/orders", async (req, res) => {
       return res.status(404).json({ message: "Користувача не знайдено" });
     }
 
-    // Create new order
+    // Створення нового замовлення
     const newOrder = await executeQuery(
       "INSERT INTO orders (user_id, title, description, phone, industry, status) VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id",
       [user_id, title, description, phone, industry]
@@ -1777,12 +1447,11 @@ app.post("/orders", async (req, res) => {
   }
 });
 
-// Get all orders
+// Отримання всіх замовлень
 app.get("/orders", async (req, res) => {
   try {
     const result = await executeQuery(`
       SELECT o.id, o.user_id, o.title, o.description, o.phone, o.status, 
-             o.industry, o.master_id, o.created_at, o.  o.title, o.description, o.phone, o.status, 
              o.industry, o.master_id, o.created_at, o.updated_at,
              u.username as user_username, 
              up.first_name as user_first_name, 
@@ -1806,7 +1475,7 @@ app.get("/orders", async (req, res) => {
   }
 });
 
-// Get user orders
+// Отримання замовлень користувача
 app.get("/orders/user/:userId", async (req, res) => {
   const userId = req.params.userId;
 
@@ -1837,7 +1506,7 @@ app.get("/orders/user/:userId", async (req, res) => {
   }
 });
 
-// Get master orders
+// Отримання замовлень, оброблених майстром
 app.get("/orders/master/:masterId", async (req, res) => {
   const masterId = req.params.masterId;
 
@@ -1866,7 +1535,7 @@ app.get("/orders/master/:masterId", async (req, res) => {
   }
 });
 
-// Update order status
+// Оновлення статусу замовлення
 app.put("/orders/:orderId", async (req, res) => {
   const orderId = req.params.orderId;
   const { status, master_id } = req.body;
@@ -1885,7 +1554,7 @@ app.put("/orders/:orderId", async (req, res) => {
   }
 
   try {
-    // Check if order exists
+    // Перевірка чи існує замовлення
     const orderResult = await executeQuery(
       "SELECT * FROM orders WHERE id = $1",
       [orderId]
@@ -1898,7 +1567,7 @@ app.put("/orders/:orderId", async (req, res) => {
       });
     }
 
-    // Check if user is a master, if master_id is provided
+    // Перевірка чи користувач є майстром, якщо вказано master_id
     if (master_id) {
       const masterResult = await executeQuery(
         `
@@ -1915,7 +1584,7 @@ app.put("/orders/:orderId", async (req, res) => {
         });
       }
 
-      // Check master approval status only if master is found
+      // Перевіряємо статус затвердження майстра тільки якщо він знайдений
       if (masterResult.rows[0].approval_status !== "approved") {
         return res.status(403).json({
           success: false,
@@ -1924,7 +1593,7 @@ app.put("/orders/:orderId", async (req, res) => {
       }
     }
 
-    // Update order status
+    // Оновлення статусу замовлення
     const updateResult = await executeQuery(
       `
       UPDATE orders 
@@ -1958,7 +1627,7 @@ app.put("/orders/:orderId", async (req, res) => {
   }
 });
 
-// Get orders by industry
+// Отримання замовлень за галуззю
 app.get("/orders/industry/:industry", async (req, res) => {
   const industry = req.params.industry;
 
@@ -1984,7 +1653,7 @@ app.get("/orders/industry/:industry", async (req, res) => {
   }
 });
 
-// Get order statistics
+// Отримання статистики замовлень
 app.get("/orders/stats", async (req, res) => {
   try {
     const result = await executeQuery(`
@@ -2006,7 +1675,7 @@ app.get("/orders/stats", async (req, res) => {
   }
 });
 
-// Get orders by status
+// Отримання замовлень за статусом
 app.get("/orders/status/:status", async (req, res) => {
   const status = req.params.status;
 
@@ -2053,7 +1722,7 @@ app.get("/orders/status/:status", async (req, res) => {
   }
 });
 
-// Get order details by ID
+// Отримання деталей замовлення за ID
 app.get("/orders/:orderId", async (req, res) => {
   const orderId = req.params.orderId;
 
@@ -2090,7 +1759,7 @@ app.get("/orders/:orderId", async (req, res) => {
   }
 });
 
-// Search orders
+// Пошук замовлень
 app.get("/orders/search/:query", async (req, res) => {
   const query = req.params.query;
 
@@ -2124,7 +1793,7 @@ app.get("/orders/search/:query", async (req, res) => {
   }
 });
 
-// Get order statistics by industry
+// Отримання кількості замовлень за галузями
 app.get("/orders/stats/by-industry", async (req, res) => {
   try {
     const result = await executeQuery(`
@@ -2149,9 +1818,9 @@ app.get("/orders/stats/by-industry", async (req, res) => {
   }
 });
 
-// Get latest orders (for dashboard)
+// Отримання останніх замовлень (для дашборду)
 app.get("/orders/latest/:limit", async (req, res) => {
-  const limit = Number.parseInt(req.params.limit) || 5;
+  const limit = parseInt(req.params.limit) || 5;
 
   try {
     const result = await executeQuery(
@@ -2176,7 +1845,7 @@ app.get("/orders/latest/:limit", async (req, res) => {
   }
 });
 
-// Get order count by status
+// Отримання кількості замовлень за статусами
 app.get("/orders/count/by-status", async (req, res) => {
   try {
     const result = await executeQuery(`
@@ -2187,7 +1856,7 @@ app.get("/orders/count/by-status", async (req, res) => {
       GROUP BY status
     `);
 
-    // Convert result to convenient format
+    // Перетворюємо результат у зручний формат
     const counts = {
       pending: 0,
       completed: 0,
@@ -2196,8 +1865,8 @@ app.get("/orders/count/by-status", async (req, res) => {
     };
 
     result.rows.forEach((row) => {
-      counts[row.status] = Number.parseInt(row.count);
-      counts.total += Number.parseInt(row.count);
+      counts[row.status] = parseInt(row.count);
+      counts.total += parseInt(row.count);
     });
 
     res.status(200).json(counts);
@@ -2207,9 +1876,9 @@ app.get("/orders/count/by-status", async (req, res) => {
   }
 });
 
-// REVIEWS ENDPOINTS
+// ЕНДПОІНТИ ДЛЯ ВІДГУКІВ
 
-// Create new review
+// Створення нового відгуку
 app.post("/reviews", async (req, res) => {
   const { user_id, name, industry, rating, text, master_name, city } = req.body;
 
@@ -2224,7 +1893,7 @@ app.post("/reviews", async (req, res) => {
   }
 
   try {
-    // Check if user exists, if user_id is provided
+    // Перевірка чи існує користувач, якщо вказано user_id
     if (user_id) {
       const userResult = await executeQuery(
         "SELECT * FROM users WHERE id = $1",
@@ -2235,7 +1904,7 @@ app.post("/reviews", async (req, res) => {
       }
     }
 
-    // Create new review
+    // Створення нового відгуку
     const newReview = await executeQuery(
       "INSERT INTO reviews (user_id, name, industry, rating, text, master_name, city, status) VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved') RETURNING id",
       [
@@ -2263,7 +1932,7 @@ app.post("/reviews", async (req, res) => {
   }
 });
 
-// Get all reviews
+// Отримання всіх відгуків
 app.get("/reviews", async (req, res) => {
   try {
     const result = await executeQuery(`
@@ -2280,7 +1949,7 @@ app.get("/reviews", async (req, res) => {
   }
 });
 
-// Get review by ID
+// Отримання відгуку за ID
 app.get("/reviews/:reviewId", async (req, res) => {
   const reviewId = req.params.reviewId;
 
@@ -2305,7 +1974,7 @@ app.get("/reviews/:reviewId", async (req, res) => {
   }
 });
 
-// Delete review
+// Видалення відгуку
 app.delete("/reviews/:reviewId", async (req, res) => {
   const reviewId = req.params.reviewId;
 
@@ -2327,7 +1996,7 @@ app.delete("/reviews/:reviewId", async (req, res) => {
   }
 });
 
-// Update review status (for moderation)
+// Оновлення статусу відгуку (для модерації)
 app.put("/reviews/:reviewId/status", async (req, res) => {
   const reviewId = req.params.reviewId;
   const { status } = req.body;
@@ -2354,7 +2023,7 @@ app.put("/reviews/:reviewId/status", async (req, res) => {
   }
 });
 
-// Get reviews by industry
+// Отримання відгуків за галуззю
 app.get("/reviews/industry/:industry", async (req, res) => {
   const industry = req.params.industry;
 
@@ -2376,9 +2045,9 @@ app.get("/reviews/industry/:industry", async (req, res) => {
   }
 });
 
-// Get reviews by rating
+// Отримання відгуків за оцінкою
 app.get("/reviews/rating/:rating", async (req, res) => {
-  const rating = Number.parseInt(req.params.rating);
+  const rating = parseInt(req.params.rating);
 
   if (isNaN(rating) || rating < 1 || rating > 5) {
     return res.status(400).json({ message: "Невірна оцінка" });
@@ -2402,7 +2071,7 @@ app.get("/reviews/rating/:rating", async (req, res) => {
   }
 });
 
-// Get review statistics by ratings
+// Отримання статистики відгуків за оцінками
 app.get("/api/review-ratings", async (req, res) => {
   try {
     const result = await executeQuery(`
@@ -2413,13 +2082,13 @@ app.get("/api/review-ratings", async (req, res) => {
       ORDER BY rating
     `);
 
-    // Convert result to convenient format
+    // Перетворюємо результат у зручний формат
     const ratings = {};
     let totalCount = 0;
 
     result.rows.forEach((row) => {
-      ratings[row.rating] = Number.parseInt(row.count);
-      totalCount += Number.parseInt(row.count);
+      ratings[row.rating] = parseInt(row.count);
+      totalCount += parseInt(row.count);
     });
 
     res.status(200).json({
@@ -2429,7 +2098,7 @@ app.get("/api/review-ratings", async (req, res) => {
         totalCount > 0
           ? (
               Object.entries(ratings).reduce(
-                (sum, [rating, count]) => sum + Number.parseInt(rating) * count,
+                (sum, [rating, count]) => sum + parseInt(rating) * count,
                 0
               ) / totalCount
             ).toFixed(1)
@@ -2441,7 +2110,7 @@ app.get("/api/review-ratings", async (req, res) => {
   }
 });
 
-// Get review statistics by industries
+// Отримання статистики відгуків за галузями
 app.get("/api/review-industries", async (req, res) => {
   try {
     const result = await executeQuery(`
@@ -2452,11 +2121,11 @@ app.get("/api/review-industries", async (req, res) => {
       ORDER BY count DESC
     `);
 
-    // Convert result to convenient format
+    // Перетворюємо результат у зручний формат
     const industries = {};
 
     result.rows.forEach((row) => {
-      industries[row.industry] = Number.parseInt(row.count);
+      industries[row.industry] = parseInt(row.count);
     });
 
     res.status(200).json({ industries });
@@ -2468,7 +2137,7 @@ app.get("/api/review-industries", async (req, res) => {
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, "uploads");
 
     // Create uploads directory if it doesn't exist
@@ -2478,7 +2147,7 @@ const storage = multer.diskStorage({
 
     cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
     cb(null, file.fieldname + "-" + uniqueSuffix + ext);
@@ -2561,12 +2230,7 @@ app.post(
   }
 );
 
-// Start server
+// Запуск сервера
 app.listen(port, () => {
   console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);
-  console.log(
-    `   Google OAuth налаштовано та інтегровано з основною аутентифікацією`
-  );
-  console.log(`   Google Client ID: ${process.env.GOOGLE_CLIENT_ID}`);
-  console.log(`   Session Secret: ${process.env.SESSION_SECRET}`);
 });

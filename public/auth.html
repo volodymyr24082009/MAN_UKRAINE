@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Реєстрація та Логін - ProFix Network Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="./css/auth.css">
+
+  <!-- Add additional meta tags for better mobile experience -->
+  <meta name="theme-color" content="#1a2238" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+</head>
+<body>
+  <div class="container">
+      <header class="header">
+          <div class="header-container">
+              <a href="index.html" class="logo">
+                  <i class="fas fa-tools"></i>
+                  ProFix Network Hub
+              </a>
+              <div class="theme-switch-container">
+                  <label class="theme-switch">
+                      <input type="checkbox" id="themeToggle">
+                      <span class="slider">
+                          <span class="moon"><i class="fas fa-moon"></i></span>
+                          <span class="sun"><i class="fas fa-sun"></i></span>
+                      </span>
+                  </label>
+              </div>
+          </div>
+      </header>
+
+      <main>
+          <div class="auth-container">
+              <h1 class="auth-title">Реєстрація та Логін</h1>
+              
+              <form id="registerForm">
+                  <h2><i class="fas fa-user-plus"></i> Реєстрація</h2>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-user"></i>
+                      <input type="text" id="regUsername" required placeholder="Ім'я користувача або email" />
+                  </div>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-lock"></i>
+                      <input type="password" id="regPassword" required placeholder="Пароль" />
+                      <i class="fas fa-eye password-toggle" id="regPasswordToggle"></i>
+                  </div>
+                  
+                  <div class="password-strength">
+                      <div class="password-strength-meter" id="passwordStrengthMeter"></div>
+                  </div>
+                  <div class="password-strength-text" id="passwordStrengthText"></div>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-lock"></i>
+                      <input type="password" id="regPasswordConfirm" required placeholder="Підтвердіть пароль" />
+                      <i class="fas fa-eye password-toggle" id="regPasswordConfirmToggle"></i>
+                  </div>
+                  
+                  <button type="submit">
+                      <i class="fas fa-user-plus"></i> ЗАРЕЄСТРУВАТИСЯ
+                  </button>
+                  
+                  <div class="form-footer">
+                      Вже маєте акаунт? <a href="#" id="showLoginForm">Увійти</a>
+                  </div>
+              </form>
+
+              <form id="loginForm">
+                  <h2><i class="fas fa-sign-in-alt"></i> Логін</h2>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-user"></i>
+                      <input type="text" id="loginUsername" required placeholder="Ім'я користувача або email" />
+                  </div>
+                  
+                  <div class="input-group">
+                      <i class="fas fa-lock"></i>
+                      <input type="password" id="loginPassword" required placeholder="Пароль" />
+                      <i class="fas fa-eye password-toggle" id="loginPasswordToggle"></i>
+                  </div>
+                  
+                  <div class="remember-me">
+                      <input type="checkbox" id="rememberMe">
+                      <label for="rememberMe">Запам'ятати мене</label>
+                  </div>
+                  
+                  <button type="submit">
+                      <i class="fas fa-sign-in-alt"></i> УВІЙТИ
+                  </button>
+                  
+                  <div class="form-footer">
+                      Немає акаунту? <a href="#" id="showRegisterForm">Зареєструватися</a>
+                  </div>
+              </form>
+          </div>
+      </main>
+
+      <div class="back-to-top" id="backToTop">
+          <i class="fas fa-arrow-up"></i>
+      </div>
+  </div>
+
+  <div id="modalOverlay" class="modal-overlay">
+    <div id="modalContent" class="modal-content">
+        <div class="modal-header">
+            <span id="modalTitle">Повідомлення</span>
+            <span class="modal-close">&times;</span>
+        </div>
+        <div id="modalBody" class="modal-body">
+            <p id="modalMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button id="modalOkButton" class="modal-button">OK</button>
+        </div>
+    </div>
+  </div>
+
+  <script src="./js/auth.js"></script>
+</body>
+</html>
+
