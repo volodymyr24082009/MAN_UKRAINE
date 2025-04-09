@@ -11,11 +11,15 @@ const { sendMessage } = require("./bot");
 const fs = require("fs");
 const punycode = require("punycode/");
 
+// Додайте ці імпорти на початку вашого server.js файлу
+const http = require("http");
+const socketIo = require("socket.io");
+
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 34549;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -701,7 +705,7 @@ app.delete("/services/:serviceId", async (req, res) => {
       return res.status(404).json({ message: "Послугу не знайдено" });
     }
 
-    console.log(`✅ Послугу з ID ${serviceId} усп��шно видалено.`);
+    console.log(`✅ Послугу з ID ${serviceId} успішно видалено.`);
     res
       .status(200)
       .json({ success: true, message: "Послугу успішно видалено" });
@@ -1062,7 +1066,7 @@ app.get("/api/age-demographics", async (req, res) => {
 
     const totalUsers = ages.length;
     const agePercentages = categoryCounts.map((category) => ({
-      category: category.category,
+      category: category.name,
       percentage: totalUsers > 0 ? (category.count / totalUsers) * 100 : 0,
     }));
 
@@ -1820,7 +1824,7 @@ app.get("/orders/stats/by-industry", async (req, res) => {
 
 // Отримання останніх замовлень (для дашборду)
 app.get("/orders/latest/:limit", async (req, res) => {
-  const limit = parseInt(req.params.limit) || 5;
+  const limit = Number.parseInt(req.params.limit) || 5;
 
   try {
     const result = await executeQuery(
@@ -1865,8 +1869,8 @@ app.get("/orders/count/by-status", async (req, res) => {
     };
 
     result.rows.forEach((row) => {
-      counts[row.status] = parseInt(row.count);
-      counts.total += parseInt(row.count);
+      counts[row.status] = Number.parseInt(row.count);
+      counts.total += Number.parseInt(row.count);
     });
 
     res.status(200).json(counts);
@@ -2047,7 +2051,7 @@ app.get("/reviews/industry/:industry", async (req, res) => {
 
 // Отримання відгуків за оцінкою
 app.get("/reviews/rating/:rating", async (req, res) => {
-  const rating = parseInt(req.params.rating);
+  const rating = Number.parseInt(req.params.rating);
 
   if (isNaN(rating) || rating < 1 || rating > 5) {
     return res.status(400).json({ message: "Невірна оцінка" });
@@ -2087,8 +2091,8 @@ app.get("/api/review-ratings", async (req, res) => {
     let totalCount = 0;
 
     result.rows.forEach((row) => {
-      ratings[row.rating] = parseInt(row.count);
-      totalCount += parseInt(row.count);
+      ratings[row.rating] = Number.parseInt(row.count);
+      totalCount += Number.parseInt(row.count);
     });
 
     res.status(200).json({
@@ -2098,7 +2102,7 @@ app.get("/api/review-ratings", async (req, res) => {
         totalCount > 0
           ? (
               Object.entries(ratings).reduce(
-                (sum, [rating, count]) => sum + parseInt(rating) * count,
+                (sum, [rating, count]) => sum + Number.parseInt(rating) * count,
                 0
               ) / totalCount
             ).toFixed(1)
@@ -2125,7 +2129,7 @@ app.get("/api/review-industries", async (req, res) => {
     const industries = {};
 
     result.rows.forEach((row) => {
-      industries[row.industry] = parseInt(row.count);
+      industries[row.industry] = Number.parseInt(row.count);
     });
 
     res.status(200).json({ industries });
@@ -2137,7 +2141,7 @@ app.get("/api/review-industries", async (req, res) => {
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, "uploads");
 
     // Create uploads directory if it doesn't exist
@@ -2147,7 +2151,7 @@ const storage = multer.diskStorage({
 
     cb(null, uploadDir);
   },
-  filename: function (req, file, cb) {
+  filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
     cb(null, file.fieldname + "-" + uniqueSuffix + ext);
@@ -2230,7 +2234,69 @@ app.post(
   }
 );
 
-// Запуск сервера
-app.listen(port, () => {
+// Створіть HTTP сервер з вашого Express додатку
+const server = http.createServer(app);
+const io = socketIo(server);
+
+// Зберігання активних користувачів
+const activeUsers = new Map();
+
+// Socket.io обробка подій
+io.on("connection", (socket) => {
+  console.log("Новий користувач підключився:", socket.id);
+
+  // Обробка приєднання до чату
+  socket.on("join", (user) => {
+    console.log(`Користувач ${user.username} приєднався до чату`);
+
+    // Зберігаємо інформацію про користувача
+    activeUsers.set(socket.id, user);
+
+    // Повідомляємо всіх про нового користувача
+    io.emit("user-joined", user);
+  });
+
+  // Обробка повідомлень
+  socket.on("message", (message) => {
+    console.log(`Нове повідомлення від ${message.username}: ${message.text}`);
+
+    // Відправляємо повідомлення всім користувачам
+    io.emit("message", message);
+  });
+
+  // Обробка виходу з чату
+  socket.on("leave", (user) => {
+    console.log(`Користувач ${user.username} покинув чат`);
+
+    // Видаляємо користувача зі списку активних
+    activeUsers.delete(socket.id);
+
+    // Повідомляємо всіх про вихід користувача
+    io.emit("user-left", user);
+  });
+
+  // Обробка відключення
+  socket.on("disconnect", () => {
+    console.log("Користувач відключився:", socket.id);
+
+    // Перевіряємо, чи був користувач у чаті
+    const user = activeUsers.get(socket.id);
+    if (user) {
+      // Видаляємо користувача зі списку активних
+      activeUsers.delete(socket.id);
+
+      // Повідомляємо всіх про вихід користувача
+      io.emit("user-left", user);
+    }
+  });
+});
+
+// Змініть цей рядок у вашому коді
+// app.listen(port, () => {
+//   console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);
+// });
+
+// На цей код:
+server.listen(port, () => {
   console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);
 });
