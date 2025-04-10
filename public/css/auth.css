@@ -1,5 +1,5 @@
 :root {
-  /* New eye-friendly color palette */
+  /* Enhanced color palette */
   --background-dark: #1a2238;
   --background-light: #f8f9fa;
   --text-dark: #e9e9ea;
@@ -311,7 +311,8 @@ form h2 {
   margin-bottom: 25px;
 }
 
-.input-group i {
+.input-group i.fa-lock,
+.input-group i.fa-user {
   position: absolute;
   left: 15px;
   top: 50%;
@@ -361,6 +362,20 @@ html.light .password-toggle {
 
 .password-toggle:hover {
   color: var(--primary-color);
+}
+
+.password-requirements {
+  font-size: 0.8rem;
+  color: var(--text-dark);
+  opacity: 0.8;
+  margin-top: -15px;
+  margin-bottom: 20px;
+  line-height: 1.4;
+  padding-left: 5px;
+}
+
+html.light .password-requirements {
+  color: var(--text-light);
 }
 
 .password-strength {
@@ -990,171 +1005,5 @@ html.light .modal-footer {
   .form-footer {
     margin-top: 15px;
     font-size: 0.85rem;
-  }
-
-  .modal-content {
-    border-radius: var(--border-radius-md);
-  }
-
-  .modal-header {
-    padding: 12px 15px;
-  }
-
-  #modalTitle {
-    font-size: 1.1rem;
-  }
-
-  .modal-close {
-    font-size: 1.3rem;
-  }
-
-  .modal-body {
-    padding: 15px;
-  }
-
-  #modalMessage {
-    font-size: 0.9rem;
-  }
-
-  .modal-footer {
-    padding: 10px 15px;
-  }
-
-  .modal-button {
-    padding: 8px 15px;
-    font-size: 0.85rem;
-  }
-
-  .back-to-top {
-    right: 15px;
-    bottom: 15px;
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 375px) {
-  .logo {
-    font-size: 1.1rem;
-  }
-
-  .logo i {
-    font-size: 1.3rem;
-  }
-
-  .auth-title {
-    font-size: 1.4rem;
-  }
-
-  form {
-    padding: 15px 12px;
-  }
-
-  form h2 {
-    font-size: 1.2rem;
-    margin-bottom: 12px;
-  }
-
-  .input-group {
-    margin-bottom: 12px;
-  }
-
-  .input-group input {
-    padding: 9px 9px 9px 32px;
-    font-size: 0.85rem;
-  }
-
-  .input-group i {
-    left: 10px;
-    font-size: 0.85rem;
-  }
-
-  .password-toggle {
-    right: 10px;
-  }
-
-  form button {
-    padding: 9px;
-    font-size: 0.85rem;
-  }
-
-  .form-footer {
-    font-size: 0.8rem;
-  }
-}
-
-/* Add portrait and landscape orientations for better mobile experience */
-@media (max-height: 600px) and (orientation: landscape) {
-  .auth-container {
-    padding-top: 10px;
-    padding-bottom: 10px;
-    margin: 15px auto;
-  }
-
-  .auth-title {
-    font-size: 1.5rem;
-    margin-bottom: 15px;
-  }
-
-  form {
-    padding: 15px;
-  }
-
-  .input-group {
-    margin-bottom: 12px;
-  }
-
-  form h2 {
-    margin-bottom: 15px;
-  }
-
-  .form-footer {
-    margin-top: 15px;
-  }
-}
-
-/* Add high-resolution display support */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  body {
-    background-size: 25px 25px;
-    background-position: 0 0, 12.5px 12.5px;
-  }
-}
-
-/* Add support for dark mode preference */
-@media (prefers-color-scheme: dark) {
-  html:not(.light) {
-    color-scheme: dark;
-  }
-}
-
-/* Add support for reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  .logo i {
-    animation: none !important;
-  }
-
-  form:hover {
-    transform: none !important;
-  }
-
-  .input-group input:focus {
-    transform: none !important;
-  }
-
-  form button:hover {
-    transform: none !important;
-  }
-
-  .back-to-top:hover {
-    transform: none !important;
   }
 }

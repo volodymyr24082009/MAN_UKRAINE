@@ -1886,3 +1886,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+document.addEventListener("DOMContentLoaded", function () {
+  const isAdmin = sessionStorage.getItem("isAdmin");
+  if (isAdmin !== "true") {
+    window.location.href = "../admin-login.html"; // або index.html, якщо треба
+  }
+});
