@@ -1,4 +1,3 @@
-// Original code from the first file
 // Check if user is logged in
 function checkUserLoggedIn() {
   const userId = localStorage.getItem("userId");
@@ -147,7 +146,7 @@ async function fetchStatistics() {
   }
 }
 
-// Create charts with real data
+// Create charts with real data - FIXED to handle invalid dates
 function createCharts(timelineData) {
   if (!timelineData || timelineData.length === 0) {
     createFallbackCharts();
@@ -155,8 +154,23 @@ function createCharts(timelineData) {
   }
 
   const labels = timelineData.map((item) => {
-    const date = new Date(item.timestamp);
-    return date.toLocaleDateString("uk-UA", { month: "short" });
+    // Fix: Properly handle date parsing and formatting
+    try {
+      // Check if timestamp is a number (milliseconds) or a string date
+      const date = typeof item.timestamp === 'number' 
+        ? new Date(item.timestamp) 
+        : new Date(item.timestamp);
+      
+      // Verify if date is valid before formatting
+      if (isNaN(date.getTime())) {
+        return item.month || "Невідомо"; // Use month property if available or fallback
+      }
+      
+      return date.toLocaleDateString("uk-UA", { month: "short" });
+    } catch (e) {
+      console.error("Error parsing date:", e);
+      return item.month || "Невідомо"; // Fallback to month property or default text
+    }
   });
 
   const usersData = timelineData.map((item) => item.users);
