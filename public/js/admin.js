@@ -117,22 +117,122 @@ function showNotification(message, type = "success") {
     notification.classList.remove("show");
   }, 3000);
 }
+// Load Age Demographics Chart with real data from database
+function loadAgeChart() {
+  fetch("/api/age-demographics")
+    .then((response) => response.json())
+    .then((data) => {
+      const ctx = document.getElementById("ageChart").getContext("2d")
+
+      // Format data from real database values
+      const labels = data.map((item) => item.category)
+      const percentages = data.map((item) => item.percentage)
+
+      // Create chart with real data
+      const ageChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Відсоток користувачів",
+              data: percentages,
+              backgroundColor: [
+                "rgba(255, 99, 132, 0.7)",
+                "rgba(54, 162, 235, 0.7)",
+                "rgba(255, 206, 86, 0.7)",
+                "rgba(75, 192, 192, 0.7)",
+                "rgba(153, 102, 255, 0.7)",
+                "rgba(255, 159, 64, 0.7)",
+                "rgba(255, 99, 132, 0.7)",
+              ],
+              borderColor: [
+                "rgba(255, 99, 132, 1)",
+                "rgba(54, 162, 235, 1)",
+                "rgba(255, 206, 86, 1)",
+                "rgba(75, 192, 192, 1)",
+                "rgba(153, 102, 255, 1)",
+                "rgba(255, 159, 64, 1)",
+                "rgba(255, 99, 132, 1)",
+              ],
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+              labels: {
+                color: htmlElement.classList.contains("light") ? "#333" : "#fff",
+              },
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => `${context.raw.toFixed(1)}%`,
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: {
+                color: htmlElement.classList.contains("light") ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)",
+              },
+              ticks: {
+                color: htmlElement.classList.contains("light") ? "#333" : "#fff",
+              },
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: htmlElement.classList.contains("light") ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)",
+              },
+              ticks: {
+                color: htmlElement.classList.contains("light") ? "#333" : "#fff",
+                callback: (value) => value + "%",
+              },
+            },
+          },
+        },
+      })
+
+      // Store chart reference for theme updates
+      window.ageChart = ageChart
+    })
+    .catch((error) => {
+      console.error("Error loading age demographics:", error)
+      showNotification("Помилка при завантаженні вікової демографії", "error")
+    })
+}
 
 // Load Dashboard Data
 function loadDashboardData() {
-  // Load user and master counts
+  // Load user and master counts with real data
   fetch("/api/user-master-count")
     .then((response) => response.json())
     .then((data) => {
       document.getElementById("totalUsers").textContent = data.users;
       document.getElementById("totalMasters").textContent = data.masters;
 
-      // Calculate percentage change (placeholder)
-      document.getElementById("usersChange").textContent = "12%";
-      document.getElementById("mastersChange").textContent = "8%";
+      // Calculate percentage change based on real growth data
+      const usersGrowthPercent = data.users > 0 
+        ? Math.round((data.usersGrowth / data.users) * 100) 
+        : 0;
+      const mastersGrowthPercent = data.masters > 0 
+        ? Math.round((data.mastersGrowth / data.masters) * 100) 
+        : 0;
+      
+      document.getElementById("usersChange").textContent = `${usersGrowthPercent}%`;
+      document.getElementById("mastersChange").textContent = `${mastersGrowthPercent}%`;
     })
-    .catch((error) => console.error("Error loading user-master count:", error));
+    .catch((error) => {
+      console.error("Error loading user-master count:", error);
+      showNotification("Помилка при завантаженні даних користувачів", "error");
+    });
 
+  // Rest of the loadDashboardData function remains unchanged
   // Load orders count
   fetch("/orders")
     .then((response) => response.json())
@@ -177,11 +277,10 @@ function loadDashboardData() {
     })
     .catch((error) => console.error("Error loading master requests:", error));
 
-  // Load charts
+  // Load charts with real data
   loadUserMasterChart();
   loadAgeChart();
 }
-
 // Load User-Master Timeline Chart
 function loadUserMasterChart() {
   fetch("/api/user-master-timeline")
@@ -1859,3 +1958,789 @@ cardIconStyle.textContent = `
 document.head.appendChild(cardIconStyle);
 
 console.log("✅ Admin panel review functionality has been added successfully!");
+
+// News Management Functions
+
+// Load News
+function loadNews() {
+  fetch("/api/news")
+    .then((response) => response.json())
+    .then((data) => {
+      const tableBody = document.querySelector("#newsTable tbody");
+      tableBody.innerHTML = "";
+
+      if (!data.news || data.news.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <i class="fas fa-newspaper"></i>
+                <div class="empty-state-text">Немає новин для відображення</div>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      data.news.forEach((news) => {
+        const createdDate = new Date(news.created_at).toLocaleString("uk-UA");
+
+        const row = `
+          <tr>
+            <td>${news.id}</td>
+            <td>${news.title}</td>
+            <td>${
+              news.short_description.length > 50
+                ? news.short_description.substring(0, 50) + "..."
+                : news.short_description
+            }</td>
+            <td>${getCategoryText(news.category)}</td>
+            <td><span class="status-badge status-${
+              news.status === "published" ? "approved" : "pending"
+            }">${
+          news.status === "published" ? "Опубліковано" : "Чернетка"
+        }</span></td>
+            <td>${news.views || 0}</td>
+            <td>${createdDate}</td>
+            <td class="action-buttons">
+              <button class="btn btn-info" onclick="showNewsDetails(${
+                news.id
+              })">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-primary" onclick="editNews(${news.id})">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-danger" onclick="deleteNews(${news.id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+
+      // Create pagination
+      createPagination(data.news.length, 10, "newsPagination");
+
+      // Load news charts
+      loadNewsViewsChart(data.news);
+      loadNewsCategoriesChart(data.news);
+    })
+    .catch((error) => {
+      console.error("Помилка при завантаженні новин:", error);
+      showNotification("Помилка при завантаженні новин", "error");
+    });
+}
+
+// Load News Views Chart
+function loadNewsViewsChart(newsData) {
+  // Sort news by views (descending) and take top 5
+  const topNews = [...newsData]
+    .sort((a, b) => (b.views || 0) - (a.views || 0))
+    .slice(0, 5);
+
+  const ctx = document.getElementById("newsViewsChart").getContext("2d");
+
+  // Format data
+  const labels = topNews.map((news) =>
+    news.title.length > 20 ? news.title.substring(0, 20) + "..." : news.title
+  );
+  const views = topNews.map((news) => news.views || 0);
+  const likes = topNews.map((news) => news.likes || 0);
+
+  // Create chart
+  const newsViewsChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Перегляди",
+          data: views,
+          backgroundColor: "rgba(52, 152, 219, 0.7)",
+          borderColor: "rgba(52, 152, 219, 1)",
+          borderWidth: 1,
+        },
+        {
+          label: "Вподобання",
+          data: likes,
+          backgroundColor: "rgba(231, 76, 60, 0.7)",
+          borderColor: "rgba(231, 76, 60, 1)",
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "top",
+          labels: {
+            color: htmlElement.classList.contains("light") ? "#333" : "#fff",
+          },
+        },
+        tooltip: {
+          mode: "index",
+          intersect: false,
+        },
+      },
+      scales: {
+        x: {
+          grid: {
+            color: htmlElement.classList.contains("light")
+              ? "rgba(0,0,0,0.1)"
+              : "rgba(255,255,255,0.1)",
+          },
+          ticks: {
+            color: htmlElement.classList.contains("light") ? "#333" : "#fff",
+          },
+        },
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: htmlElement.classList.contains("light")
+              ? "rgba(0,0,0,0.1)"
+              : "rgba(255,255,255,0.1)",
+          },
+          ticks: {
+            color: htmlElement.classList.contains("light") ? "#333" : "#fff",
+          },
+        },
+      },
+    },
+  });
+
+  // Store chart reference for theme updates
+  window.newsViewsChart = newsViewsChart;
+}
+
+// Load News Categories Chart
+function loadNewsCategoriesChart(newsData) {
+  // Count news by category
+  const categoryCounts = {};
+
+  newsData.forEach((news) => {
+    const category = news.category || "uncategorized";
+    categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+  });
+
+  const ctx = document.getElementById("newsCategoriesChart").getContext("2d");
+
+  // Format data
+  const categories = Object.keys(categoryCounts);
+  const counts = Object.values(categoryCounts);
+  const categoryLabels = categories.map((category) =>
+    getCategoryText(category)
+  );
+
+  // Create chart
+  const newsCategoriesChart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: categoryLabels,
+      datasets: [
+        {
+          data: counts,
+          backgroundColor: [
+            "rgba(52, 152, 219, 0.7)",
+            "rgba(155, 89, 182, 0.7)",
+            "rgba(46, 204, 113, 0.7)",
+            "rgba(241, 196, 15, 0.7)",
+            "rgba(231, 76, 60, 0.7)",
+          ],
+          borderColor: [
+            "rgba(52, 152, 219, 1)",
+            "rgba(155, 89, 182, 1)",
+            "rgba(46, 204, 113, 1)",
+            "rgba(241, 196, 15, 1)",
+            "rgba(231, 76, 60, 1)",
+          ],
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: {
+            color: htmlElement.classList.contains("light") ? "#333" : "#fff",
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const value = context.raw;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+              return `${value} новин (${percentage}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Store chart reference for theme updates
+  window.newsCategoriesChart = newsCategoriesChart;
+}
+
+// Show News Details
+function showNewsDetails(newsId) {
+  fetch(`/api/news/${newsId}`)
+    .then((response) => response.json())
+    .then((data) => {
+      const news = data.news;
+      if (!news) {
+        showNotification("Новину не знайдено", "error");
+        return;
+      }
+
+      const createdDate = new Date(news.created_at).toLocaleString("uk-UA");
+      const updatedDate = new Date(news.updated_at).toLocaleString("uk-UA");
+
+      // Prepare images HTML
+      let mainImageHtml = "";
+      if (news.main_image) {
+        mainImageHtml = `
+          <div class="news-main-image">
+            <img src="${news.main_image}" alt="${news.title}">
+          </div>
+        `;
+      }
+
+      let additionalImagesHtml = "";
+      if (news.additional_images && news.additional_images.length > 0) {
+        additionalImagesHtml = `
+          <div class="news-additional-images">
+            <h4>Додаткові зображення:</h4>
+            <div class="news-image-gallery">
+              ${news.additional_images
+                .map(
+                  (img) => `
+                <div class="news-image-item">
+                  <img src="${img}" alt="Додаткове зображення">
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      let externalLinksHtml = "";
+      if (news.external_links && news.external_links.length > 0) {
+        externalLinksHtml = `
+          <div class="news-external-links">
+            <h4>Зовнішні посилання:</h4>
+            <ul>
+              ${news.external_links
+                .map(
+                  (link) => `
+                <li><a href="${link}" target="_blank">${link}</a></li>
+              `
+                )
+                .join("")}
+            </ul>
+          </div>
+        `;
+      }
+
+      const newsDetailsBody = document.getElementById("newsDetailsBody");
+      newsDetailsBody.innerHTML = `
+        <div class="user-profile-details">
+          <div class="detail-item">
+            <div class="detail-label">ID</div>
+            <div class="detail-value">${news.id}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Заголовок</div>
+            <div class="detail-value">${news.title}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Категорія</div>
+            <div class="detail-value">${getCategoryText(news.category)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Статус</div>
+            <div class="detail-value"><span class="status-badge status-${
+              news.status === "published" ? "approved" : "pending"
+            }">${
+        news.status === "published" ? "Опубліковано" : "Чернетка"
+      }</span></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Перегляди</div>
+            <div class="detail-value">${news.views || 0}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Вподобання</div>
+            <div class="detail-value">${news.likes || 0}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Дата створення</div>
+            <div class="detail-value">${createdDate}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Дата оновлення</div>
+            <div class="detail-value">${updatedDate}</div>
+          </div>
+        </div>
+        
+        ${mainImageHtml}
+        
+        <div class="form-group">
+          <label class="form-label">Короткий опис</label>
+          <div class="detail-value">${news.short_description}</div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Повний текст</label>
+          <div class="detail-value news-content">${news.content}</div>
+        </div>
+        
+        ${additionalImagesHtml}
+        ${externalLinksHtml}
+      `;
+
+      const newsDetailsFooter = document.getElementById("newsDetailsFooter");
+      newsDetailsFooter.innerHTML = `
+        <button class="btn btn-primary" onclick="editNews(${news.id}); closeNewsDetailsModal();">
+          <i class="fas fa-edit"></i> Редагувати
+        </button>
+        <button class="btn btn-danger" onclick="deleteNews(${news.id}); closeNewsDetailsModal();">
+          <i class="fas fa-trash"></i> Видалити
+        </button>
+        <button class="btn btn-secondary" id="closeNewsModalBtn">Закрити</button>
+      `;
+
+      // Set up close button
+      document.getElementById("closeNewsModalBtn").onclick =
+        closeNewsDetailsModal;
+
+      // Show modal
+      document.getElementById("newsDetailsModal").classList.add("show");
+    })
+    .catch((error) => {
+      console.error("Помилка при завантаженні деталей новини:", error);
+      showNotification("Помилка при завантаженні деталей новини", "error");
+    });
+}
+
+// Close News Details Modal
+function closeNewsDetailsModal() {
+  document.getElementById("newsDetailsModal").classList.remove("show");
+}
+
+// Add/Edit News
+function editNews(newsId = null) {
+  const isEdit = newsId !== null;
+  const newsEditorTitle = document.getElementById("newsEditorTitle");
+  const newsForm = document.getElementById("newsForm");
+
+  // Reset form
+  newsForm.reset();
+  document.getElementById("newsId").value = "";
+  document.getElementById("mainImagePreview").innerHTML = "";
+  document.getElementById("additionalImagesPreview").innerHTML = "";
+
+  // Set title based on mode
+  newsEditorTitle.textContent = isEdit ? "Редагувати новину" : "Додати новину";
+
+  if (isEdit) {
+    // Fetch news data
+    fetch(`/api/news/${newsId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        const news = data.news;
+        if (!news) {
+          showNotification("Новину не знайдено", "error");
+          return;
+        }
+
+        // Fill form with news data
+        document.getElementById("newsId").value = news.id;
+        document.getElementById("newsTitle").value = news.title;
+        document.getElementById("newsShortDescription").value =
+          news.short_description;
+        document.getElementById("newsContent").value = news.content;
+        document.getElementById("newsCategory").value =
+          news.category || "updates";
+        document.getElementById("newsStatus").value =
+          news.status || "published";
+
+        // Show main image preview if exists
+        if (news.main_image) {
+          const mainImagePreview = document.getElementById("mainImagePreview");
+          mainImagePreview.innerHTML = `<img src="${news.main_image}" alt="Головне зображення">`;
+        }
+
+        // Show additional images preview if exists
+        if (news.additional_images && news.additional_images.length > 0) {
+          const additionalImagesPreview = document.getElementById(
+            "additionalImagesPreview"
+          );
+          additionalImagesPreview.innerHTML = news.additional_images
+            .map(
+              (img, index) => `
+            <div class="image-preview-item" data-path="${img}">
+              <img src="${img}" alt="Додаткове зображення ${index + 1}">
+              <div class="image-preview-remove" onclick="removeAdditionalImage(this)">
+                <i class="fas fa-times"></i>
+              </div>
+            </div>
+          `
+            )
+            .join("");
+        }
+
+        // Fill external links
+        if (news.external_links && news.external_links.length > 0) {
+          document.getElementById("newsExternalLinks").value =
+            news.external_links.join("\n");
+        }
+
+        // Show modal
+        document.getElementById("newsEditorModal").classList.add("show");
+      })
+      .catch((error) => {
+        console.error("Помилка при завантаженні даних новини:", error);
+        showNotification("Помилка при завантаженні даних новини", "error");
+      });
+  } else {
+    // Show empty form for new news
+    document.getElementById("newsEditorModal").classList.add("show");
+  }
+}
+
+// Remove Additional Image
+function removeAdditionalImage(element) {
+  const imageItem = element.parentElement;
+  imageItem.remove();
+}
+
+// Close News Editor Modal
+function closeNewsEditorModal() {
+  document.getElementById("newsEditorModal").classList.remove("show");
+}
+
+// Save News
+function saveNews() {
+  const newsId = document.getElementById("newsId").value;
+  const isEdit = newsId !== "";
+
+  // Get form data
+  const title = document.getElementById("newsTitle").value;
+  const shortDescription = document.getElementById(
+    "newsShortDescription"
+  ).value;
+  const content = document.getElementById("newsContent").value;
+  const category = document.getElementById("newsCategory").value;
+  const status = document.getElementById("newsStatus").value;
+
+  // Validate required fields
+  if (!title || !shortDescription || !content) {
+    showNotification("Заповніть всі обов'язкові поля", "error");
+    return;
+  }
+
+  // Create FormData object
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("short_description", shortDescription);
+  formData.append("content", content);
+  formData.append("category", category);
+  formData.append("status", status);
+
+  // Add main image if selected
+  const mainImageInput = document.getElementById("newsMainImage");
+  if (mainImageInput.files.length > 0) {
+    formData.append("main_image", mainImageInput.files[0]);
+  }
+
+  // Add additional images if selected
+  const additionalImagesInput = document.getElementById("newsAdditionalImages");
+  if (additionalImagesInput.files.length > 0) {
+    for (let i = 0; i < additionalImagesInput.files.length; i++) {
+      formData.append("additional_images", additionalImagesInput.files[i]);
+    }
+  }
+
+  // Add existing additional images paths
+  const existingImages = document.querySelectorAll(
+    "#additionalImagesPreview .image-preview-item"
+  );
+  existingImages.forEach((item) => {
+    const imagePath = item.getAttribute("data-path");
+    if (imagePath) {
+      formData.append("existing_additional_images", imagePath);
+    }
+  });
+
+  // Add external links
+  const externalLinksText = document.getElementById("newsExternalLinks").value;
+  if (externalLinksText.trim()) {
+    const links = externalLinksText
+      .split("\n")
+      .filter((link) => link.trim() !== "");
+    links.forEach((link) => {
+      formData.append("external_links", link.trim());
+    });
+  }
+
+  // Send request
+  const url = isEdit ? `/api/news/${newsId}` : "/api/news";
+  const method = isEdit ? "PUT" : "POST";
+
+  fetch(url, {
+    method: method,
+    body: formData,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        showNotification(
+          isEdit ? "Новину успішно оновлено" : "Новину успішно створено",
+          "success"
+        );
+        closeNewsEditorModal();
+        loadNews();
+      } else {
+        showNotification(
+          data.message || "Помилка при збереженні новини",
+          "error"
+        );
+      }
+    })
+    .catch((error) => {
+      console.error("Помилка при збереженні новини:", error);
+      showNotification("Помилка при збереженні новини", "error");
+    });
+}
+
+// Delete News
+function deleteNews(newsId) {
+  if (confirm(`Ви впевнені, що хочете видалити новину з ID ${newsId}?`)) {
+    fetch(`/api/news/${newsId}`, { method: "DELETE" })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("Новину успішно видалено", "success");
+          loadNews();
+        } else {
+          showNotification(
+            data.message || "Помилка при видаленні новини",
+            "error"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Помилка при видаленні новини:", error);
+        showNotification("Помилка при видаленні новини", "error");
+      });
+  }
+}
+
+// Get Category Text
+function getCategoryText(category) {
+  switch (category) {
+    case "updates":
+      return "Оновлення";
+    case "events":
+      return "Події";
+    case "tips":
+      return "Поради";
+    case "announcements":
+      return "Оголошення";
+    default:
+      return category || "Загальне";
+  }
+}
+
+// Export News to CSV
+function exportNewsToCSV() {
+  fetch("/api/news")
+    .then((response) => response.json())
+    .then((data) => {
+      // Prepare CSV content
+      let csvContent = "data:text/csv;charset=utf-8,";
+
+      // Add headers
+      csvContent +=
+        "ID,Заголовок,Короткий опис,Категорія,Статус,Перегляди,Вподобання,Дата створення\n";
+
+      // Add rows
+      data.news.forEach((news) => {
+        const createdDate = new Date(news.created_at).toLocaleString("uk-UA");
+        const status =
+          news.status === "published" ? "Опубліковано" : "Чернетка";
+
+        // Create CSV row
+        const row = [
+          news.id,
+          `"${news.title.replace(/"/g, '""')}"`,
+          `"${news.short_description.replace(/"/g, '""')}"`,
+          `"${getCategoryText(news.category)}"`,
+          status,
+          news.views || 0,
+          news.likes || 0,
+          createdDate,
+        ].join(",");
+
+        csvContent += row + "\n";
+      });
+
+      // Create download link
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute(
+        "download",
+        `news_${new Date().toISOString().slice(0, 10)}.csv`
+      );
+      document.body.appendChild(link);
+
+      // Trigger download
+      link.click();
+      document.body.removeChild(link);
+    })
+    .catch((error) => {
+      console.error("Помилка при експорті новин:", error);
+      showNotification("Помилка при експорті новин", "error");
+    });
+}
+
+// Update charts theme for news charts
+function updateNewsChartsTheme() {
+  const textColor = htmlElement.classList.contains("light") ? "#333" : "#fff";
+  const gridColor = htmlElement.classList.contains("light")
+    ? "rgba(0,0,0,0.1)"
+    : "rgba(255,255,255,0.1)";
+
+  // Update news views chart
+  if (window.newsViewsChart) {
+    window.newsViewsChart.options.plugins.legend.labels.color = textColor;
+    window.newsViewsChart.options.scales.x.grid.color = gridColor;
+    window.newsViewsChart.options.scales.y.grid.color = gridColor;
+    window.newsViewsChart.options.scales.x.ticks.color = textColor;
+    window.newsViewsChart.options.scales.y.ticks.color = textColor;
+    window.newsViewsChart.update();
+  }
+
+  // Update news categories chart
+  if (window.newsCategoriesChart) {
+    window.newsCategoriesChart.options.plugins.legend.labels.color = textColor;
+    window.newsCategoriesChart.update();
+  }
+}
+
+// Add news tab event listener
+document
+  .querySelector('[data-tab="news"]')
+  .addEventListener("click", function (e) {
+    if (this.getAttribute("href").startsWith("#")) {
+      e.preventDefault();
+      const tabId = this.getAttribute("data-tab");
+
+      // Remove active class from all links and contents
+      tabLinks.forEach((link) => link.classList.remove("active"));
+      tabContents.forEach((content) => content.classList.remove("active"));
+
+      // Add active class to current link and content
+      this.classList.add("active");
+      document.getElementById(`${tabId}-tab`).classList.add("active");
+
+      // Load news data
+      loadNews();
+    }
+  });
+
+// Add news search functionality
+document
+  .getElementById("newsSearchInput")
+  .addEventListener("input", function () {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll("#newsTable tbody tr");
+
+    rows.forEach((row) => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(searchTerm) ? "" : "none";
+    });
+  });
+
+// Add event listeners for news modals
+document
+  .getElementById("closeNewsDetailsModal")
+  .addEventListener("click", closeNewsDetailsModal);
+document
+  .getElementById("closeNewsEditorModal")
+  .addEventListener("click", closeNewsEditorModal);
+document
+  .getElementById("addNewsBtn")
+  .addEventListener("click", () => editNews());
+document.getElementById("saveNewsBtn").addEventListener("click", saveNews);
+document
+  .getElementById("cancelNewsBtn")
+  .addEventListener("click", closeNewsEditorModal);
+document
+  .getElementById("exportNewsBtn")
+  .addEventListener("click", exportNewsToCSV);
+
+// Add event listener for main image preview
+document
+  .getElementById("newsMainImage")
+  .addEventListener("change", function () {
+    const preview = document.getElementById("mainImagePreview");
+    preview.innerHTML = "";
+
+    if (this.files && this.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        preview.innerHTML = `<img src="${e.target.result}" alt="Головне зображення">`;
+      };
+      reader.readAsDataURL(this.files[0]);
+    }
+  });
+
+// Add event listener for additional images preview
+document
+  .getElementById("newsAdditionalImages")
+  .addEventListener("change", function () {
+    const preview = document.getElementById("additionalImagesPreview");
+
+    if (this.files && this.files.length > 0) {
+      for (let i = 0; i < this.files.length; i++) {
+        const reader = new FileReader();
+        const file = this.files[i];
+
+        reader.onload = function (e) {
+          const imageItem = document.createElement("div");
+          imageItem.className = "image-preview-item";
+          imageItem.innerHTML = `
+          <img src="${e.target.result}" alt="Додаткове зображення">
+          <div class="image-preview-remove" onclick="removeAdditionalImage(this)">
+            <i class="fas fa-times"></i>
+          </div>
+        `;
+          preview.appendChild(imageItem);
+        };
+
+        reader.readAsDataURL(file);
+      }
+    }
+  });
+
+// Update the updateChartsTheme function to include news charts
+const originalUpdateChartsTheme = updateChartsTheme;
+updateChartsTheme = function () {
+  originalUpdateChartsTheme();
+  updateNewsChartsTheme();
+};
+
+console.log("✅ News management functionality has been added successfully!");

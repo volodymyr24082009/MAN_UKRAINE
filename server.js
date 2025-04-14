@@ -470,6 +470,670 @@ createMessagesTable().catch((err) => {
   console.error("Failed to initialize messages table:", err.message);
 });
 
+// Add this code to your server.js file
+
+// Create news table if it doesn't exist
+const createNewsTable = async () => {
+  try {
+    // Check if the news table exists
+    const tableExists = await executeQuery(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'news'
+      );
+    `);
+
+    if (tableExists.rows[0].exists) {
+      console.log("News table exists, checking for required columns...");
+
+      // Get all columns in the news table
+      const columnsResult = await executeQuery(`
+        SELECT column_name, is_nullable, data_type
+        FROM information_schema.columns
+        WHERE table_name = 'news';
+      `);
+
+      const columns = columnsResult.rows.map((row) => row.column_name);
+      console.log("Existing columns:", columns);
+
+      // Add missing columns if needed
+      const requiredColumns = [
+        { name: "title", type: "VARCHAR(255)", default: "''" },
+        { name: "short_description", type: "TEXT", default: "''" },
+        { name: "content", type: "TEXT", default: "''" },
+        { name: "main_image", type: "VARCHAR(255)", default: "NULL" },
+        { name: "additional_images", type: "TEXT[]", default: "NULL" },
+        { name: "external_links", type: "TEXT[]", default: "NULL" },
+        { name: "category", type: "VARCHAR(50)", default: "'updates'" },
+        { name: "status", type: "VARCHAR(20)", default: "'published'" },
+        { name: "views", type: "INTEGER", default: "0" },
+        { name: "likes", type: "INTEGER", default: "0" },
+        { name: "created_at", type: "TIMESTAMP", default: "CURRENT_TIMESTAMP" },
+        { name: "updated_at", type: "TIMESTAMP", default: "CURRENT_TIMESTAMP" },
+      ];
+
+      for (const column of requiredColumns) {
+        if (!columns.includes(column.name)) {
+          console.log(
+            `Adding missing '${column.name}' column to news table...`
+          );
+          await executeQuery(`
+            ALTER TABLE news ADD COLUMN ${column.name} ${column.type} DEFAULT ${column.default}
+          `);
+          console.log(`✅ Added missing '${column.name}' column to news table`);
+        }
+      }
+    } else {
+      console.log("News table doesn't exist, creating it...");
+
+      // Create the news table with all required columns
+      await executeQuery(`
+        CREATE TABLE news (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          short_description TEXT NOT NULL,
+          content TEXT NOT NULL,
+          main_image VARCHAR(255),
+          additional_images TEXT[],
+          external_links TEXT[],
+          category VARCHAR(50) DEFAULT 'updates',
+          status VARCHAR(20) NOT NULL DEFAULT 'published',
+          views INTEGER DEFAULT 0,
+          likes INTEGER DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      console.log("✅ Created news table with all required columns");
+
+      // Add some sample news
+      await addSampleNews();
+    }
+  } catch (err) {
+    console.error("❌ Error fixing news table:", err.message);
+    throw err;
+  }
+};
+
+// Add sample news for testing
+const addSampleNews = async () => {
+  try {
+    const sampleNews = [
+      {
+        title: "Запуск нової платформи ProFix Network",
+        short_description:
+          "Ми раді повідомити про запуск нашої нової платформи для пошуку та замовлення послуг ремонту та обслуговування.",
+        content:
+          "Сьогодні ми з гордістю оголошуємо про запуск нової платформи ProFix Network, яка з'єднує клієнтів з кваліфікованими майстрами у різних галузях. Наша мета - зробити процес пошуку та замовлення послуг максимально простим та зручним для всіх користувачів. Платформа пропонує широкий вибір послуг від ремонту побутової техніки до IT-консультацій.",
+        category: "updates",
+        status: "published",
+      },
+      {
+        title: "Нові можливості для майстрів",
+        short_description:
+          "Розширюємо функціонал для майстрів з новими інструментами для керування замовленнями.",
+        content:
+          "Ми додали нові інструменти для майстрів, які дозволяють ефективніше керувати замовленнями та спілкуватися з клієнтами. Тепер майстри можуть встановлювати свій графік роботи, отримувати сповіщення про нові замовлення та залишати відгуки про клієнтів. Також додано можливість завантажувати фотографії виконаних робіт для портфоліо.",
+        category: "updates",
+        status: "published",
+      },
+      {
+        title: "Майстер-клас з ремонту смартфонів",
+        short_description:
+          "Запрошуємо на безкоштовний майстер-клас з базового ремонту смартфонів.",
+        content:
+          "Наша команда організовує безкоштовний майстер-клас з базового ремонту смартфонів. На заході ви дізнаєтесь як замінити екран, батарею та інші компоненти вашого пристрою. Майстер-клас відбудеться 15 червня о 15:00 в нашому офісі. Кількість місць обмежена, тому реєструйтесь заздалегідь.",
+        category: "events",
+        status: "published",
+      },
+      {
+        title: "5 порад для економії електроенергії",
+        short_description:
+          "Корисні поради, які допоможуть зменшити споживання електроенергії та заощадити кошти.",
+        content:
+          "У цій статті ми зібрали 5 найефективніших порад для економії електроенергії:\n\n1. Замініть звичайні лампи на LED-освітлення\n2. Вимикайте прилади з режиму очікування\n3. Використовуйте енергоефективну побутову техніку\n4. Правильно налаштуйте холодильник та кондиціонер\n5. Встановіть розумні лічильники та розетки\n\nДотримуючись цих простих порад, ви можете зменшити споживання електроенергії на 20-30%.",
+        category: "tips",
+        status: "published",
+      },
+      {
+        title: "Як вибрати надійного майстра",
+        short_description:
+          "Поради щодо вибору кваліфікованого майстра для ремонту та обслуговування.",
+        content:
+          "Вибір надійного майстра - важливий крок для успішного ремонту. Ось кілька порад, які допоможуть вам зробити правильний вибір:\n\n1. Перевіряйте відгуки та рейтинг майстра\n2. Звертайте увагу на досвід роботи та спеціалізацію\n3. Запитуйте про гарантію на виконані роботи\n4. Уточнюйте вартість послуг заздалегідь\n5. Перегляньте портфоліо з прикладами робіт\n\nНа платформі ProFix Network ви можете легко знайти перевірених майстрів з високим рейтингом та позитивними відгуками.",
+        category: "tips",
+        status: "published",
+      },
+    ];
+
+    for (const news of sampleNews) {
+      await executeQuery(
+        `
+        INSERT INTO news (title, short_description, content, category, status)
+        VALUES ($1, $2, $3, $4, $5)
+      `,
+        [
+          news.title,
+          news.short_description,
+          news.content,
+          news.category,
+          news.status,
+        ]
+      );
+    }
+
+    console.log("✅ Added sample news");
+  } catch (err) {
+    console.error("❌ Error adding sample news:", err.message);
+  }
+};
+
+// Call this function during server initialization
+createNewsTable().catch((err) => {
+  console.error("Failed to initialize news table:", err.message);
+});
+
+// Configure multer storage for news images
+const newsStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, "public/uploads/news");
+
+    // Create uploads directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, "news-" + uniqueSuffix + ext);
+  },
+});
+
+const newsUpload = multer({
+  storage: newsStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max file size
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only images
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Тільки зображення можуть бути завантажені!"), false);
+    }
+  },
+});
+
+// Get all news
+app.get("/api/news", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT id, title, short_description, content, main_image, 
+             additional_images, external_links, category, status, 
+             views, likes, created_at, updated_at
+      FROM news
+      ORDER BY created_at DESC
+    `);
+
+    res.status(200).json({ news: result.rows });
+  } catch (err) {
+    console.error("❌ Error getting news:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Get news by ID
+app.get("/api/news/:id", async (req, res) => {
+  const newsId = req.params.id;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, title, short_description, content, main_image, 
+             additional_images, external_links, category, status, 
+             views, likes, created_at, updated_at
+      FROM news
+      WHERE id = $1
+    `,
+      [newsId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    res.status(200).json({ news: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Error getting news by ID:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Create news
+app.post(
+  "/api/news",
+  newsUpload.fields([
+    { name: "main_image", maxCount: 1 },
+    { name: "additional_images", maxCount: 10 },
+  ]),
+  async (req, res) => {
+    try {
+      const {
+        title,
+        short_description,
+        content,
+        category = "updates",
+        status = "published",
+        external_links,
+      } = req.body;
+
+      if (!title || !short_description || !content) {
+        return res.status(400).json({
+          message: "Title, short description and content are required",
+        });
+      }
+
+      // Process main image
+      let mainImagePath = null;
+      if (
+        req.files &&
+        req.files.main_image &&
+        req.files.main_image.length > 0
+      ) {
+        const mainImage = req.files.main_image[0];
+        mainImagePath = `/uploads/news/${mainImage.filename}`;
+      }
+
+      // Process additional images
+      let additionalImagePaths = [];
+      if (
+        req.files &&
+        req.files.additional_images &&
+        req.files.additional_images.length > 0
+      ) {
+        additionalImagePaths = req.files.additional_images.map(
+          (file) => `/uploads/news/${file.filename}`
+        );
+      }
+
+      // Process external links
+      let links = [];
+      if (external_links) {
+        if (Array.isArray(external_links)) {
+          links = external_links.filter((link) => link.trim() !== "");
+        } else if (
+          typeof external_links === "string" &&
+          external_links.trim() !== ""
+        ) {
+          links = [external_links];
+        }
+      }
+
+      const result = await executeQuery(
+        `
+      INSERT INTO news (
+        title, short_description, content, main_image, 
+        additional_images, external_links, category, status
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id
+    `,
+        [
+          title,
+          short_description,
+          content,
+          mainImagePath,
+          additionalImagePaths.length > 0 ? additionalImagePaths : null,
+          links.length > 0 ? links : null,
+          category,
+          status,
+        ]
+      );
+
+      console.log(`✅ Created news with ID ${result.rows[0].id}`);
+      res.status(201).json({
+        success: true,
+        message: "News created successfully",
+        newsId: result.rows[0].id,
+      });
+    } catch (err) {
+      console.error("❌ Error creating news:", err.message);
+      res.status(500).json({ message: "Server error", error: err.message });
+    }
+  }
+);
+
+// Update news
+app.put(
+  "/api/news/:id",
+  newsUpload.fields([
+    { name: "main_image", maxCount: 1 },
+    { name: "additional_images", maxCount: 10 },
+  ]),
+  async (req, res) => {
+    const newsId = req.params.id;
+
+    try {
+      // Check if news exists
+      const existingNews = await executeQuery(
+        "SELECT * FROM news WHERE id = $1",
+        [newsId]
+      );
+      if (existingNews.rows.length === 0) {
+        return res.status(404).json({ message: "News not found" });
+      }
+
+      const {
+        title,
+        short_description,
+        content,
+        category,
+        status,
+        external_links,
+      } = req.body;
+
+      if (!title || !short_description || !content) {
+        return res.status(400).json({
+          message: "Title, short description and content are required",
+        });
+      }
+
+      // Process main image
+      let mainImagePath = existingNews.rows[0].main_image;
+      if (
+        req.files &&
+        req.files.main_image &&
+        req.files.main_image.length > 0
+      ) {
+        const mainImage = req.files.main_image[0];
+        mainImagePath = `/uploads/news/${mainImage.filename}`;
+
+        // Delete old image if exists
+        if (existingNews.rows[0].main_image) {
+          const oldImagePath = path.join(
+            __dirname,
+            "public",
+            existingNews.rows[0].main_image
+          );
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        }
+      }
+
+      // Process additional images
+      let additionalImagePaths = existingNews.rows[0].additional_images || [];
+      if (
+        req.files &&
+        req.files.additional_images &&
+        req.files.additional_images.length > 0
+      ) {
+        const newImagePaths = req.files.additional_images.map(
+          (file) => `/uploads/news/${file.filename}`
+        );
+        additionalImagePaths = [...additionalImagePaths, ...newImagePaths];
+      }
+
+      // Process external links
+      let links = [];
+      if (external_links) {
+        if (Array.isArray(external_links)) {
+          links = external_links.filter((link) => link.trim() !== "");
+        } else if (
+          typeof external_links === "string" &&
+          external_links.trim() !== ""
+        ) {
+          links = [external_links];
+        }
+      }
+
+      await executeQuery(
+        `
+      UPDATE news
+      SET title = $1, 
+          short_description = $2, 
+          content = $3, 
+          main_image = $4, 
+          additional_images = $5, 
+          external_links = $6, 
+          category = $7, 
+          status = $8,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $9
+    `,
+        [
+          title,
+          short_description,
+          content,
+          mainImagePath,
+          additionalImagePaths.length > 0 ? additionalImagePaths : null,
+          links.length > 0 ? links : null,
+          category || existingNews.rows[0].category,
+          status || existingNews.rows[0].status,
+          newsId,
+        ]
+      );
+
+      console.log(`✅ Updated news with ID ${newsId}`);
+      res.status(200).json({
+        success: true,
+        message: "News updated successfully",
+      });
+    } catch (err) {
+      console.error("❌ Error updating news:", err.message);
+      res.status(500).json({ message: "Server error", error: err.message });
+    }
+  }
+);
+
+// Delete news
+app.delete("/api/news/:id", async (req, res) => {
+  const newsId = req.params.id;
+
+  try {
+    // Check if news exists and get image paths
+    const existingNews = await executeQuery(
+      "SELECT main_image, additional_images FROM news WHERE id = $1",
+      [newsId]
+    );
+    if (existingNews.rows.length === 0) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    // Delete the news
+    await executeQuery("DELETE FROM news WHERE id = $1", [newsId]);
+
+    // Delete associated images
+    const mainImage = existingNews.rows[0].main_image;
+    const additionalImages = existingNews.rows[0].additional_images || [];
+
+    if (mainImage) {
+      const mainImagePath = path.join(__dirname, "public", mainImage);
+      if (fs.existsSync(mainImagePath)) {
+        fs.unlinkSync(mainImagePath);
+      }
+    }
+
+    additionalImages.forEach((imagePath) => {
+      const fullPath = path.join(__dirname, "public", imagePath);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    });
+
+    console.log(`✅ Deleted news with ID ${newsId}`);
+    res.status(200).json({
+      success: true,
+      message: "News deleted successfully",
+    });
+  } catch (err) {
+    console.error("❌ Error deleting news:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Increment view count
+app.post("/api/news/:id/view", async (req, res) => {
+  const newsId = req.params.id;
+
+  try {
+    const result = await executeQuery(
+      `
+      UPDATE news
+      SET views = views + 1
+      WHERE id = $1
+      RETURNING views
+    `,
+      [newsId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      views: result.rows[0].views,
+    });
+  } catch (err) {
+    console.error("❌ Error incrementing view count:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Toggle like
+app.post("/api/news/:id/like", async (req, res) => {
+  const newsId = req.params.id;
+  const userId = req.body.userId; // Optional: track which users liked which news
+
+  try {
+    // For simplicity, we'll just increment the like count
+    // In a real app, you would track which users liked which news
+    const result = await executeQuery(
+      `
+      UPDATE news
+      SET likes = likes + 1
+      WHERE id = $1
+      RETURNING likes
+    `,
+      [newsId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      likes: result.rows[0].likes,
+      liked: true,
+    });
+  } catch (err) {
+    console.error("❌ Error toggling like:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Get news by category
+app.get("/api/news/category/:category", async (req, res) => {
+  const category = req.params.category;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, title, short_description, content, main_image, 
+             additional_images, external_links, category, status, 
+             views, likes, created_at, updated_at
+      FROM news
+      WHERE category = $1 AND status = 'published'
+      ORDER BY created_at DESC
+    `,
+      [category]
+    );
+
+    res.status(200).json({ news: result.rows });
+  } catch (err) {
+    console.error("❌ Error getting news by category:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Search news
+app.get("/api/news/search/:query", async (req, res) => {
+  const query = req.params.query;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, title, short_description, content, main_image, 
+             additional_images, external_links, category, status, 
+             views, likes, created_at, updated_at
+      FROM news
+      WHERE (title ILIKE $1 OR short_description ILIKE $1 OR content ILIKE $1)
+            AND status = 'published'
+      ORDER BY created_at DESC
+    `,
+      [`%${query}%`]
+    );
+
+    res.status(200).json({ news: result.rows });
+  } catch (err) {
+    console.error("❌ Error searching news:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Get popular news
+app.get("/api/news/popular", async (req, res) => {
+  try {
+    const result = await executeQuery(`
+      SELECT id, title, short_description, content, main_image, 
+             additional_images, external_links, category, status, 
+             views, likes, created_at, updated_at
+      FROM news
+      WHERE status = 'published'
+      ORDER BY views DESC, likes DESC
+      LIMIT 5
+    `);
+
+    res.status(200).json({ news: result.rows });
+  } catch (err) {
+    console.error("❌ Error getting popular news:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// Get latest news
+app.get("/api/news/latest/:limit", async (req, res) => {
+  const limit = Number.parseInt(req.params.limit) || 5;
+
+  try {
+    const result = await executeQuery(
+      `
+      SELECT id, title, short_description, content, main_image, 
+             additional_images, external_links, category, status, 
+             views, likes, created_at, updated_at
+      FROM news
+      WHERE status = 'published'
+      ORDER BY created_at DESC
+      LIMIT $1
+    `,
+      [limit]
+    );
+
+    res.status(200).json({ news: result.rows });
+  } catch (err) {
+    console.error("❌ Error getting latest news:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+console.log("✅ News API endpoints have been added successfully!");
+
 // Головна сторінка (реєстрація/авторизація)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "auth.html"));
@@ -1114,11 +1778,81 @@ app.get("/admin/users-with-services", async (req, res) => {
   }
 });
 
-// Новий ендпоінт для отримання вікової статистики
+// Improved endpoint for user-master-timeline to use real data
+app.get("/api/user-master-timeline", async (req, res) => {
+  try {
+    console.log("Отримано запит на /api/user-master-timeline");
+
+    // Get the last 6 months
+    const months = [];
+    const currentDate = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate);
+      date.setMonth(currentDate.getMonth() - i);
+
+      const monthName = date.toLocaleString("uk-UA", { month: "long" });
+      const year = date.getFullYear();
+      const monthYear = `${monthName} ${year} р.`;
+
+      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+      months.push({
+        month: monthYear,
+        startDate: startOfMonth,
+        endDate: endOfMonth,
+      });
+    }
+
+    // Get user and master counts for each month
+    const timelineData = [];
+
+    for (const monthData of months) {
+      // Query to get users and masters count up to the end of this month
+      const result = await executeQuery(
+        `
+        SELECT 
+          (SELECT COUNT(*) FROM users u 
+           JOIN user_profile up ON u.id = up.user_id 
+           WHERE u.id <= (SELECT MAX(id) FROM users WHERE created_at <= $1)
+           AND (up.role_master = false OR up.role_master IS NULL)) as users_count,
+          
+          (SELECT COUNT(*) FROM users u 
+           JOIN user_profile up ON u.id = up.user_id 
+           WHERE u.id <= (SELECT MAX(id) FROM users WHERE created_at <= $1)
+           AND up.role_master = true) as masters_count
+      `,
+        [monthData.endDate]
+      );
+
+      const usersCount = Number.parseInt(result.rows[0].users_count) || 0;
+      const mastersCount = Number.parseInt(result.rows[0].masters_count) || 0;
+
+      timelineData.push({
+        month: monthData.month,
+        users: usersCount,
+        masters: mastersCount,
+      });
+    }
+
+    console.log("Відправлення даних часової шкали:", timelineData);
+    res.json(timelineData);
+  } catch (error) {
+    console.error(
+      "❌ Помилка при отриманні даних часової шкали:",
+      error.message
+    );
+    res.status(500).json({ message: "Помилка сервера", error: error.message });
+  }
+});
+
+// Improved endpoint for age-demographics to use real data
 app.get("/api/age-demographics", async (req, res) => {
   try {
     console.log("Отримано запит на /api/age-demographics");
 
+    // Get all users with date_of_birth from user_profile table
     const result = await executeQuery(`
       SELECT date_of_birth 
       FROM user_profile 
@@ -1127,8 +1861,9 @@ app.get("/api/age-demographics", async (req, res) => {
 
     console.log(`Отримано ${result.rows.length} записів з бази даних`);
 
+    // Define age categories
     const ageCategories = [
-      { name: "13-17", min: 13, max: 17 },
+      { name: "до 18", min: 0, max: 17 },
       { name: "18-24", min: 18, max: 24 },
       { name: "25-34", min: 25, max: 34 },
       { name: "35-44", min: 35, max: 44 },
@@ -1137,16 +1872,16 @@ app.get("/api/age-demographics", async (req, res) => {
       { name: "65+", min: 65, max: 150 },
     ];
 
+    // Calculate age for each user
     const currentDate = new Date();
     const ages = result.rows.map((user) => {
       const birthDate = new Date(user.date_of_birth);
       let age = currentDate.getFullYear() - birthDate.getFullYear();
-      const currentMonth = currentDate.getMonth();
-      const birthMonth = birthDate.getMonth();
 
+      // Adjust age if birthday hasn't occurred yet this year
       if (
-        birthMonth > currentMonth ||
-        (birthMonth === currentMonth &&
+        birthDate.getMonth() > currentDate.getMonth() ||
+        (birthDate.getMonth() === currentDate.getMonth() &&
           birthDate.getDate() > currentDate.getDate())
       ) {
         age--;
@@ -1155,23 +1890,26 @@ app.get("/api/age-demographics", async (req, res) => {
       return age;
     });
 
+    // Count users in each category
     const categoryCounts = ageCategories.map((category) => {
       const count = ages.filter(
         (age) => age >= category.min && age <= category.max
       ).length;
+
       return {
         category: category.name,
         count,
       };
     });
 
+    // Calculate percentages
     const totalUsers = ages.length;
     const agePercentages = categoryCounts.map((category) => ({
       category: category.name,
       percentage: totalUsers > 0 ? (category.count / totalUsers) * 100 : 0,
     }));
 
-    console.log("Відправлення даних:", agePercentages);
+    console.log("Відправлення даних вікової демографії:", agePercentages);
     res.json(agePercentages);
   } catch (error) {
     console.error(
@@ -1182,12 +1920,12 @@ app.get("/api/age-demographics", async (req, res) => {
   }
 });
 
-// Новий ендпоінт для отримання кількості користувачів та майстрів
+// Improved endpoint for user-master-count to provide growth data
 app.get("/api/user-master-count", async (req, res) => {
   try {
     console.log("Отримано запит на /api/user-master-count");
 
-    // Get current user and master counts
+    // Get current user and master counts from user_profile table
     const countResult = await executeQuery(`
       SELECT 
         COUNT(*) FILTER (WHERE role_master = false OR role_master IS NULL) as users_count,
@@ -1202,9 +1940,7 @@ app.get("/api/user-master-count", async (req, res) => {
         COUNT(*) FILTER (WHERE up.role_master = true) as masters_growth
       FROM user_profile up
       JOIN users u ON up.user_id = u.id
-      WHERE u.id IN (
-        SELECT id FROM users WHERE id > (SELECT MAX(id) - 10 FROM users)
-      )
+      WHERE u.created_at > NOW() - INTERVAL '7 days'
     `);
 
     const usersCount = Number.parseInt(countResult.rows[0].users_count) || 0;
@@ -1218,15 +1954,15 @@ app.get("/api/user-master-count", async (req, res) => {
     console.log("Отримано дані про кількість користувачів та майстрів:", {
       users: usersCount,
       masters: mastersCount,
-      usersGrowth: usersGrowth,
-      mastersGrowth: mastersGrowth,
+      usersGrowth,
+      mastersGrowth,
     });
 
     res.json({
       users: usersCount,
       masters: mastersCount,
-      usersGrowth: usersGrowth,
-      mastersGrowth: mastersGrowth,
+      usersGrowth,
+      mastersGrowth,
     });
   } catch (error) {
     console.error(

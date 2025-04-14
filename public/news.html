@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Новини - ProFix Network Hub</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/news.css" />
+    <meta name="theme-color" content="#1a2238" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+  </head>
+  <body>
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <a href="index.html" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>ProFix Network</span>
+          </a>
+          <nav class="main-nav">
+            <ul class="nav-list">
+              <li><a href="index.html">Головна</a></li>
+              <li><a href="services.html">Послуги</a></li>
+              <li><a href="masters.html">Майстри</a></li>
+              <li><a href="news.html" class="active">Новини</a></li>
+              <li><a href="about.html">Про нас</a></li>
+              <li><a href="contact.html">Контакти</a></li>
+            </ul>
+          </nav>
+          <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle">
+              <i class="fas fa-moon"></i>
+            </button>
+            <div class="user-menu" id="userMenu">
+              <button class="user-menu-btn" id="userMenuBtn">
+                <i class="fas fa-user-circle"></i>
+                <span id="userMenuName">Увійти</span>
+              </button>
+              <div class="user-menu-dropdown" id="userMenuDropdown">
+                <!-- Dropdown content will be populated by JS -->
+              </div>
+            </div>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+              <i class="fas fa-bars"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="news-hero">
+        <div class="container">
+          <h1>Новини та події</h1>
+          <p>Останні новини та події у світі ремонту та обслуговування</p>
+        </div>
+      </section>
+
+      <section class="news-filters">
+        <div class="container">
+          <div class="filters-wrapper">
+            <div class="search-box">
+              <input type="text" id="newsSearch" placeholder="Пошук новин..." />
+              <i class="fas fa-search"></i>
+            </div>
+            <div class="filter-categories">
+              <button class="filter-btn active" data-category="all">Всі</button>
+              <button class="filter-btn" data-category="updates">
+                Оновлення
+              </button>
+              <button class="filter-btn" data-category="events">Події</button>
+              <button class="filter-btn" data-category="tips">Поради</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="news-grid">
+        <div class="container">
+          <div class="news-container" id="newsContainer">
+            <!-- News items will be dynamically populated here -->
+            <div class="news-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <p>Завантаження новин...</p>
+            </div>
+          </div>
+          <div class="pagination" id="newsPagination">
+            <!-- Pagination will be dynamically populated -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-logo">
+            <a href="index.html">
+              <i class="fas fa-tools"></i>
+              <span>ProFix Network</span>
+            </a>
+            <p>Ваш надійний партнер у світі ремонту та обслуговування</p>
+          </div>
+          <div class="footer-links">
+            <div class="footer-column">
+              <h3>Навігація</h3>
+              <ul>
+                <li><a href="index.html">Головна</a></li>
+                <li><a href="services.html">Послуги</a></li>
+                <li><a href="masters.html">Майстри</a></li>
+                <li><a href="news.html">Новини</a></li>
+                <li><a href="about.html">Про нас</a></li>
+                <li><a href="contact.html">Контакти</a></li>
+              </ul>
+            </div>
+            <div class="footer-column">
+              <h3>Контакти</h3>
+              <ul>
+                <li><i class="fas fa-map-marker-alt"></i> Київ, Україна</li>
+                <li><i class="fas fa-phone"></i> +380 (44) 123-45-67</li>
+                <li><i class="fas fa-envelope"></i> info@profixnetwork.com</li>
+              </ul>
+            </div>
+            <div class="footer-column">
+              <h3>Соціальні мережі</h3>
+              <div class="social-links">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2023 ProFix Network. Всі права захищені.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- News Modal -->
+    <div class="modal-backdrop" id="newsModal">
+      <div class="modal news-modal">
+        <div class="modal-header">
+          <h3 class="modal-title" id="newsModalTitle">Заголовок новини</h3>
+          <button class="modal-close" id="closeNewsModal">&times;</button>
+        </div>
+        <div class="modal-body" id="newsModalBody">
+          <!-- News content will be dynamically populated -->
+        </div>
+        <div class="modal-footer">
+          <div class="news-stats">
+            <div class="news-views">
+              <i class="fas fa-eye"></i>
+              <span id="newsViewCount">0</span>
+            </div>
+            <div class="news-likes">
+              <button id="newsLikeBtn" class="like-btn">
+                <i class="far fa-heart"></i>
+              </button>
+              <span id="newsLikeCount">0</span>
+            </div>
+          </div>
+          <div class="news-share">
+            <button class="share-btn" data-platform="facebook">
+              <i class="fab fa-facebook-f"></i>
+            </button>
+            <button class="share-btn" data-platform="twitter">
+              <i class="fab fa-twitter"></i>
+            </button>
+            <button class="share-btn" data-platform="telegram">
+              <i class="fab fa-telegram"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./js/news.js"></script>
+  </body>
+</html>

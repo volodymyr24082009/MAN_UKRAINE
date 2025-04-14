@@ -1,5 +1,5 @@
 // Theme toggle functionality
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   const themeToggle = document.getElementById("themeToggle");
   const htmlElement = document.documentElement;
 
@@ -1194,18 +1194,27 @@ async function saveProfile(event) {
     return;
   }
 
-  // Get form data
-  const formData = {
-    first_name: document.getElementById("first_name").value,
-    last_name: document.getElementById("last_name").value,
-    email: document.getElementById("email").value,
-    phone: document.getElementById("phone").value,
-    address: document.getElementById("address").value,
-    date_of_birth: document.getElementById("date_of_birth").value,
-    role_master: document.getElementById("role_master").checked,
-  };
+  // Show loading state
+  const submitButton = event.target.querySelector('button[type="submit"]');
+  const originalButtonText = submitButton ? submitButton.innerHTML : "Зберегти";
+  if (submitButton) {
+    submitButton.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
+    submitButton.disabled = true;
+  }
 
   try {
+    // Get form data
+    const formData = {
+      first_name: document.getElementById("first_name").value,
+      last_name: document.getElementById("last_name").value,
+      email: document.getElementById("email").value,
+      phone: document.getElementById("phone").value,
+      address: document.getElementById("address").value,
+      date_of_birth: document.getElementById("date_of_birth").value,
+      role_master: document.getElementById("role_master").checked,
+    };
+
     // Update user profile
     const profileResponse = await fetch(`/profile/${userId}`, {
       method: "PUT",
@@ -1222,12 +1231,16 @@ async function saveProfile(event) {
 
     const profileData = await profileResponse.json();
 
-    // If user is a master, save selected industries
+    // If user is a master, save selected industries and services
     if (formData.role_master) {
-      // Get all industry checkboxes
-      const industryCheckboxes = document.querySelectorAll(
-        'input[name="industry"]'
+      // Get all selected industry checkboxes
+      const selectedIndustryCheckboxes = Array.from(
+        document.querySelectorAll('input[name="industry"]:checked')
       );
+
+      if (selectedIndustryCheckboxes.length === 0) {
+        throw new Error("Будь ласка, виберіть хоча б одну галузь");
+      }
 
       // First, get existing services to identify which ones to delete
       const existingServicesResponse = await fetch(`/services/${userId}`, {
@@ -1241,13 +1254,10 @@ async function saveProfile(event) {
       }
 
       const existingServicesData = await existingServicesResponse.json();
-      const existingIndustries = existingServicesData.services.filter(
-        (service) => service.service_type === "industry"
-      );
 
-      // Delete all existing industries
-      for (const industry of existingIndustries) {
-        await fetch(`/services/${industry.id}`, {
+      // Delete all existing services (both industries and specific services)
+      for (const service of existingServicesData.services) {
+        await fetch(`/services/${service.id}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1256,8 +1266,27 @@ async function saveProfile(event) {
       }
 
       // Add only the selected industries
-      for (const checkbox of industryCheckboxes) {
-        if (checkbox.checked) {
+      for (const checkbox of selectedIndustryCheckboxes) {
+        await fetch(`/services/${userId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            service_name: checkbox.value,
+            service_type: "industry",
+          }),
+        });
+
+        // Now handle services for this industry
+        const industryName = checkbox.value;
+        const serviceCheckboxes = document.querySelectorAll(
+          `input[name="service-${checkbox.dataset.industry}"]:checked`
+        );
+
+        // Add selected services for this industry
+        for (const serviceCheckbox of serviceCheckboxes) {
           await fetch(`/services/${userId}`, {
             method: "POST",
             headers: {
@@ -1265,59 +1294,49 @@ async function saveProfile(event) {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-              service_name: checkbox.value,
-              service_type: "industry",
+              service_name: serviceCheckbox.value,
+              service_type: "service",
+            }),
+          });
+        }
+
+        // Add skills text for this industry if it exists
+        const skillsTextarea = document.getElementById(
+          `${checkbox.dataset.industry}-skills-text`
+        );
+        if (skillsTextarea && skillsTextarea.value.trim()) {
+          await fetch(`/services/${userId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              service_name: skillsTextarea.value.trim(),
+              service_type: `${checkbox.dataset.industry}-skills-text`,
             }),
           });
         }
       }
 
-      // Now handle services for each selected industry
-      for (const checkbox of industryCheckboxes) {
-        if (checkbox.checked) {
-          const industryName = checkbox.value;
-          const serviceCheckboxes = document.querySelectorAll(
-            `input[name="service-${industryName}"]`
-          );
-
-          // Delete existing services for this industry
-          const existingIndustryServices = existingServicesData.services.filter(
-            (service) =>
-              service.service_type === "service" &&
-              document.querySelector(
-                `input[name="service-${industryName}"][value="${service.service_name}"]`
-              )
-          );
-
-          for (const service of existingIndustryServices) {
-            await fetch(`/services/${service.id}`, {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
-          }
-
-          // Add selected services
-          for (const serviceCheckbox of serviceCheckboxes) {
-            if (serviceCheckbox.checked) {
-              await fetch(`/services/${userId}`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  service_name: serviceCheckbox.value,
-                  service_type: "service",
-                }),
-              });
-            }
-          }
-        }
+      // Add custom skills if they exist
+      const customSkills = document.getElementById("custom-skills");
+      if (customSkills && customSkills.value.trim()) {
+        await fetch(`/services/${userId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            service_name: customSkills.value.trim(),
+            service_type: "custom-skills",
+          }),
+        });
       }
     }
 
+    // Show success message
     showSuccess("Профіль успішно оновлено");
 
     // If profile requires approval, show message
@@ -1327,10 +1346,41 @@ async function saveProfile(event) {
       );
     }
 
-    // Reload profile data
-    loadProfileData();
+    // Reload profile data to show updated information
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   } catch (error) {
     console.error("Error saving profile:", error);
     showError("Помилка при збереженні профілю: " + error.message);
+  } finally {
+    // Reset button state
+    if (submitButton) {
+      submitButton.innerHTML = originalButtonText;
+      submitButton.disabled = false;
+    }
   }
+}
+
+// Helper function to show info message
+function showInfo(message) {
+  const infoElement = document.getElementById("info-message");
+  if (!infoElement) {
+    // Create info element if it doesn't exist
+    const infoDiv = document.createElement("div");
+    infoDiv.id = "info-message";
+    infoDiv.style.display = "none";
+    document.body.appendChild(infoDiv);
+  }
+
+  infoElement.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+  infoElement.style.display = "flex";
+
+  setTimeout(() => {
+    infoElement.style.animation = "fadeInScale 0.4s ease-out reverse";
+    setTimeout(() => {
+      infoElement.style.display = "none";
+      infoElement.style.animation = "";
+    }, 400);
+  }, 5000);
 }

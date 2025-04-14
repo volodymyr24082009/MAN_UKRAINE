@@ -68,6 +68,12 @@
             </a>
           </li>
           <li>
+            <a href="#news" data-tab="news">
+              <i class="fas fa-newspaper"></i>
+              <span>Новини</span>
+            </a>
+          </li>
+          <li>
             <a href="#settings" data-tab="settings">
               <i class="fas fa-cog"></i>
               <span>Налаштування</span>
@@ -472,6 +478,73 @@
           </div>
         </div>
 
+        <!-- News Tab -->
+        <div id="news-tab" class="tab-content">
+          <div class="table-container">
+            <div class="table-header">
+              <h3 class="table-title">Управління новинами</h3>
+              <div class="table-actions">
+                <div class="search-box">
+                  <i class="fas fa-search"></i>
+                  <input
+                    type="text"
+                    placeholder="Пошук..."
+                    id="newsSearchInput"
+                  />
+                </div>
+                <button class="btn btn-success" id="addNewsBtn">
+                  <i class="fas fa-plus"></i> Додати новину
+                </button>
+                <button class="btn btn-primary" id="exportNewsBtn">
+                  <i class="fas fa-download"></i> Експорт
+                </button>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table id="newsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Заголовок</th>
+                    <th>Короткий опис</th>
+                    <th>Категорія</th>
+                    <th>Статус</th>
+                    <th>Перегляди</th>
+                    <th>Дата</th>
+                    <th>Дії</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- News content will be dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" id="newsPagination">
+              <!-- Pagination will be dynamically populated -->
+            </div>
+          </div>
+
+          <!-- News Statistics -->
+          <div class="charts-container">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Популярність новин</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="newsViewsChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Новини за категоріями</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="newsCategoriesChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Settings Tab -->
         <div id="settings-tab" class="tab-content">
           <div class="card">
@@ -604,6 +677,117 @@
         </div>
         <div class="modal-footer" id="reviewDetailsFooter">
           <!-- Action buttons will be dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- News Details Modal -->
+    <div class="modal-backdrop" id="newsDetailsModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Деталі новини</h3>
+          <button class="modal-close" id="closeNewsDetailsModal">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="newsDetailsBody">
+          <!-- News details will be dynamically populated -->
+        </div>
+        <div class="modal-footer" id="newsDetailsFooter">
+          <!-- Action buttons will be dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- News Editor Modal -->
+    <div class="modal-backdrop" id="newsEditorModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title" id="newsEditorTitle">Додати новину</h3>
+          <button class="modal-close" id="closeNewsEditorModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="newsForm">
+            <input type="hidden" id="newsId" />
+            <div class="form-group">
+              <label class="form-label">Заголовок</label>
+              <input type="text" class="form-control" id="newsTitle" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Короткий опис</label>
+              <textarea
+                class="form-control"
+                id="newsShortDescription"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Повний текст</label>
+              <textarea
+                class="form-control"
+                id="newsContent"
+                rows="6"
+                required
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Категорія</label>
+              <select class="form-control" id="newsCategory">
+                <option value="updates">Оновлення</option>
+                <option value="events">Події</option>
+                <option value="tips">Поради</option>
+                <option value="announcements">Оголошення</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Статус</label>
+              <select class="form-control" id="newsStatus">
+                <option value="published">Опубліковано</option>
+                <option value="draft">Чернетка</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Головне зображення</label>
+              <input
+                type="file"
+                class="form-control"
+                id="newsMainImage"
+                accept="image/*"
+              />
+              <div id="mainImagePreview" class="image-preview"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Додаткові зображення</label>
+              <input
+                type="file"
+                class="form-control"
+                id="newsAdditionalImages"
+                accept="image/*"
+                multiple
+              />
+              <div
+                id="additionalImagesPreview"
+                class="image-preview-gallery"
+              ></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"
+                >Зовнішні посилання (по одному на рядок)</label
+              >
+              <textarea
+                class="form-control"
+                id="newsExternalLinks"
+                rows="3"
+              ></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="saveNewsBtn">Зберегти</button>
+          <button class="btn btn-secondary" id="cancelNewsBtn">
+            Скасувати
+          </button>
         </div>
       </div>
     </div>
