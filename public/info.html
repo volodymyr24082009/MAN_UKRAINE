@@ -1,168 +1,200 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message Information</title>
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/info.css">
-</head>
-<body>
-    <div class="container">
-        <!-- Header Section -->
-        <header class="header">
-            <div class="logo">
-                <i class="fas fa-envelope-open-text"></i>
-                <h1>Message Center</h1>
-            </div>
-            <div class="theme-toggle">
-                <label class="switch">
-                    <input type="checkbox" id="themeToggle">
-                    <span class="slider round"></span>
-                </label>
-                <span class="toggle-label">Light Mode</span>
-            </div>
-        </header>
-
-        <!-- Navigation -->
-        <nav class="navigation">
-            <button class="mobile-menu-btn">
-                <i class="fas fa-bars"></i>
-            </button>
-            <ul class="nav-menu">
-                <li><a href="#" class="nav-link active" data-view="messages">Messages</a></li>
-                <li><a href="#" class="nav-link" data-view="statistics">Statistics</a></li>
-                <li><a href="message.html" class="nav-link">Send Message</a></li>
-            </ul>
+<html lang="uk" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Повідомлення для майстрів</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/info.css" />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <a href="index.html" class="logo">
+          <i class="fas fa-comments"></i>
+          <span>ProFix Network Hub</span>
+        </a>
+        <nav class="nav-menu">
+          <a href="index.html" class="nav-link">Головна</a>
+          <a href="message.html" class="nav-link">Повідомлення</a>
+          <a href="#" class="nav-link active">Вхідні</a>
+          <a href="#" class="nav-link">Контакти</a>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <i class="fas fa-moon moon"></i>
+              <i class="fas fa-sun sun"></i>
+            </span>
+          </label>
         </nav>
+        <button class="mobile-menu-btn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Messages View -->
-            <section id="messagesView" class="view active">
-                <div class="section-header">
-                    <h2>Recent Messages</h2>
-                    <div class="filters">
-                        <select id="messageTypeFilter">
-                            <option value="all">All Types</option>
-                            <option value="text">Text</option>
-                            <option value="voice">Voice</option>
-                            <option value="video">Video</option>
-                        </select>
-                        <div class="search-container">
-                            <input type="text" id="searchMessages" placeholder="Search messages...">
-                            <button id="searchBtn"><i class="fas fa-search"></i></button>
-                        </div>
-                    </div>
-                </div>
+    <div class="container">
+      <div class="messages-container">
+        <h1 class="messages-title">Повідомлення для майстрів</h1>
 
-                <div class="messages-container" id="messagesContainer">
-                    <!-- Messages will be loaded here dynamically -->
-                    <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <span>Loading messages...</span>
-                    </div>
-                </div>
-
-                <div class="pagination">
-                    <button id="prevPage" disabled><i class="fas fa-chevron-left"></i> Previous</button>
-                    <span id="pageInfo">Page 1 of 1</span>
-                    <button id="nextPage" disabled>Next <i class="fas fa-chevron-right"></i></button>
-                </div>
-            </section>
-
-            <!-- Statistics View -->
-            <section id="statisticsView" class="view">
-                <div class="section-header">
-                    <h2>Message Statistics</h2>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Total Messages</h3>
-                            <p id="totalMessages">-</p>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Text Messages</h3>
-                            <p id="textMessages">-</p>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-microphone"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Voice Messages</h3>
-                            <p id="voiceMessages">-</p>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-video"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Video Messages</h3>
-                            <p id="videoMessages">-</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <div class="chart-card">
-                        <h3>Messages by Type</h3>
-                        <canvas id="messageTypeChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Messages Over Time</h3>
-                        <canvas id="messagesTimeChart"></canvas>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Message Modal -->
-        <div class="modal" id="messageModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Message Details</h2>
-                    <button class="close-btn">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <!-- Message details will be loaded here -->
-                </div>
-            </div>
+        <div class="messages-filter">
+          <div class="filter-group">
+            <label for="messageTypeFilter">Тип повідомлення:</label>
+            <select id="messageTypeFilter" class="filter-select">
+              <option value="all">Всі типи</option>
+              <option value="text">Текстові</option>
+              <option value="voice">Голосові</option>
+              <option value="video">Відео</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="dateFilter">Сортувати за:</label>
+            <select id="dateFilter" class="filter-select">
+              <option value="newest">Найновіші спочатку</option>
+              <option value="oldest">Найстаріші спочатку</option>
+            </select>
+          </div>
+          <div class="search-group">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Пошук повідомлень..."
+            />
+            <button id="searchBtn"><i class="fas fa-search"></i></button>
+          </div>
         </div>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <p>&copy; 2025 Message Center. All rights reserved.</p>
-        </footer>
+        <div class="messages-list" id="messagesList">
+          <!-- Messages will be loaded here dynamically -->
+          <div class="loading-indicator">
+            <div class="spinner"></div>
+            <p>Завантаження повідомлень...</p>
+          </div>
+        </div>
 
-        <!-- Back to Top Button -->
-        <button id="backToTop" class="back-to-top">
-            <i class="fas fa-arrow-up"></i>
-        </button>
+        <div class="pagination">
+          <button id="prevPage" class="pagination-btn" disabled>
+            <i class="fas fa-chevron-left"></i> Попередня
+          </button>
+          <span id="pageInfo">Сторінка 1</span>
+          <button id="nextPage" class="pagination-btn" disabled>
+            Наступна <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Include Chart.js for statistics -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Socket.io for real-time updates -->
-    <script src="/socket.io/socket.io.js"></script>
-    <!-- Main JavaScript -->
+    <!-- Message Preview Modal -->
+    <div id="messageModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Перегляд повідомлення</h2>
+          <button class="close-btn" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+          <!-- Message details will be loaded here -->
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn" id="replyBtn">
+            <i class="fas fa-reply"></i> Відповісти
+          </button>
+          <button class="modal-btn delete-btn" id="deleteBtn">
+            <i class="fas fa-trash"></i> Видалити
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-section">
+          <div class="footer-logo">
+            <i class="fas fa-comments"></i>
+            <span>Повідомлення</span>
+          </div>
+          <p class="footer-description">
+            Система обміну повідомленнями між користувачами та майстрами.
+          </p>
+          <div class="footer-social">
+            <a href="#" class="social-icon"
+              ><i class="fab fa-facebook-f"></i
+            ></a>
+            <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h3 class="footer-title">Навігація</h3>
+          <ul class="footer-links">
+            <li class="footer-link">
+              <a href="index.html"><i class="fas fa-home"></i> Головна</a>
+            </li>
+            <li class="footer-link">
+              <a href="message.html"
+                ><i class="fas fa-paper-plane"></i> Надіслати повідомлення</a
+              >
+            </li>
+            <li class="footer-link">
+              <a href="info.html"
+                ><i class="fas fa-inbox"></i> Вхідні повідомлення</a
+              >
+            </li>
+            <li class="footer-link">
+              <a href="#"><i class="fas fa-phone"></i> Контакти</a>
+            </li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3 class="footer-title">Контакти</h3>
+          <div class="footer-contact">
+            <div class="contact-icon">
+              <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="contact-info">
+              <div class="contact-label">Адреса</div>
+              <div class="contact-value">вул. Прикладна, 123, Київ</div>
+            </div>
+          </div>
+          <div class="footer-contact">
+            <div class="contact-icon"><i class="fas fa-phone"></i></div>
+            <div class="contact-info">
+              <div class="contact-label">Телефон</div>
+              <div class="contact-value">
+                <a href="tel:+380123456789">+38 (012) 345-67-89</a>
+              </div>
+            </div>
+          </div>
+          <div class="footer-contact">
+            <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+            <div class="contact-info">
+              <div class="contact-label">Email</div>
+              <div class="contact-value">
+                <a href="mailto:info@example.com">info@example.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="copyright">© 2023 Всі права захищено</div>
+      </div>
+    </footer>
+
+    <!-- Back to top button -->
+    <button class="back-to-top" id="backToTop">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+
     <script src="js/info.js"></script>
-    
-</body>
+  </body>
 </html>

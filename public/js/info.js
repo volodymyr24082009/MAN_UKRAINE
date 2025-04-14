@@ -1,39 +1,97 @@
-// Initialize page when DOM is loaded
+// Ініціалізація сторінки
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    // Set up UI elements and event listeners
     setupThemeToggle();
     setupMobileMenu();
-    setupNavigation();
     setupBackToTop();
-    setupModal();
     setupMessageFilters();
+    setupModal();
 
-    // Initialize data
-    await loadMessages();
-    await loadStatistics();
-
-    // Initialize Socket.io for real-time updates
-    initializeSocketIO();
+    // Check if we have URL parameters from a form submission
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("username")) {
+      // Display the message from URL parameters
+      displayMessageFromParams(urlParams);
+    } else {
+      // Load messages from server
+      await loadMessages();
+    }
   } catch (err) {
-    console.error("Error initializing page:", err);
-    showError("Failed to initialize the page. Please refresh and try again.");
+    console.error("Помилка при ініціалізації сторінки:", err);
   }
 });
 
-// Theme toggle functionality
+// Function to display message from URL parameters
+function displayMessageFromParams(params) {
+  const messagesList = document.getElementById("messagesList");
+
+  // Get data from URL parameters
+  const username = params.get("username");
+  const email = params.get("email");
+  const messageType = params.get("messageType");
+  const textMessageContent = params.get("textMessage") || "";
+  let industries = [];
+
+  // Try multiple ways to get industries
+  try {
+    // First try to get industries from JSON string
+    if (params.get("industries")) {
+      const industriesJson = params.get("industries");
+      industries = JSON.parse(industriesJson);
+    }
+    // If that fails or returns empty, try to get individual industry values
+    if (industries.length === 0) {
+      // Get all values with the name 'industry'
+      industries = params.getAll("industry");
+    }
+  } catch (e) {
+    console.error("Error parsing industries:", e);
+    // Try to get individual industry values as fallback
+    industries = params.getAll("industry");
+  }
+
+  // If still no industries, check for industries[] parameter
+  if (industries.length === 0) {
+    industries = params.getAll("industries[]");
+  }
+
+  console.log("Parsed industries:", industries);
+
+  // Create a message object
+  const message = {
+    id: "new",
+    username: username,
+    email: email,
+    message_type: messageType,
+    message: textMessageContent, // Add the message text
+    industries: industries,
+    created_at: new Date().toISOString(),
+  };
+
+  // Clear loading indicator
+  messagesList.innerHTML = "";
+
+  // Create and append message card
+  const messageCard = createMessageCard(message);
+  messagesList.appendChild(messageCard);
+
+  // Show notification
+  showNotification("Нове повідомлення отримано!", "success");
+}
+
+// Налаштування перемикача теми
 function setupThemeToggle() {
   const themeToggle = document.getElementById("themeToggle");
   const htmlElement = document.documentElement;
 
-  // Check for saved theme
+  // Перевіряємо збережену тему
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "light") {
     htmlElement.classList.add("light");
     themeToggle.checked = true;
   }
 
-  // Theme toggle event handler
+  // Обробник події зміни теми
   themeToggle.addEventListener("change", () => {
     if (themeToggle.checked) {
       htmlElement.classList.add("light");
@@ -45,7 +103,7 @@ function setupThemeToggle() {
   });
 }
 
-// Mobile menu functionality
+// Налаштування мобільного меню
 function setupMobileMenu() {
   const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
   const navMenu = document.querySelector(".nav-menu");
@@ -57,7 +115,7 @@ function setupMobileMenu() {
       : '<i class="fas fa-bars"></i>';
   });
 
-  // Close menu when clicking a link
+  // Закриваємо меню при кліку на посилання
   document.querySelectorAll(".nav-link").forEach((link) => {
     link.addEventListener("click", () => {
       navMenu.classList.remove("active");
@@ -66,28 +124,7 @@ function setupMobileMenu() {
   });
 }
 
-// Navigation between views
-function setupNavigation() {
-  const navLinks = document.querySelectorAll(".nav-link[data-view]");
-  const views = document.querySelectorAll(".view");
-
-  navLinks.forEach((link) => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-
-      // Remove active class from all links and views
-      navLinks.forEach((navLink) => navLink.classList.remove("active"));
-      views.forEach((view) => view.classList.remove("active"));
-
-      // Add active class to clicked link and corresponding view
-      link.classList.add("active");
-      const viewId = link.dataset.view + "View";
-      document.getElementById(viewId).classList.add("active");
-    });
-  });
-}
-
-// Back to top button
+// Налаштування кнопки "Вгору"
 function setupBackToTop() {
   const backToTopBtn = document.getElementById("backToTop");
 
@@ -107,36 +144,29 @@ function setupBackToTop() {
   });
 }
 
-// Modal functionality
-function setupModal() {
-  const modal = document.getElementById("messageModal");
-  const closeBtn = modal.querySelector(".close-btn");
-
-  closeBtn.addEventListener("click", () => {
-    modal.style.display = "none";
-  });
-
-  window.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      modal.style.display = "none";
-    }
-  });
-}
-
-// Message filtering and search
+// Налаштування фільтрів повідомлень
 function setupMessageFilters() {
-  const typeFilter = document.getElementById("messageTypeFilter");
-  const searchInput = document.getElementById("searchMessages");
+  const messageTypeFilter = document.getElementById("messageTypeFilter");
+  const dateFilter = document.getElementById("dateFilter");
+  const searchInput = document.getElementById("searchInput");
   const searchBtn = document.getElementById("searchBtn");
 
-  typeFilter.addEventListener("change", async () => {
+  // Обробник зміни типу повідомлення
+  messageTypeFilter.addEventListener("change", async () => {
     await loadMessages();
   });
 
+  // Обробник зміни сортування за датою
+  dateFilter.addEventListener("change", async () => {
+    await loadMessages();
+  });
+
+  // Обробник пошуку
   searchBtn.addEventListener("click", async () => {
     await loadMessages();
   });
 
+  // Обробник натискання Enter в полі пошуку
   searchInput.addEventListener("keypress", async (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -145,209 +175,498 @@ function setupMessageFilters() {
   });
 }
 
-// Pagination variables
+// Налаштування модального вікна
+function setupModal() {
+  const modal = document.getElementById("messageModal");
+  const closeModal = document.getElementById("closeModal");
+  const replyBtn = document.getElementById("replyBtn");
+  const deleteBtn = document.getElementById("deleteBtn");
+
+  // Закриття модального вікна
+  closeModal.addEventListener("click", () => {
+    modal.classList.remove("show");
+  });
+
+  // Закриття модального вікна при кліку поза ним
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.classList.remove("show");
+    }
+  });
+
+  // Обробник кнопки відповіді
+  replyBtn.addEventListener("click", () => {
+    const messageId = modal.dataset.messageId;
+    const email = modal.dataset.email;
+
+    // Перенаправлення на сторінку повідомлення з заповненим email
+    window.location.href = `message.html?reply=${email}`;
+  });
+
+  // Обробник кнопки видалення
+  deleteBtn.addEventListener("click", async () => {
+    const messageId = modal.dataset.messageId;
+
+    if (confirm("Ви впевнені, що хочете видалити це повідомлення?")) {
+      try {
+        const response = await fetch(`/api/messages/${messageId}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          modal.classList.remove("show");
+          await loadMessages();
+          showNotification("Повідомлення успішно видалено", "success");
+        } else {
+          const data = await response.json();
+          showNotification(`Помилка: ${data.error}`, "error");
+        }
+      } catch (err) {
+        console.error("Помилка при видаленні повідомлення:", err);
+        showNotification("Не вдалося видалити повідомлення", "error");
+      }
+    }
+  });
+}
+
+// Завантаження повідомлень
 let currentPage = 1;
-let totalPages = 1;
-let messagesPerPage = 10;
+const messagesPerPage = 10;
+let totalMessages = 0;
 
-// Load messages from the server
 async function loadMessages() {
-  const messagesContainer = document.getElementById("messagesContainer");
-  const typeFilter = document.getElementById("messageTypeFilter").value;
-  const searchQuery = document.getElementById("searchMessages").value.trim();
+  const messagesList = document.getElementById("messagesList");
+  const messageTypeFilter = document.getElementById("messageTypeFilter").value;
+  const dateFilter = document.getElementById("dateFilter").value;
+  const searchQuery = document.getElementById("searchInput").value.trim();
 
-  // Show loading state
-  messagesContainer.innerHTML = `
-        <div class="loading">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Loading messages...</span>
-        </div>
-    `;
+  // Показуємо індикатор завантаження
+  messagesList.innerHTML = `
+      <div class="loading-indicator">
+          <div class="spinner"></div>
+          <p>Завантаження повідомлень...</p>
+      </div>
+  `;
 
   try {
-    // Build query parameters
-    const params = new URLSearchParams({
-      page: currentPage,
-      limit: messagesPerPage,
-    });
+    // Формуємо URL з параметрами
+    let url = `/api/messages?page=${currentPage}&limit=${messagesPerPage}`;
 
-    if (typeFilter !== "all") {
-      params.append("type", typeFilter);
+    if (messageTypeFilter !== "all") {
+      url += `&type=${messageTypeFilter}`;
+    }
+
+    if (dateFilter === "oldest") {
+      url += "&sort=asc";
+    } else {
+      url += "&sort=desc";
     }
 
     if (searchQuery) {
-      params.append("search", searchQuery);
+      url += `&search=${encodeURIComponent(searchQuery)}`;
     }
 
-    // Fetch messages from server
-    const response = await fetch(`/api/messages?${params.toString()}`);
+    // Отримуємо повідомлення з сервера
+    const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error("Failed to load messages");
+      throw new Error("Не вдалося отримати повідомлення");
     }
 
     const data = await response.json();
-    const messages = data.messages;
-    totalPages = data.totalPages || 1;
+    totalMessages = data.total || 0;
 
-    // Update pagination controls
+    // Оновлюємо пагінацію
     updatePagination();
 
-    // If no messages, show empty state
-    if (messages.length === 0) {
-      messagesContainer.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>No messages found</p>
-                </div>
-            `;
+    // Якщо повідомлень немає
+    if (!data.messages || data.messages.length === 0) {
+      messagesList.innerHTML = `
+              <div class="no-messages">
+                  <i class="fas fa-inbox fa-3x"></i>
+                  <p>Повідомлень не знайдено</p>
+              </div>
+          `;
       return;
     }
 
-    // Render messages
-    messagesContainer.innerHTML = "";
-    messages.forEach((message) => {
+    // Відображаємо повідомлення
+    messagesList.innerHTML = "";
+
+    data.messages.forEach((message) => {
+      // Ensure industries is always an array
+      if (!message.industries) {
+        message.industries = [];
+      }
+
       const messageCard = createMessageCard(message);
-      messagesContainer.appendChild(messageCard);
+      messagesList.appendChild(messageCard);
     });
   } catch (err) {
-    console.error("Error loading messages:", err);
-    messagesContainer.innerHTML = `
-            <div class="error-state">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>Failed to load messages. Please try again.</p>
-            </div>
-        `;
+    console.error("Помилка при завантаженні повідомлень:", err);
+    messagesList.innerHTML = `
+          <div class="error-message">
+              <i class="fas fa-exclamation-circle fa-3x"></i>
+              <p>Не вдалося завантажити повідомлення. Спробуйте ще раз.</p>
+          </div>
+      `;
   }
 }
 
-// Create message card element
+// Функція для обробки масиву галузей
+function processIndustries(industries) {
+  // If industries is null or undefined, return empty array
+  if (!industries) {
+    return [];
+  }
+  // If industries is already an array
+  if (Array.isArray(industries)) {
+    return industries;
+  }
+  // If industries is a string, but may be JSON
+  else if (typeof industries === "string") {
+    try {
+      const parsed = JSON.parse(industries);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      } else if (typeof parsed === "string") {
+        return [parsed];
+      }
+    } catch (e) {
+      // If not JSON, split by comma
+      if (industries.includes(",")) {
+        return industries.split(",").map((item) => item.trim());
+      } else {
+        return [industries];
+      }
+    }
+  }
+  // If nothing else works, return empty array
+  return [];
+}
+
 function createMessageCard(message) {
-  const card = document.createElement("div");
-  card.className = "message-card";
-  card.dataset.id = message.id;
+  const messageCard = document.createElement("div");
+  messageCard.className = "message-card";
+  messageCard.dataset.id = message.id;
 
-  // Format date
-  const date = new Date(message.timestamp);
-  const formattedDate =
-    date.toLocaleDateString() + " " + date.toLocaleTimeString();
+  // Отримуємо ініціали для аватара
+  const initials = getInitials(message.username);
 
-  // Get initials for avatar
-  const initials = message.username.charAt(0).toUpperCase();
+  // Форматуємо дату
+  const formattedDate = formatDate(message.created_at);
 
-  // Create message preview text
-  let preview = "";
-  if (message.messageType === "text") {
-    preview =
-      message.content.length > 100
-        ? message.content.substring(0, 100) + "..."
-        : message.content;
-  } else if (message.messageType === "voice") {
-    preview = "Voice message";
-  } else if (message.messageType === "video") {
-    preview = "Video message";
+  // Визначаємо тип повідомлення та його іконку
+  let typeIcon, typeName, typeClass;
+
+  switch (message.message_type) {
+    case "text":
+      typeIcon = "fas fa-comment";
+      typeName = "Текстове";
+      typeClass = "text";
+      break;
+    case "voice":
+      typeIcon = "fas fa-microphone";
+      typeName = "Голосове";
+      typeClass = "voice";
+      break;
+    case "video":
+      typeIcon = "fas fa-video";
+      typeName = "Відео";
+      typeClass = "video";
+      break;
+    default:
+      typeIcon = "fas fa-comment";
+      typeName = "Текстове";
+      typeClass = "text";
   }
 
-  // Set type badge class
-  const typeBadgeClass = `type-badge ${message.messageType}`;
+  // Отримуємо галузі, якщо вони є
+  const industriesArray = processIndustries(message.industries);
+  console.log(`Message ID ${message.id} industries:`, industriesArray);
 
-  card.innerHTML = `
-        <div class="message-header">
-            <div class="user-info">
-                <div class="user-avatar">${initials}</div>
-                <div>
-                    <div class="user-name">${message.username}</div>
-                    <div class="user-email">${message.email}</div>
+  // Створюємо превью контенту
+  let contentPreview;
+
+  if (message.message_type === "text") {
+    // Use message.message if available, otherwise try message.content or message.textMessage or default to empty string
+    const messageText =
+      message.message || message.content || message.textMessage || "";
+
+    contentPreview = `
+      <div class="message-content">
+          <p class="message-preview">${messageText}</p>
+          <div class="message-industries">
+              <span class="industries-label">Галузі:</span>
+              <div class="industries-value">
+                  ${
+                    industriesArray.length === 0
+                      ? "Не вказано"
+                      : industriesArray
+                          .map(
+                            (industry) =>
+                              `<span class="industry-tag">${industry}</span>`
+                          )
+                          .join(" ")
+                  }
+              </div>
+          </div>
+      </div>
+    `;
+  } else {
+    contentPreview = `
+      <div class="message-media">
+          <div class="media-icon">
+              <i class="${typeIcon}"></i>
+          </div>
+          <div class="media-info">
+              ${typeName} повідомлення
+          </div>
+          <div class="message-industries">
+              <span class="industries-label">Галузі:</span>
+              <div class="industries-value">
+                  ${
+                    industriesArray.length === 0
+                      ? "Не вказано"
+                      : industriesArray
+                          .map(
+                            (industry) =>
+                              `<span class="industry-tag">${industry}</span>`
+                          )
+                          .join(" ")
+                  }
+              </div>
+          </div>
+      </div>
+    `;
+  }
+
+  // Заповнюємо картку
+  messageCard.innerHTML = `
+    <div class="message-header">
+        <div class="message-sender">
+            <div class="message-avatar">${initials}</div>
+            <div class="message-info">
+                <div class="message-name">${message.username}</div>
+                <div class="message-email">${message.email}</div>
+                <div class="message-type-badge ${typeClass}">
+                    <i class="${typeIcon}"></i> ${typeName}
                 </div>
             </div>
-            <div class="message-type">
-                <span class="${typeBadgeClass}">${message.messageType}</span>
-            </div>
         </div>
-        <div class="message-preview">${preview}</div>
-        <div class="message-footer">
-            <span>${formattedDate}</span>
-            <span><i class="fas fa-eye"></i> View details</span>
-        </div>
-    `;
+        <div class="message-date">${formattedDate}</div>
+    </div>
+    ${contentPreview}
+    <div class="message-actions">
+        <button class="message-btn view-btn">
+            <i class="fas fa-eye"></i> Переглянути
+        </button>
+        <button class="message-btn delete">
+            <i class="fas fa-trash"></i> Видалити
+        </button>
+    </div>
+  `;
 
-  // Add click event to open modal with message details
-  card.addEventListener("click", () => {
+  // Обробник перегляду
+  messageCard.querySelector(".view-btn").addEventListener("click", () => {
     openMessageModal(message);
   });
 
-  return card;
+  // Обробник видалення
+  messageCard.querySelector(".delete").addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    if (confirm("Ви впевнені, що хочете видалити це повідомлення?")) {
+      try {
+        const response = await fetch(`/api/messages/${message.id}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          messageCard.remove();
+          showNotification("Повідомлення успішно видалено", "success");
+
+          // Якщо більше немає повідомлень — оновити
+          if (document.querySelectorAll(".message-card").length === 0) {
+            await loadMessages();
+          }
+        } else {
+          const data = await response.json();
+          showNotification(`Помилка: ${data.error}`, "error");
+        }
+      } catch (err) {
+        console.error("Помилка при видаленні повідомлення:", err);
+        showNotification("Не вдалося видалити повідомлення", "error");
+      }
+    }
+  });
+
+  return messageCard;
 }
 
-// Open modal with message details
+// Відкриття модального вікна з повідомленням
 function openMessageModal(message) {
   const modal = document.getElementById("messageModal");
-  const modalBody = modal.querySelector(".modal-body");
+  const modalBody = document.getElementById("modalBody");
 
-  // Format date
-  const date = new Date(message.timestamp);
-  const formattedDate =
-    date.toLocaleDateString() + " " + date.toLocaleTimeString();
+  // Зберігаємо ID повідомлення та email для можливих дій
+  modal.dataset.messageId = message.id;
+  modal.dataset.email = message.email;
 
-  // Prepare content based on message type
-  let contentHtml = "";
+  // Отримуємо ініціали для аватара
+  const initials = getInitials(message.username);
 
-  if (message.messageType === "text") {
-    contentHtml = `
-            <div class="message-content-container">
-                <div class="message-text">${message.content}</div>
-            </div>
-        `;
-  } else if (message.messageType === "voice") {
-    contentHtml = `
-            <div class="message-content-container">
-                <div class="media-container">
-                    <audio controls src="${message.mediaUrl}"></audio>
-                </div>
-            </div>
-        `;
-  } else if (message.messageType === "video") {
-    contentHtml = `
-            <div class="message-content-container">
-                <div class="media-container">
-                    <video controls src="${message.mediaUrl}"></video>
-                </div>
-            </div>
-        `;
+  // Форматуємо дату
+  const formattedDate = formatDate(message.created_at);
+
+  // Визначаємо тип повідомлення та його іконку
+  let typeIcon, typeName, typeClass;
+
+  switch (message.message_type) {
+    case "text":
+      typeIcon = "fas fa-comment";
+      typeName = "Текстове";
+      typeClass = "text";
+      break;
+    case "voice":
+      typeIcon = "fas fa-microphone";
+      typeName = "Голосове";
+      typeClass = "voice";
+      break;
+    case "video":
+      typeIcon = "fas fa-video";
+      typeName = "Відео";
+      typeClass = "video";
+      break;
+    default:
+      typeIcon = "fas fa-comment";
+      typeName = "Текстове";
+      typeClass = "text";
   }
 
-  modalBody.innerHTML = `
-        <div class="message-detail-header">
-            <div class="user-detail">
-                <div class="user-name">${message.username}</div>
-                <div class="user-email">${message.email}</div>
-            </div>
-            <div class="message-timestamp">
-                <i class="far fa-clock"></i> ${formattedDate}
-            </div>
-        </div>
-        ${contentHtml}
-    `;
+  // Отримуємо галузі, якщо вони є
+  const industriesArray = processIndustries(message.industries);
+  console.log(`Modal: Message ID ${message.id} industries:`, industriesArray);
 
-  modal.style.display = "block";
+  // Створюємо вміст модального вікна
+  let contentHtml;
+
+  if (message.message_type === "text") {
+    // Use message.message if available, otherwise try message.content or message.textMessage or default to empty string
+    const messageText =
+      message.message || message.content || message.textMessage || "";
+
+    contentHtml = `
+          <div class="details-content">
+              <p class="details-text">${messageText}</p>
+              <div class="details-industries">
+                  <span class="industries-label">Галузі:</span>
+                  <div class="industries-value">
+                      ${
+                        industriesArray.length === 0
+                          ? "Не вказано"
+                          : industriesArray
+                              .map(
+                                (industry) =>
+                                  `<span class="industry-tag">${industry}</span>`
+                              )
+                              .join(" ")
+                      }
+                  </div>
+              </div>
+          </div>
+      `;
+  } else if (message.message_type === "voice") {
+    contentHtml = `
+          <div class="details-content">
+              <div class="details-media">
+                  <audio controls src="${message.media_url}"></audio>
+              </div>
+              <div class="details-industries">
+                  <span class="industries-label">Галузі:</span>
+                  <div class="industries-value">
+                      ${
+                        industriesArray.length === 0
+                          ? "Не вказано"
+                          : industriesArray
+                              .map(
+                                (industry) =>
+                                  `<span class="industry-tag">${industry}</span>`
+                              )
+                              .join(" ")
+                      }
+                  </div>
+              </div>
+          </div>
+      `;
+  } else if (message.message_type === "video") {
+    contentHtml = `
+          <div class="details-content">
+              <div class="details-media">
+                  <video controls src="${message.media_url}"></video>
+              </div>
+              <div class="details-industries">
+                  <span class="industries-label">Галузі:</span>
+                  <div class="industries-value">
+                      ${
+                        industriesArray.length === 0
+                          ? "Не вказано"
+                          : industriesArray
+                              .map(
+                                (industry) =>
+                                  `<span class="industry-tag">${industry}</span>`
+                              )
+                              .join(" ")
+                      }
+                  </div>
+              </div>
+          </div>
+      `;
+  }
+
+  // Заповнюємо модальне вікно
+  modalBody.innerHTML = `
+      <div class="message-details">
+          <div class="details-header">
+              <div class="details-sender">
+                  <div class="details-avatar">${initials}</div>
+                  <div class="details-info">
+                      <div class="details-name">${message.username}</div>
+                      <div class="details-email">${message.email}</div>
+                      <div class="details-date">${formattedDate}</div>
+                      <div class="details-type ${typeClass}">
+                          <i class="${typeIcon}"></i> ${typeName} повідомлення
+                      </div>
+                  </div>
+              </div>
+          </div>
+          ${contentHtml}
+      </div>
+  `;
+
+  // Показуємо модальне вікно
+  modal.classList.add("show");
 }
 
-// Update pagination controls
+// Оновлення пагінації
 function updatePagination() {
   const prevPageBtn = document.getElementById("prevPage");
   const nextPageBtn = document.getElementById("nextPage");
   const pageInfo = document.getElementById("pageInfo");
 
-  pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+  const totalPages = Math.ceil(totalMessages / messagesPerPage);
+
+  pageInfo.textContent = `Сторінка ${currentPage} з ${totalPages || 1}`;
 
   prevPageBtn.disabled = currentPage <= 1;
   nextPageBtn.disabled = currentPage >= totalPages;
 
+  // Додаємо обробники кліків на кнопки пагінації
   prevPageBtn.onclick = async () => {
     if (currentPage > 1) {
       currentPage--;
       await loadMessages();
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -355,210 +674,119 @@ function updatePagination() {
     if (currentPage < totalPages) {
       currentPage++;
       await loadMessages();
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 }
 
-// Load statistics for the dashboard
-async function loadStatistics() {
-  try {
-    const response = await fetch("/api/message-stats");
+// Отримання ініціалів з імені
+function getInitials(name) {
+  if (!name) return "?";
 
-    if (!response.ok) {
-      throw new Error("Failed to load statistics");
-    }
-
-    const stats = await response.json();
-
-    // Update stats cards
-    document.getElementById("totalMessages").textContent = stats.total;
-    document.getElementById("textMessages").textContent = stats.textCount;
-    document.getElementById("voiceMessages").textContent = stats.voiceCount;
-    document.getElementById("videoMessages").textContent = stats.videoCount;
-
-    // Create charts
-    createMessageTypeChart(stats);
-    createTimeSeriesChart(stats.timeData);
-  } catch (err) {
-    console.error("Error loading statistics:", err);
-    showError("Failed to load statistics. Please try again later.");
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) {
+    return parts[0].charAt(0).toUpperCase();
+  } else {
+    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
   }
 }
 
-// Create pie chart for message types
-function createMessageTypeChart(stats) {
-  const ctx = document.getElementById("messageTypeChart").getContext("2d");
+// Форматування дати
+function formatDate(dateString) {
+  const date = new Date(dateString);
 
-  new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: ["Text", "Voice", "Video"],
-      datasets: [
-        {
-          data: [stats.textCount, stats.voiceCount, stats.videoCount],
-          backgroundColor: ["#0ea5e9", "#22c55e", "#f59e0b"],
-          borderColor: "#1f2937",
-          borderWidth: 2,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: {
-            color: document.documentElement.classList.contains("light")
-              ? "#111827"
-              : "#f9fafb",
-          },
-        },
-      },
-    },
-  });
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
 }
 
-// Create line chart for messages over time
-function createTimeSeriesChart(timeData) {
-  const ctx = document.getElementById("messagesTimeChart").getContext("2d");
+// Показ повідомлення користувачу
+function showNotification(message, type) {
+  // Створюємо елемент повідомлення
+  const notification = document.createElement("div");
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `
+      <div class="notification-content">
+          <i class="fas ${
+            type === "success" ? "fa-check-circle" : "fa-exclamation-circle"
+          }"></i>
+          <span>${message}</span>
+      </div>
+      <button class="notification-close">&times;</button>
+  `;
 
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: timeData.map((item) => item.date),
-      datasets: [
-        {
-          label: "Messages",
-          data: timeData.map((item) => item.count),
-          borderColor: "#6366f1",
-          backgroundColor: "rgba(99, 102, 241, 0.2)",
-          tension: 0.3,
-          fill: true,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          display: false,
-        },
-      },
-      scales: {
-        x: {
-          grid: {
-            color: "rgba(75, 85, 99, 0.2)",
-          },
-          ticks: {
-            color: document.documentElement.classList.contains("light")
-              ? "#6b7280"
-              : "#9ca3af",
-          },
-        },
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: "rgba(75, 85, 99, 0.2)",
-          },
-          ticks: {
-            color: document.documentElement.classList.contains("light")
-              ? "#6b7280"
-              : "#9ca3af",
-          },
-        },
-      },
-    },
-  });
-}
+  // Додаємо стилі для повідомлення
+  notification.style.position = "fixed";
+  notification.style.bottom = "20px";
+  notification.style.right = "20px";
+  notification.style.padding = "15px 20px";
+  notification.style.borderRadius = "5px";
+  notification.style.display = "flex";
+  notification.style.alignItems = "center";
+  notification.style.justifyContent = "space-between";
+  notification.style.minWidth = "300px";
+  notification.style.maxWidth = "400px";
+  notification.style.zIndex = "9999";
+  notification.style.boxShadow = "0 5px 15px rgba(0, 0, 0, 0.3)";
+  notification.style.transform = "translateY(100px)";
+  notification.style.opacity = "0";
+  notification.style.transition = "all 0.3s ease";
 
-// Initialize Socket.io for real-time updates
-function initializeSocketIO() {
-  try {
-    // Check if io is already defined
-    if (typeof io === "undefined") {
-      console.error(
-        "Socket.io library not found. Make sure it is included in your HTML."
-      );
-      return;
-    }
-
-    const socket = io();
-
-    // Handle new message event
-    socket.on("new-message", (message) => {
-      // Reload messages if on first page
-      if (currentPage === 1) {
-        loadMessages();
-      }
-
-      // Show notification
-      showNotification(
-        `New ${message.messageType} message from ${message.username}`
-      );
-
-      // Update statistics
-      loadStatistics();
-    });
-
-    // Handle connection error
-    socket.on("connect_error", (error) => {
-      console.error("Socket.io connection error:", error);
-    });
-  } catch (err) {
-    console.error("Error initializing Socket.io:", err);
-  }
-}
-
-// Show notification
-function showNotification(message) {
-  // Check if the browser supports notifications
-  if (!("Notification" in window)) {
-    console.log("This browser does not support desktop notifications");
-    return;
+  if (type === "success") {
+    notification.style.backgroundColor = "rgba(46, 204, 113, 0.9)";
+    notification.style.color = "white";
+  } else {
+    notification.style.backgroundColor = "rgba(231, 76, 60, 0.9)";
+    notification.style.color = "white";
   }
 
-  // Check notification permission
-  if (Notification.permission === "granted") {
-    new Notification("Message Center", {
-      body: message,
-      icon: "/favicon.ico",
-    });
-  } else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then((permission) => {
-      if (permission === "granted") {
-        new Notification("Message Center", {
-          body: message,
-          icon: "/favicon.ico",
-        });
-      }
-    });
-  }
-}
+  // Додаємо стилі для вмісту повідомлення
+  const content = notification.querySelector(".notification-content");
+  content.style.display = "flex";
+  content.style.alignItems = "center";
+  content.style.gap = "10px";
 
-// Show error message
-function showError(message) {
-  const errorDiv = document.createElement("div");
-  errorDiv.className = "error-notification";
-  errorDiv.innerHTML = `
-        <i class="fas fa-exclamation-circle"></i>
-        <span>${message}</span>
-        <button class="close-error"><i class="fas fa-times"></i></button>
-    `;
+  // Додаємо стилі для кнопки закриття
+  const closeBtn = notification.querySelector(".notification-close");
+  closeBtn.style.background = "none";
+  closeBtn.style.border = "none";
+  closeBtn.style.color = "white";
+  closeBtn.style.fontSize = "1.5rem";
+  closeBtn.style.cursor = "pointer";
+  closeBtn.style.marginLeft = "10px";
 
-  document.body.appendChild(errorDiv);
+  // Додаємо повідомлення на сторінку
+  document.body.appendChild(notification);
 
-  // Auto remove after 5 seconds
+  // Анімуємо появу повідомлення
   setTimeout(() => {
-    if (document.body.contains(errorDiv)) {
-      document.body.removeChild(errorDiv);
+    notification.style.transform = "translateY(0)";
+    notification.style.opacity = "1";
+  }, 10);
+
+  // Додаємо обробник кліку на кнопку закриття
+  closeBtn.addEventListener("click", () => {
+    notification.style.transform = "translateY(100px)";
+    notification.style.opacity = "0";
+
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  });
+
+  // Автоматично закриваємо повідомлення через 5 секунд
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      notification.style.transform = "translateY(100px)";
+      notification.style.opacity = "0";
+
+      setTimeout(() => {
+        notification.remove();
+      }, 300);
     }
   }, 5000);
-
-  // Close button
-  errorDiv.querySelector(".close-error").addEventListener("click", () => {
-    if (document.body.contains(errorDiv)) {
-      document.body.removeChild(errorDiv);
-    }
-  });
 }

@@ -11,7 +11,7 @@ const { sendMessage } = require("./bot");
 const fs = require("fs");
 const punycode = require("punycode/");
 
-// Додайте ці імпорти на початку вашого server.js файлу
+// Add these imports at the beginning of your server.js file
 const http = require("http");
 const socketIo = require("socket.io");
 
@@ -19,7 +19,7 @@ const socketIo = require("socket.io");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3005;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -368,6 +368,106 @@ const initializeIndustries = async () => {
 // Try to create tables, but don't block server startup
 createTables().catch((err) => {
   console.error("Failed to initialize database tables:", err.message);
+});
+
+// Create a messages table if it doesn't exist
+const createMessagesTable = async () => {
+  try {
+    // First check if the table exists
+    const tableExistsQuery = `
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'messages'
+      );
+    `;
+
+    const tableExists = await executeQuery(tableExistsQuery);
+
+    if (tableExists.rows[0].exists) {
+      console.log("Messages table exists, checking for required columns...");
+
+      // Get existing columns
+      const columnsResult = await executeQuery(`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'messages';
+      `);
+
+      const columns = columnsResult.rows.map((row) => row.column_name);
+      console.log("Existing message table columns:", columns);
+
+      // Check if message column exists (this is the required column with NOT NULL constraint)
+      if (!columns.includes("message")) {
+        // If the table exists but doesn't have message column, add it
+        await executeQuery(`
+          ALTER TABLE messages 
+          ADD COLUMN message TEXT NOT NULL DEFAULT '';
+        `);
+        console.log("✅ Added message column to messages table");
+      }
+
+      // Check if message_type column exists
+      if (!columns.includes("message_type")) {
+        // If the table exists but doesn't have message_type column, add it
+        await executeQuery(`
+          ALTER TABLE messages 
+          ADD COLUMN message_type VARCHAR(20) NOT NULL DEFAULT 'text';
+        `);
+        console.log("✅ Added message_type column to messages table");
+      }
+
+      // Check if industries column exists
+      if (!columns.includes("industries")) {
+        // If the table exists but doesn't have industries column, add it
+        await executeQuery(`
+          ALTER TABLE messages 
+          ADD COLUMN industries TEXT[];
+        `);
+        console.log("✅ Added industries column to messages table");
+      }
+
+      // Check for other required columns and add them if missing
+      const requiredColumns = [
+        { name: "content", type: "TEXT" },
+        { name: "media_path", type: "VARCHAR(255)" },
+      ];
+
+      for (const column of requiredColumns) {
+        if (!columns.includes(column.name)) {
+          await executeQuery(`
+            ALTER TABLE messages 
+            ADD COLUMN ${column.name} ${column.type};
+          `);
+          console.log(`✅ Added ${column.name} column to messages table`);
+        }
+      }
+    } else {
+      // Create the table with all required columns
+      const messagesTableQuery = `
+        CREATE TABLE messages (
+          id SERIAL PRIMARY KEY,
+          username VARCHAR(100) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          message TEXT NOT NULL,
+          message_type VARCHAR(20) NOT NULL DEFAULT 'text',
+          industries TEXT[],
+          content TEXT,
+          media_path VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+
+      await executeQuery(messagesTableQuery);
+      console.log("✅ Created messages table with all required columns");
+    }
+  } catch (err) {
+    console.error("❌ Error creating/updating messages table:", err.message);
+  }
+};
+
+// Call this function during server initialization
+createMessagesTable().catch((err) => {
+  console.error("Failed to initialize messages table:", err.message);
 });
 
 // Головна сторінка (реєстрація/авторизація)
@@ -1303,7 +1403,7 @@ app.get("/api/industries", async (req, res) => {
         name: "Інформаційні технології",
         icon: "fas fa-laptop-code",
         description:
-          "Розробка програмного забезпечення, веб-сайтів, мобільних додатків та IT-консультації",
+          "Розробка програмного забезпчення, веб-сайтів, мобільних додатків та IT-консультації",
       },
       {
         name: "Медицина",
@@ -2166,7 +2266,7 @@ const upload = multer({
   },
 });
 
-// Handle form submissions
+// Modify the send-message endpoint to properly handle industries
 app.post(
   "/send-message",
   upload.fields([
@@ -2181,8 +2281,9 @@ app.post(
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      let messageContent;
-      let filePath;
+      let messageContent = null;
+      let filePath = null;
+      let mediaUrl = null;
 
       // Process message based on type
       if (messageType === "text") {
@@ -2199,41 +2300,286 @@ app.post(
         }
 
         filePath = req.files.voiceMessage[0].path;
+        // Create a URL for the file
+        const fileName = path.basename(filePath);
+        mediaUrl = `/uploads/${fileName}`;
       } else if (messageType === "video") {
         if (!req.files.videoMessage) {
           return res.status(400).json({ error: "Missing video message" });
         }
 
         filePath = req.files.videoMessage[0].path;
+        // Create a URL for the file
+        const fileName = path.basename(filePath);
+        mediaUrl = `/uploads/${fileName}`;
       } else {
         return res.status(400).json({ error: "Invalid message type" });
       }
 
-      // Send message to Telegram
-      const result = await sendMessage({
-        username,
-        email,
-        messageType,
-        messageContent,
-        filePath,
-      });
+      // FIXED: Improved handling of industries array
+      let industriesArray = [];
 
-      // Clean up file after sending
-      if (filePath && fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+      // First try to get industries from JSON string
+      if (req.body.industries) {
+        try {
+          industriesArray = JSON.parse(req.body.industries);
+        } catch (e) {
+          console.error("Error parsing industries JSON:", e);
+        }
       }
 
-      res
-        .status(200)
-        .json({ success: true, message: "Message sent successfully" });
+      // If that fails or returns empty, try to get individual industry values
+      if (industriesArray.length === 0) {
+        // Get all values with the name 'industry'
+        industriesArray = Array.isArray(req.body.industry)
+          ? req.body.industry
+          : req.body.industry
+          ? [req.body.industry]
+          : [];
+      }
+
+      console.log("Отримані галузі:", industriesArray);
+
+      // Save message to database - FIXED: Ensure industries is stored as an array
+      const result = await executeQuery(
+        `
+        INSERT INTO messages (username, email, message, message_type, content, media_path, industries)
+        VALUES ($1, $2, $3, $4, $5, $6, $7::text[])
+        RETURNING id, industries
+        `,
+        [
+          username,
+          email,
+          messageContent || "",
+          messageType,
+          messageContent,
+          mediaUrl,
+          industriesArray, // Explicitly cast to text array
+        ]
+      );
+
+      const messageId = result.rows[0].id;
+      console.log("Збережені галузі:", result.rows[0].industries);
+
+      // Send message to Telegram (if you're using this functionality)
+      try {
+        await sendMessage({
+          username,
+          email,
+          messageType,
+          messageContent,
+          filePath,
+          industries: industriesArray,
+        });
+      } catch (telegramError) {
+        console.error("Error sending message to Telegram:", telegramError);
+        // Continue execution even if Telegram sending fails
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Message sent successfully",
+        messageId,
+        industries: industriesArray, // Return the industries in the response
+      });
     } catch (error) {
       console.error("Error sending message:", error);
-      res
-        .status(500)
-        .json({ error: error.message || "Failed to send message" });
+      res.status(500).json({
+        error: error.message || "Failed to send message",
+      });
     }
   }
 );
+
+// Оновлений ендпоінт для отримання повідомлень
+app.get("/api/messages", async (req, res) => {
+  try {
+    const page = Number.parseInt(req.query.page) || 1;
+    const limit = Number.parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    const messageType = req.query.type;
+    const sortOrder = req.query.sort === "asc" ? "ASC" : "DESC";
+    const searchQuery = req.query.search;
+
+    // Build the query
+    let query = `
+      SELECT id, username, email, message_type, content, message, media_path as media_url, industries, created_at
+      FROM messages
+      WHERE 1=1
+    `;
+
+    const queryParams = [];
+    let paramIndex = 1;
+
+    // Add type filter if specified
+    if (messageType && messageType !== "all") {
+      query += ` AND message_type = $${paramIndex}`;
+      queryParams.push(messageType);
+      paramIndex++;
+    }
+
+    // Add search filter if specified
+    if (searchQuery) {
+      query += ` AND (
+        username ILIKE $${paramIndex} OR
+        email ILIKE $${paramIndex} OR
+        content ILIKE $${paramIndex} OR
+        message ILIKE $${paramIndex} OR
+        EXISTS (
+          SELECT 1 FROM unnest(industries) as industry
+          WHERE industry ILIKE $${paramIndex}
+        )
+      )`;
+      queryParams.push(`%${searchQuery}%`);
+      paramIndex++;
+    }
+
+    // Add sorting and pagination
+    query += ` ORDER BY created_at ${sortOrder} LIMIT $${paramIndex} OFFSET $${
+      paramIndex + 1
+    }`;
+    queryParams.push(limit, offset);
+
+    // Execute the query
+    const result = await executeQuery(query, queryParams);
+
+    // Debug log to check what's coming from the database
+    console.log("Отримані повідомлення з бази даних:", result.rows);
+
+    // Ensure industries is always an array
+    const messages = result.rows.map((message) => {
+      // If industries is null or undefined, set it to an empty array
+      if (!message.industries) {
+        message.industries = [];
+      }
+      return message;
+    });
+
+    // Get total count for pagination
+    let countQuery = `
+      SELECT COUNT(*) as total
+      FROM messages
+      WHERE 1=1
+    `;
+
+    const countParams = [];
+    paramIndex = 1;
+
+    // Add type filter if specified
+    if (messageType && messageType !== "all") {
+      countQuery += ` AND message_type = $${paramIndex}`;
+      countParams.push(messageType);
+      paramIndex++;
+    }
+
+    // Add search filter if specified
+    if (searchQuery) {
+      countQuery += ` AND (
+        username ILIKE $${paramIndex} OR
+        email ILIKE $${paramIndex} OR
+        content ILIKE $${paramIndex} OR
+        message ILIKE $${paramIndex} OR
+        EXISTS (
+          SELECT 1 FROM unnest(industries) as industry
+          WHERE industry ILIKE $${paramIndex}
+        )
+      )`;
+      countParams.push(`%${searchQuery}%`);
+    }
+
+    const countResult = await executeQuery(countQuery, countParams);
+    const total = Number.parseInt(countResult.rows[0].total);
+
+    res.status(200).json({
+      messages: messages,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error("❌ Error getting messages:", err.message);
+    res.status(500).json({ error: "Failed to get messages" });
+  }
+});
+
+// Оновлений ендпоінт для отримання одного повідомлення
+app.get("/api/messages/:id", async (req, res) => {
+  try {
+    const messageId = req.params.id;
+
+    const result = await executeQuery(
+      `
+      SELECT id, username, email, message_type, content, message, media_path as media_url, industries, created_at
+      FROM messages
+      WHERE id = $1
+      `,
+      [messageId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    // Ensure industries is always an array
+    const message = result.rows[0];
+    if (!message.industries) {
+      message.industries = [];
+    }
+
+    console.log("Отримане повідомлення з бази даних:", message);
+
+    res.status(200).json({ message });
+  } catch (err) {
+    console.error("❌ Error getting message:", err.message);
+    res.status(500).json({ error: "Failed to get message" });
+  }
+});
+
+// Delete a message
+app.delete("/api/messages/:id", async (req, res) => {
+  try {
+    const messageId = req.params.id;
+
+    // Get the message to check if it has a media file
+    const messageResult = await executeQuery(
+      "SELECT media_path FROM messages WHERE id = $1",
+      [messageId]
+    );
+
+    if (messageResult.rows.length === 0) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    const mediaPath = messageResult.rows[0].media_path;
+
+    // Delete the message from the database
+    await executeQuery("DELETE FROM messages WHERE id = $1", [messageId]);
+
+    // Delete the media file if it exists
+    if (mediaPath) {
+      const fullPath = path.join(__dirname, mediaPath.replace(/^\//, ""));
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Message deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting message:", err.message);
+    res.status(500).json({ error: "Failed to delete message" });
+  }
+});
+
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Serve the info page
+app.get("/info.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "info.html"));
+});
 
 // Створіть HTTP сервер з вашого Express додатку
 const server = http.createServer(app);
@@ -2301,3 +2647,7 @@ io.on("connection", (socket) => {
 server.listen(port, () => {
   console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);
 });
+
+console.log(
+  "The issue is fixed by ensuring the 'industries' field is properly handled in the send-message endpoint"
+);
