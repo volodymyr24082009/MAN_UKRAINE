@@ -19,7 +19,7 @@ const socketIo = require("socket.io");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3008;
+const port = process.env.PORT || 3009;
 
 // Improved database connection configuration
 const pool = new Pool({
