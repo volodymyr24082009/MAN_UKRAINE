@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Відеодзвінки з майстрами</title>
+    <link rel="stylesheet" href="css/video.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src='https://meet.jit.si/external_api.js'></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Відеоконсультація з майстром</h1>
+            <p>Оберіть одного майстра зі списку та натисніть кнопку "Зателефонувати"</p>
+        </header>
+
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Пошук майстра...">
+                <button id="searchButton"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="filter-container">
+                <select id="industryFilter">
+                    <option value="">Всі галузі</option>
+                    <!-- Галузі будуть додані через JavaScript -->
+                </select>
+            </div>
+        </div>
+
+        <div class="masters-container">
+            <div class="masters-list" id="mastersList">
+                <!-- Майстри будуть додані через JavaScript -->
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Завантаження майстрів...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-container">
+            <button id="callButton" class="call-button" disabled>
+                <i class="fas fa-video"></i> Зателефонувати
+            </button>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+    </div>
+
+    <div id="videoContainer" class="video-container hidden">
+        <div class="video-header">
+            <h2 id="callTitle">Відеодзвінок з <span id="masterName"></span></h2>
+            <button id="closeCallButton" class="close-button">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="jitsiContainer" class="jitsi-container"></div>
+    </div>
+
+    <script src="js/video.js"></script>
+</body>
+</html>
