@@ -157,15 +157,16 @@ function createCharts(timelineData) {
     // Fix: Properly handle date parsing and formatting
     try {
       // Check if timestamp is a number (milliseconds) or a string date
-      const date = typeof item.timestamp === 'number' 
-        ? new Date(item.timestamp) 
-        : new Date(item.timestamp);
-      
+      const date =
+        typeof item.timestamp === "number"
+          ? new Date(item.timestamp)
+          : new Date(item.timestamp);
+
       // Verify if date is valid before formatting
       if (isNaN(date.getTime())) {
         return item.month || "Невідомо"; // Use month property if available or fallback
       }
-      
+
       return date.toLocaleDateString("uk-UA", { month: "short" });
     } catch (e) {
       console.error("Error parsing date:", e);

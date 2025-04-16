@@ -345,6 +345,7 @@ html.light .mobile-menu-btn {
   height: 100%;
   background: linear-gradient(rgba(26, 34, 56, 0.8), rgba(26, 34, 56, 0.6));
   z-index: 1;
+  transition: background var(--transition-medium);
 }
 
 html.light .hero::before {
@@ -799,12 +800,12 @@ html.light .industry-description {
 .testimonials-section {
   padding: 80px 0;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .testimonials-slider {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   margin: 0 auto;
   max-width: 1000px;
 }
@@ -816,7 +817,7 @@ html.light .industry-description {
 
 .testimonial-card {
   min-width: 100%;
-  padding: 30px;
+  padding: 40px;
   background: var(--gradient-dark);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-dark);
@@ -825,6 +826,7 @@ html.light .industry-description {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  margin-bottom: 30px;
 }
 
 html.light .testimonial-card {
@@ -878,12 +880,14 @@ html.light .testimonial-quote {
   font-weight: 700;
   font-size: 1.2rem;
   color: var(--primary-color);
+  margin-top: 10px;
 }
 
 .testimonial-role {
   font-size: 0.9rem;
   color: var(--text-dark);
   opacity: 0.8;
+  margin-top: 5px;
 }
 
 html.light .testimonial-role {
@@ -892,8 +896,8 @@ html.light .testimonial-role {
 
 .testimonial-rating {
   color: var(--warning-color);
-  font-size: 1.2rem;
-  margin-bottom: 10px;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
 }
 
 .testimonial-industry {
@@ -901,13 +905,17 @@ html.light .testimonial-role {
   color: var(--primary-color);
   margin-bottom: 15px;
   font-weight: 600;
+  padding: 5px 15px;
+  background-color: rgba(52, 152, 219, 0.1);
+  border-radius: 20px;
+  display: inline-block;
 }
 
 .testimonial-date {
   font-size: 0.8rem;
   color: var(--text-dark);
   opacity: 0.7;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 
 html.light .testimonial-date {
@@ -922,11 +930,13 @@ html.light .testimonial-date {
   justify-content: space-between;
   transform: translateY(-50%);
   z-index: 10;
+  padding: 0 30px;
+  pointer-events: none;
 }
 
 .testimonial-control {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: var(--primary-color);
   color: white;
@@ -936,7 +946,10 @@ html.light .testimonial-date {
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-medium);
-  opacity: 0.7;
+  opacity: 0.8;
+  z-index: 20;
+  pointer-events: auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .testimonial-control:hover {
@@ -945,20 +958,73 @@ html.light .testimonial-date {
 }
 
 .testimonial-control.prev {
-  margin-left: -20px;
+  margin-left: -25px;
 }
 
 .testimonial-control.next {
-  margin-right: -20px;
+  margin-right: -25px;
 }
 
+/* Кнопка "Залишити відгук" */
 .add-review-container {
   display: flex;
   justify-content: center;
-  margin-top: 30px;
+  margin-top: 40px;
+  margin-bottom: 20px;
 }
 
-/* Review Form Section */
+.add-review-btn {
+  padding: 15px 30px;
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.add-review-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--secondary-color),
+    var(--primary-color)
+  );
+  transition: all var(--transition-medium);
+  z-index: -1;
+}
+
+.add-review-btn:hover::before {
+  left: 0;
+}
+
+.add-review-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+}
+
+/* Стилі для форми відгуку */
 .review-section {
   padding: 80px 0;
   position: relative;
@@ -983,6 +1049,7 @@ html.light .testimonial-date {
   overflow: hidden;
   width: 100%;
   max-width: 700px;
+  margin: 0 auto;
 }
 
 html.light .review-form-container {
@@ -1000,13 +1067,71 @@ html.light .review-form-container:hover {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-.rating-container {
+.review-form {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  gap: 20px;
+}
+
+.form-group {
+  position: relative;
+  margin-bottom: 25px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 15px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-dark);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-dark);
+  font-size: 1rem;
+  transition: all var(--transition-medium);
+  font-family: var(--font-family);
+}
+
+html.light .form-group input,
+html.light .form-group textarea,
+html.light .form-group select {
+  border: 1px solid var(--border-light);
+  background-color: rgba(255, 255, 255, 0.8);
+  color: var(--text-light);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+  transform: translateY(-3px);
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+html.light .form-group label {
+  color: var(--text-light);
+}
+
+/* Зірковий рейтинг */
+.rating-container {
+  margin-bottom: 20px;
 }
 
 .rating-label {
+  display: block;
   margin-bottom: 10px;
   font-weight: 600;
   color: var(--text-dark);
@@ -1018,20 +1143,73 @@ html.light .rating-label {
 
 .star-rating {
   display: flex;
-  gap: 5px;
+  gap: 10px;
+  margin-bottom: 5px;
 }
 
 .star-rating i {
   color: #bdc3c7;
   cursor: pointer;
   transition: all var(--transition-medium);
-  font-size: 1.5rem;
+  font-size: 1.8rem;
 }
 
 .star-rating i.hovered,
 .star-rating i.selected,
 .star-rating i.active {
   color: var(--warning-color);
+}
+
+/* Кнопка відправки відгуку */
+.submit-review-btn {
+  padding: 15px;
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.submit-review-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--secondary-color),
+    var(--primary-color)
+  );
+  transition: all var(--transition-medium);
+  z-index: -1;
+}
+
+.submit-review-btn:hover::before {
+  left: 0;
+}
+
+.submit-review-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
 }
 
 /* Order Form Section */
@@ -2427,508 +2605,25 @@ html.light .modal-close {
   animation: spin 1s ease-in-out infinite;
 }
 
-/* To Animate Classes */
-.to-animate {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
-}
-
-.animate {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(90deg);
-  }
-}
-
-@keyframes rotate-back {
-  from {
-    transform: rotate(90deg);
-  }
-  to {
-    transform: rotate(0deg);
-  }
-}
-
-@keyframes jello {
-  0%,
-  11.1%,
-  100% {
-    transform: none;
-  }
-  22.2% {
-    transform: skewX(-12.5deg) skewY(-12.5deg);
-  }
-  33.3% {
-    transform: skewX(6.25deg) skewY(6.25deg);
-  }
-  44.4% {
-    transform: skewX(-3.125deg) skewY(-3.125deg);
-  }
-  55.5% {
-    transform: skewX(1.5625deg) skewY(1.5625deg);
-  }
-  66.6% {
-    transform: skewX(-0.78125deg) skewY(-0.78125deg);
-  }
-  77.7% {
-    transform: skewX(0.390625deg) skewY(0.390625deg);
-  }
-  88.8% {
-    transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
-  }
-}
-/* Покращені стилі для секції відгуків клієнтів */
-.testimonials-section {
-  padding: 80px 0;
-  position: relative;
-  overflow: visible;
-}
-
-.testimonials-slider {
-  position: relative;
-  overflow: visible;
-  margin: 0 auto;
-  max-width: 1000px;
-}
-
-.testimonials-track {
-  display: flex;
-  transition: transform var(--transition-medium);
-}
-
-.testimonial-card {
-  min-width: 100%;
-  padding: 40px;
-  background: var(--gradient-dark);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-dark);
-  border: 1px solid var(--border-dark);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-html.light .testimonial-card {
-  background: var(--gradient-light);
-  box-shadow: var(--shadow-light);
-  border: 1px solid var(--border-light);
-}
-
-.testimonial-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 20px;
-  border: 3px solid var(--primary-color);
-}
-
-.testimonial-quote {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  margin-bottom: 20px;
-  color: var(--text-dark);
-  position: relative;
-  padding: 0 30px;
-}
-
-html.light .testimonial-quote {
-  color: var(--text-light);
-}
-
-.testimonial-quote::before,
-.testimonial-quote::after {
-  content: '"';
-  font-size: 3rem;
-  color: var(--primary-color);
-  opacity: 0.3;
-  position: absolute;
-}
-
-.testimonial-quote::before {
-  top: -20px;
-  left: 0;
-}
-
-.testimonial-quote::after {
-  bottom: -40px;
-  right: 0;
-}
-
-.testimonial-author {
-  font-weight: 700;
-  font-size: 1.2rem;
-  color: var(--primary-color);
-  margin-top: 10px;
-}
-
-.testimonial-role {
-  font-size: 0.9rem;
-  color: var(--text-dark);
-  opacity: 0.8;
-  margin-top: 5px;
-}
-
-html.light .testimonial-role {
-  color: var(--text-light);
-}
-
-.testimonial-rating {
-  color: var(--warning-color);
-  font-size: 1.5rem;
-  margin-bottom: 15px;
-}
-
-.testimonial-industry {
-  font-size: 0.9rem;
-  color: var(--primary-color);
-  margin-bottom: 15px;
-  font-weight: 600;
-  padding: 5px 15px;
-  background-color: rgba(52, 152, 219, 0.1);
-  border-radius: 20px;
-  display: inline-block;
-}
-
-.testimonial-date {
-  font-size: 0.8rem;
-  color: var(--text-dark);
-  opacity: 0.7;
-  margin-top: 15px;
-}
-
-html.light .testimonial-date {
-  color: var(--text-light);
-}
-
-.testimonials-controls {
-  position: absolute;
-  top: 50%;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  transform: translateY(-50%);
-  z-index: 10;
-  padding: 0 30px;
-  pointer-events: none;
-}
-
-.testimonial-control {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--transition-medium);
-  opacity: 0.8;
-  z-index: 20;
-  pointer-events: auto;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.testimonial-control:hover {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-.testimonial-control.prev {
-  margin-left: -25px;
-}
-
-.testimonial-control.next {
-  margin-right: -25px;
-}
-
-/* Кнопка "Залишити відгук" */
-.add-review-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 40px;
-  margin-bottom: 20px;
-}
-
-.add-review-btn {
-  padding: 15px 30px;
-  background: linear-gradient(
-    90deg,
-    var(--primary-color),
-    var(--secondary-color)
-  );
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-md);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-medium);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-}
-
-.add-review-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    var(--secondary-color),
-    var(--primary-color)
-  );
-  transition: all var(--transition-medium);
-  z-index: -1;
-}
-
-.add-review-btn:hover::before {
-  left: 0;
-}
-
-.add-review-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
-}
-
-/* Стилі для форми відгуку */
-.review-section {
-  padding: 80px 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.review-container {
-  display: flex;
-  justify-content: center;
-}
-
-.review-form-container {
-  background: var(--gradient-dark);
-  border-radius: var(--border-radius-lg);
-  padding: 40px;
-  box-shadow: var(--shadow-dark);
-  border: 1px solid var(--border-dark);
-  transition: transform var(--transition-medium),
-    box-shadow var(--transition-medium);
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-  width: 100%;
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-html.light .review-form-container {
-  background: var(--gradient-light);
-  box-shadow: var(--shadow-light);
-  border: 1px solid var(--border-light);
-}
-
-.review-form-container:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-html.light .review-form-container:hover {
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-}
-
-.review-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  position: relative;
-  margin-bottom: 25px;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 15px;
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-dark);
-  background-color: rgba(255, 255, 255, 0.05);
-  color: var(--text-dark);
-  font-size: 1rem;
-  transition: all var(--transition-medium);
-  font-family: var(--font-family);
-}
-
-html.light .form-group input,
-html.light .form-group textarea,
-html.light .form-group select {
-  border: 1px solid var(--border-light);
-  background-color: rgba(255, 255, 255, 0.8);
-  color: var(--text-light);
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
-  transform: translateY(-3px);
-}
-
-.form-group textarea {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-html.light .form-group label {
-  color: var(--text-light);
-}
-
-/* Зірковий рейтинг */
-.rating-container {
-  margin-bottom: 20px;
-}
-
-.rating-label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-html.light .rating-label {
-  color: var(--text-light);
-}
-
-.star-rating {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 5px;
-}
-
-.star-rating i {
-  color: #bdc3c7;
-  cursor: pointer;
-  transition: all var(--transition-medium);
-  font-size: 1.8rem;
-}
-
-.star-rating i.hovered,
-.star-rating i.selected,
-.star-rating i.active {
-  color: var(--warning-color);
-}
-
-/* Кнопка відправки відгуку */
-.submit-review-btn {
-  padding: 15px;
-  background: linear-gradient(
-    90deg,
-    var(--primary-color),
-    var(--secondary-color)
-  );
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-md);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-medium);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 10px;
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.submit-review-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    var(--secondary-color),
-    var(--primary-color)
-  );
-  transition: all var(--transition-medium);
-  z-index: -1;
-}
-
-.submit-review-btn:hover::before {
-  left: 0;
-}
-
-.submit-review-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-}
-
 /* Адаптивність для мобільних пристроїв */
 @media (max-width: 768px) {
   .review-form-container {
     padding: 30px 20px;
   }
-  
+
   .testimonial-card {
     padding: 30px 20px;
   }
-  
+
   .testimonials-controls {
     padding: 0 15px;
   }
-  
+
   .testimonial-control {
     width: 40px;
     height: 40px;
   }
-  
+
   .star-rating i {
     font-size: 1.5rem;
   }
@@ -2938,20 +2633,20 @@ html.light .rating-label {
   .review-form-container {
     padding: 25px 15px;
   }
-  
+
   .testimonial-card {
     padding: 25px 15px;
   }
-  
+
   .testimonial-quote {
     padding: 0 15px;
     font-size: 1rem;
   }
-  
+
   .star-rating i {
     font-size: 1.3rem;
   }
-  
+
   .testimonial-control {
     width: 35px;
     height: 35px;
