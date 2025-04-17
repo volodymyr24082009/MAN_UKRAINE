@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Майстер - Чат</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/communicationM.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-sidebar">
+            <div class="profile-section">
+                <div class="profile-image">
+                    <img src="https://via.placeholder.com/50" alt="Профіль майстра">
+                </div>
+                <div class="profile-info">
+                    <h3 id="master-name">Майстер</h3>
+                    <p id="master-status" class="online">Онлайн</p>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" placeholder="Пошук користувачів...">
+                <i class="fas fa-search"></i>
+            </div>
+            
+            <div class="users-list" id="users-list">
+                <!-- Користувачі будуть додані через JavaScript -->
+            </div>
+        </div>
+        
+        <div class="chat-main">
+            <div class="chat-header">
+                <div class="user-info">
+                    <img src="https://via.placeholder.com/40" alt="Користувач" id="current-user-img">
+                    <div>
+                        <h3 id="current-user-name">Виберіть користувача</h3>
+                        <p id="current-user-status">Немає активного чату</p>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button id="call-btn" disabled><i class="fas fa-phone"></i></button>
+                    <button id="video-call-btn" disabled><i class="fas fa-video"></i></button>
+                    <button id="more-btn"><i class="fas fa-ellipsis-v"></i></button>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="no-chat-selected">
+                    <i class="fas fa-comments"></i>
+                    <p>Виберіть користувача для початку чату</p>
+                </div>
+                <!-- Повідомлення будуть додані через JavaScript -->
+            </div>
+            
+            <div class="chat-input-container">
+                <button id="attach-btn"><i class="fas fa-paperclip"></i></button>
+                <div class="media-buttons">
+                    <button id="voice-btn"><i class="fas fa-microphone"></i></button>
+                    <button id="video-btn"><i class="fas fa-film"></i></button>
+                </div>
+                <input type="text" id="message-input" placeholder="Введіть повідомлення..." disabled>
+                <button id="send-btn" disabled><i class="fas fa-paper-plane"></i></button>
+            </div>
+            
+            <div class="media-recorder" id="media-recorder">
+                <div class="recorder-header">
+                    <h3 id="recorder-title">Запис голосового повідомлення</h3>
+                    <button id="close-recorder"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="recorder-content">
+                    <div class="recorder-visualization">
+                        <canvas id="visualizer"></canvas>
+                    </div>
+                    <div class="recorder-timer" id="recorder-timer">00:00</div>
+                    <div class="recorder-controls">
+                        <button id="start-recording"><i class="fas fa-circle"></i> Почати запис</button>
+                        <button id="stop-recording" disabled><i class="fas fa-stop"></i> Зупинити</button>
+                        <button id="send-recording" disabled><i class="fas fa-paper-plane"></i> Надіслати</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальне вікно для вхідних дзвінків -->
+    <div class="call-modal" id="call-modal">
+        <div class="call-content">
+            <div class="caller-info">
+                <img src="https://via.placeholder.com/80" alt="Користувач" id="caller-img">
+                <h3 id="caller-name">Ім'я користувача</h3>
+                <p id="call-type">Аудіо дзвінок</p>
+            </div>
+            <div class="call-actions">
+                <button id="decline-call" class="decline"><i class="fas fa-phone-slash"></i> Відхилити</button>
+                <button id="accept-call" class="accept"><i class="fas fa-phone"></i> Прийняти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальне вікно для активного дзвінка -->
+    <div class="active-call" id="active-call">
+        <div class="call-header">
+            <h3 id="active-call-title">Дзвінок з <span id="active-call-user">Користувачем</span></h3>
+            <p id="call-duration">00:00</p>
+        </div>
+        <div class="call-body">
+            <div class="video-container" id="video-container">
+                <video id="remote-video" autoplay></video>
+                <video id="local-video" autoplay muted></video>
+            </div>
+            <div class="audio-call-ui" id="audio-call-ui">
+                <img src="https://via.placeholder.com/120" alt="Користувач" id="audio-call-img">
+                <h3 id="audio-call-name">Ім'я користувача</h3>
+            </div>
+        </div>
+        <div class="call-controls">
+            <button id="toggle-mute"><i class="fas fa-microphone"></i></button>
+            <button id="toggle-video"><i class="fas fa-video"></i></button>
+            <button id="end-call" class="end-call"><i class="fas fa-phone-slash"></i></button>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="js/communicationM.js"></script>
+</body>
+</html>

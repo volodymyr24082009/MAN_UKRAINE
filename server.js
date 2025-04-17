@@ -19,7 +19,7 @@ const socketIo = require("socket.io");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3009;
+const port = process.env.PORT || 3005;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -3317,6 +3317,118 @@ app.get("/info.html", (req, res) => {
   res.sendFile(path.join(__dirname, "info.html"));
 });
 
+// Add this route to handle avatar uploads
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, "public/uploads/avatars");
+
+    // Create uploads directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const userId = req.params.userId;
+    const ext = path.extname(file.originalname);
+    cb(null, `avatar-${userId}-${Date.now()}${ext}`);
+  },
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    // Accept only images
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Тільки зображення можуть бути завантажені!"), false);
+    }
+  },
+});
+
+// Add this route to your server.js file
+app.post(
+  "/upload-avatar/:userId",
+  authenticateToken,
+  avatarUpload.single("avatar"),
+  async (req, res) => {
+    try {
+      const userId = req.params.userId;
+
+      // Check if user exists
+      const userResult = await executeQuery(
+        "SELECT * FROM users WHERE id = $1",
+        [userId]
+      );
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ message: "Користувача не знайдено" });
+      }
+
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ message: "Файл не завантажено" });
+      }
+
+      // Create URL for the uploaded file
+      const imageUrl = `/uploads/avatars/${req.file.filename}`;
+
+      // Update user profile with the new avatar URL
+      await executeQuery(
+        "UPDATE user_profile SET profile_image_url = $1 WHERE user_id = $2",
+        [imageUrl, userId]
+      );
+
+      console.log(`✅ Аватар для користувача з ID ${userId} успішно оновлено.`);
+      res.status(200).json({
+        success: true,
+        message: "Аватар успішно оновлено",
+        imageUrl: imageUrl,
+      });
+    } catch (err) {
+      console.error("❌ Помилка при завантаженні аватара:", err.message);
+      res.status(500).json({ message: "Помилка сервера", error: err.message });
+    }
+  }
+);
+
+// Make sure to add this column to your user_profile table if it doesn't exist
+const addProfileImageUrlColumn = async () => {
+  try {
+    // Check if the column exists
+    const columnExists = await executeQuery(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'user_profile' AND column_name = 'profile_image_url'
+      );
+    `);
+
+    if (!columnExists.rows[0].exists) {
+      // Add the column if it doesn't exist
+      await executeQuery(`
+        ALTER TABLE user_profile 
+        ADD COLUMN profile_image_url VARCHAR(255);
+      `);
+      console.log("✅ Added profile_image_url column to user_profile table");
+    }
+  } catch (err) {
+    console.error(
+      "❌ Error checking/adding profile_image_url column:",
+      err.message
+    );
+  }
+};
+
+// Call this function during server initialization
+addProfileImageUrlColumn().catch((err) => {
+  console.error("Failed to add profile_image_url column:", err.message);
+});
+
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+
 // Створіть HTTP сервер з вашого Express додатку
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -3374,11 +3486,404 @@ io.on("connection", (socket) => {
   });
 });
 
-// Змініть цей рядок у вашому коді
-// app.listen(port, () => {
-//   console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);
-// });
+// Create chat messages table if it doesn't exist
+const createChatMessagesTable = async () => {
+  try {
+    // First check if the table exists
+    const tableExistsQuery = `
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'chat_messages'
+      );
+    `;
 
+    const tableExists = await executeQuery(tableExistsQuery);
+
+    if (tableExists.rows[0].exists) {
+      console.log(
+        "Chat messages table exists, checking for required columns..."
+      );
+
+      // Get existing columns
+      const columnsResult = await executeQuery(`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'chat_messages';
+      `);
+
+      const columns = columnsResult.rows.map((row) => row.column_name);
+      console.log("Existing chat_messages table columns:", columns);
+
+      // Check for required columns and add them if missing
+      const requiredColumns = [
+        { name: "sender_id", type: "VARCHAR(100) NOT NULL" },
+        { name: "receiver_id", type: "VARCHAR(100) NOT NULL" },
+        { name: "message_type", type: "VARCHAR(20) NOT NULL DEFAULT 'text'" },
+        { name: "content", type: "TEXT NOT NULL" },
+        { name: "file_name", type: "VARCHAR(255)" },
+        { name: "file_path", type: "VARCHAR(255)" },
+        { name: "read", type: "BOOLEAN DEFAULT FALSE" },
+        { name: "created_at", type: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+      ];
+
+      for (const column of requiredColumns) {
+        if (!columns.includes(column.name)) {
+          await executeQuery(`
+            ALTER TABLE chat_messages 
+            ADD COLUMN ${column.name} ${column.type};
+          `);
+          console.log(`✅ Added ${column.name} column to chat_messages table`);
+        }
+      }
+    } else {
+      // Create the table with all required columns
+      const chatMessagesTableQuery = `
+        CREATE TABLE chat_messages (
+          id SERIAL PRIMARY KEY,
+          sender_id VARCHAR(100) NOT NULL,
+          receiver_id VARCHAR(100) NOT NULL,
+          message_type VARCHAR(20) NOT NULL DEFAULT 'text',
+          content TEXT NOT NULL,
+          file_name VARCHAR(255),
+          file_path VARCHAR(255),
+          read BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+
+      await executeQuery(chatMessagesTableQuery);
+      console.log("✅ Created chat_messages table with all required columns");
+    }
+  } catch (err) {
+    console.error(
+      "❌ Error creating/updating chat_messages table:",
+      err.message
+    );
+  }
+};
+
+// Call this function during server initialization
+createChatMessagesTable().catch((err) => {
+  console.error("Failed to initialize chat_messages table:", err.message);
+});
+
+// Configure multer for chat file uploads
+const chatStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, "uploads/chat");
+
+    // Create uploads directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
+  },
+});
+
+const chatUpload = multer({
+  storage: chatStorage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max file size
+  },
+});
+
+// API endpoint to get chat history
+app.get("/api/chat/history", async (req, res) => {
+  try {
+    const { userId, masterId } = req.query;
+
+    if (!userId || !masterId) {
+      return res.status(400).json({ error: "Missing userId or masterId" });
+    }
+
+    const result = await executeQuery(
+      `
+      SELECT id, sender_id, receiver_id, message_type, content, file_name, read, created_at
+      FROM chat_messages
+      WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)
+      ORDER BY created_at ASC
+    `,
+      [userId, masterId]
+    );
+
+    // Format messages for client
+    const messages = result.rows.map((msg) => ({
+      id: msg.id,
+      sender: msg.sender_id,
+      receiver: msg.receiver_id,
+      type: msg.message_type,
+      content: msg.content,
+      fileName: msg.file_name,
+      time: new Date(msg.created_at).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      read: msg.read,
+    }));
+
+    res.status(200).json({ messages });
+  } catch (err) {
+    console.error("❌ Error getting chat history:", err.message);
+    res.status(500).json({ error: "Failed to get chat history" });
+  }
+});
+
+// API endpoint to save chat message
+app.post("/api/chat/message", async (req, res) => {
+  try {
+    const { id, sender, receiver, type, content, fileName, username } =
+      req.body;
+
+    if (!sender || !receiver || !type || !content) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const result = await executeQuery(
+      `
+      INSERT INTO chat_messages (sender_id, receiver_id, message_type, content, file_name)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id
+    `,
+      [sender, receiver, type, content, fileName || null]
+    );
+
+    console.log(
+      `✅ Saved chat message from ${username || sender} to ${receiver}`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Message saved successfully",
+      id: result.rows[0].id,
+    });
+  } catch (err) {
+    console.error("❌ Error saving chat message:", err.message);
+    res.status(500).json({ error: "Failed to save message" });
+  }
+});
+
+// API endpoint to mark messages as read
+app.post("/api/chat/read", async (req, res) => {
+  try {
+    const { messageIds, userId, masterId } = req.body;
+
+    if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0) {
+      return res.status(400).json({ error: "Invalid messageIds" });
+    }
+
+    await executeQuery(
+      `
+      UPDATE chat_messages
+      SET read = TRUE
+      WHERE id = ANY($1) AND sender_id = $2 AND receiver_id = $3
+    `,
+      [messageIds, masterId, userId]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Messages marked as read",
+    });
+  } catch (err) {
+    console.error("❌ Error marking messages as read:", err.message);
+    res.status(500).json({ error: "Failed to mark messages as read" });
+  }
+});
+
+// API endpoint to upload chat files
+app.post("/api/chat/upload", chatUpload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const { senderId, receiverId, type } = req.body;
+
+    if (!senderId || !receiverId) {
+      return res.status(400).json({ error: "Missing sender or receiver ID" });
+    }
+
+    // Create file URL
+    const fileUrl = `/uploads/chat/${req.file.filename}`;
+    const filePath = req.file.path;
+    const fileName = req.file.originalname;
+
+    // Save message to database
+    const result = await executeQuery(
+      `
+      INSERT INTO chat_messages (sender_id, receiver_id, message_type, content, file_name, file_path)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
+    `,
+      [senderId, receiverId, type || "file", fileUrl, fileName, filePath]
+    );
+
+    console.log(
+      `✅ Uploaded file ${fileName} from ${senderId} to ${receiverId}`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "File uploaded successfully",
+      fileUrl,
+      messageId: result.rows[0].id,
+    });
+  } catch (err) {
+    console.error("❌ Error uploading file:", err.message);
+    res.status(500).json({ error: "Failed to upload file" });
+  }
+});
+
+// API endpoint to get master info
+app.get("/api/masters/:masterId", async (req, res) => {
+  try {
+    const masterId = req.params.masterId;
+
+    const result = await executeQuery(
+      `
+      SELECT u.id, u.username, up.first_name, up.last_name, up.email, up.phone
+      FROM users u
+      JOIN user_profile up ON u.id = up.user_id
+      WHERE u.id = $1 AND up.role_master = true
+    `,
+      [masterId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Master not found" });
+    }
+
+    // Check if master is online (using activeUsers map from socket.io)
+    const masterSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === masterId
+    )?.[0];
+
+    const online = !!masterSocketId;
+
+    const masterInfo = {
+      ...result.rows[0],
+      online,
+    };
+
+    res.status(200).json(masterInfo);
+  } catch (err) {
+    console.error("❌ Error getting master info:", err.message);
+    res.status(500).json({ error: "Failed to get master info" });
+  }
+});
+
+// Enhanced Socket.io event handling for chat
+io.on("connection", (socket) => {
+  // Existing connection code...
+
+  // Обробка дзвінків
+  socket.on("call-offer", (data) => {
+    console.log(
+      `Вхідний дзвінок від ${data.caller.username} до ${data.receiver}`
+    );
+
+    // Знаходимо сокет отримувача
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Якщо отримувач онлайн, відправляємо йому пропозицію дзвінка
+      io.to(receiverSocketId).emit("call-offer", data);
+    } else {
+      // Якщо отримувач офлайн, відправляємо відправнику повідомлення про недоступність
+      socket.emit("call-unavailable", {
+        receiver: data.receiver,
+        message: "Користувач зараз не в мережі",
+      });
+    }
+  });
+
+  socket.on("call-answer", (data) => {
+    console.log(`Відповідь на дзвінок від ${data.sender} до ${data.receiver}`);
+
+    // Знаходимо сокет отримувача
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Відправляємо відповідь на дзвінок
+      io.to(receiverSocketId).emit("call-answer", data);
+    }
+  });
+
+  socket.on("call-declined", (data) => {
+    console.log(`Дзвінок відхилено від ${data.sender} до ${data.receiver}`);
+
+    // Знаходимо сокет отримувача
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Відправляємо повідомлення про відхилення дзвінка
+      io.to(receiverSocketId).emit("call-declined", data);
+    }
+  });
+
+  socket.on("ice-candidate", (data) => {
+    // Знаходимо сокет отримувача
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Відправляємо ICE кандидата
+      io.to(receiverSocketId).emit("ice-candidate", data);
+    }
+  });
+
+  socket.on("end-call", (data) => {
+    console.log(`Дзвінок завершено від ${data.sender} до ${data.receiver}`);
+
+    // Знаходимо сокет отримувача
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Відправляємо повідомлення про завершення дзвінка
+      io.to(receiverSocketId).emit("end-call", data);
+    }
+  });
+
+  // Existing socket event handlers...
+});
+
+// Make sure to create the uploads/chat directory
+const chatUploadsDir = path.join(__dirname, "uploads/chat");
+if (!fs.existsSync(chatUploadsDir)) {
+  fs.mkdirSync(chatUploadsDir, { recursive: true });
+}
+
+// Create the sounds directory and add placeholder for sound files
+const soundsDir = path.join(__dirname, "public/sounds");
+if (!fs.existsSync(soundsDir)) {
+  fs.mkdirSync(soundsDir, { recursive: true });
+}
+
+// Serve the chat pages
+app.get("/chat/user", (req, res) => {
+  res.sendFile(path.join(__dirname, "communicationU.html"));
+});
+
+app.get("/chat/master", (req, res) => {
+  res.sendFile(path.join(__dirname, "communicationM.html"));
+});
+
+console.log("✅ Chat API endpoints have been added successfully!");
 // На цей код:
 server.listen(port, () => {
   console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);

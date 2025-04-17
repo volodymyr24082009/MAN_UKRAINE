@@ -8,6 +8,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+ 
     <link rel="stylesheet" href="./css/profile.css" />
   </head>
   <body>
@@ -82,7 +83,7 @@
         </div>
 
         <div id="tab-profile" class="tab-content active">
-          <form id="profile-form">
+          <form id="profile-form" onsubmit="saveProfile(event)">
             <div class="form-group">
               <label for="first_name">Ім'я:</label>
               <input type="text" id="first_name" name="first_name" required />
@@ -436,10 +437,6 @@
                   rows="4"
                 ></textarea>
               </div>
-
-              <button type="button" id="save-services">
-                <i class="fas fa-save"></i> Зберегти послуги
-              </button>
             </div>
 
             <button type="submit">
@@ -565,6 +562,7 @@
 
         <div id="error-message" style="display: none"></div>
         <div id="success-message" style="display: none"></div>
+        <div id="info-message" style="display: none"></div>
       </main>
     </div>
 

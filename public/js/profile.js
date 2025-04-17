@@ -599,88 +599,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 5000);
   }
 
-  // Form submission handler
-  const profileForm = document.getElementById("profile-form");
-  if (profileForm) {
-    profileForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const userId = getUserId();
-      if (!userId) return;
-
-      const formData = {
-        first_name: document.getElementById("first_name").value,
-        last_name: document.getElementById("last_name").value,
-        email: document.getElementById("email").value,
-        phone: document.getElementById("phone").value,
-        address: document.getElementById("address").value,
-        date_of_birth: document.getElementById("date_of_birth").value,
-        bio: document.getElementById("bio").value,
-        role_master: document.getElementById("role_master").checked,
-      };
-
-      try {
-        // Show loading state
-        const submitButton = profileForm.querySelector('button[type="submit"]');
-        const originalText = submitButton.innerHTML;
-        submitButton.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-        submitButton.disabled = true;
-
-        const profileResponse = await fetch(`/profile/${userId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify(formData),
-        });
-
-        // Reset button state
-        submitButton.innerHTML = originalText;
-        submitButton.disabled = false;
-
-        if (!profileResponse.ok) {
-          const errorData = await profileResponse.json();
-          throw new Error(errorData.message || "Не вдалося оновити профіль");
-        }
-
-        const responseData = await profileResponse.json();
-
-        // Update profile header
-        updateProfileHeader({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          username: document
-            .getElementById("profile-username")
-            ?.textContent.substring(1),
-        });
-
-        // Toggle services section based on role_master
-        toggleServicesSection(formData.role_master);
-
-        // Show appropriate message
-        if (responseData.requiresApproval) {
-          // Update approval status display
-          const statusElement = document.getElementById("approval-status");
-          if (statusElement) {
-            statusElement.textContent = "На розгляді";
-            statusElement.className = "status-pending";
-            statusElement.style.display = "inline-block";
-          }
-
-          showSuccess(
-            "Профіль успішно оновлено! Ваші дані відправлено на затвердження адміністратором."
-          );
-        } else {
-          showSuccess("Профіль успішно оновлено!");
-        }
-      } catch (error) {
-        showError(error.message);
-      }
-    });
-  }
-
   // Add animation for services toggle
   const roleMasterCheckbox = document.getElementById("role_master");
   if (roleMasterCheckbox) {
@@ -762,148 +680,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
-
-  // Save services handler
-  const saveServicesBtn = document.getElementById("save-services");
-  if (saveServicesBtn) {
-    saveServicesBtn.addEventListener("click", async () => {
-      const userId = getUserId();
-      if (!userId) return;
-
-      try {
-        // Show loading state
-        const originalText = saveServicesBtn.innerHTML;
-        saveServicesBtn.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-        saveServicesBtn.disabled = true;
-
-        // Get selected industries
-        const selectedIndustries = Array.from(
-          document.querySelectorAll('#services input[name="industry"]:checked')
-        ).map((checkbox) => ({
-          name: checkbox.value,
-          type: "industry",
-          industry: checkbox.dataset.industry,
-        }));
-
-        // Get skills texts for each selected industry
-        const skillsTexts = [];
-        selectedIndustries.forEach((industry) => {
-          const textareaId = `${industry.industry}-skills-text`;
-          const textarea = document.getElementById(textareaId);
-          if (textarea && textarea.value.trim()) {
-            skillsTexts.push({
-              name: textarea.value,
-              type: textareaId,
-            });
-          }
-        });
-
-        // Get custom skills
-        const customSkills =
-          document.getElementById("custom-skills")?.value || "";
-
-        // Save services to server
-        const response = await fetch(`/services/${userId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            industries: selectedIndustries.map((i) => i.name),
-            skills: skillsTexts.map((s) => s.name),
-            customSkills: customSkills,
-          }),
-        });
-
-        // Reset button state
-        saveServicesBtn.innerHTML = originalText;
-        saveServicesBtn.disabled = false;
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Не вдалося зберегти послуги");
-        }
-
-        showSuccess("Послуги успішно збережено!");
-      } catch (error) {
-        // Reset button state
-        saveServicesBtn.innerHTML = originalText;
-        saveServicesBtn.disabled = false;
-        showError(error.message);
-      }
-    });
-  }
-
-  // Avatar upload functionality
-  const avatarUploadBtn = document.getElementById("avatar-upload");
-  if (avatarUploadBtn) {
-    avatarUploadBtn.addEventListener("click", () => {
-      document.getElementById("avatar-input").click();
-    });
-  }
-
-  const avatarInput = document.getElementById("avatar-input");
-  if (avatarInput) {
-    avatarInput.addEventListener("change", async (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      // Check file type
-      if (!file.type.startsWith("image/")) {
-        showError("Будь ласка, виберіть зображення");
-        return;
-      }
-
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        showError("Розмір файлу не повинен перевищувати 5MB");
-        return;
-      }
-
-      // Create FormData
-      const formData = new FormData();
-      formData.append("avatar", file);
-
-      try {
-        const userId = getUserId();
-        if (!userId) return;
-
-        // Upload avatar
-        const response = await fetch(`/upload-avatar/${userId}`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Не вдалося завантажити аватар");
-        }
-
-        const data = await response.json();
-
-        // Update avatar image
-        const avatarImage = document.getElementById("avatar-image");
-        if (avatarImage) {
-          avatarImage.src = data.imageUrl;
-          avatarImage.style.display = "block";
-
-          const avatarInitials = document.getElementById("avatar-initials");
-          if (avatarInitials) {
-            avatarInitials.style.display = "none";
-          }
-        }
-
-        showSuccess("Аватар успішно оновлено!");
-      } catch (error) {
-        showError(error.message);
-      }
-    });
-  }
 
   // Password strength checker
   const newPasswordInput = document.getElementById("new-password");
@@ -1118,6 +894,75 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Avatar upload functionality
+  const avatarUploadBtn = document.getElementById("avatar-upload");
+  if (avatarUploadBtn) {
+    avatarUploadBtn.addEventListener("click", () => {
+      document.getElementById("avatar-input").click();
+    });
+  }
+
+  const avatarInput = document.getElementById("avatar-input");
+  if (avatarInput) {
+    avatarInput.addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Check file type
+      if (!file.type.startsWith("image/")) {
+        showError("Будь ласка, виберіть зображення");
+        return;
+      }
+
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showError("Розмір файлу не повинен перевищувати 5MB");
+        return;
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      try {
+        const userId = getUserId();
+        if (!userId) return;
+
+        // Upload avatar
+        const response = await fetch(`/upload-avatar/${userId}`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Не вдалося завантажити аватар");
+        }
+
+        const data = await response.json();
+
+        // Update avatar image
+        const avatarImage = document.getElementById("avatar-image");
+        if (avatarImage) {
+          avatarImage.src = data.imageUrl;
+          avatarImage.style.display = "block";
+
+          const avatarInitials = document.getElementById("avatar-initials");
+          if (avatarInitials) {
+            avatarInitials.style.display = "none";
+          }
+        }
+
+        showSuccess("Аватар успішно оновлено!");
+      } catch (error) {
+        showError(error.message);
+      }
+    });
+  }
+
   // Order action functions
   window.viewOrderDetails = (orderId) => {
     window.location.href = `/order-details.html?id=${orderId}`;
@@ -1183,6 +1028,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 });
+
+// Function to save profile and services
 async function saveProfile(event) {
   event.preventDefault();
 
@@ -1337,14 +1184,14 @@ async function saveProfile(event) {
     }
 
     // Show success message
-    showSuccess("Профіль успішно оновлено");
+    showSuccess("Профіль успішно оновлено! Відправлено на модерацію майстра");
 
-    // If profile requires approval, show message
-    if (profileData.requiresApproval) {
-      showInfo(
-        "Ваш запит на роль майстра відправлено на розгляд адміністратору"
-      );
-    }
+    // Remove the conditional message about approval since we're always showing it in the success message
+    // if (profileData.requiresApproval) {
+    //   showInfo(
+    //     "Ваш запит на роль майстра відправлено на розгляд адміністратору"
+    //   );
+    // }
 
     // Reload profile data to show updated information
     setTimeout(() => {
