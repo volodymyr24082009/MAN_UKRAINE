@@ -31,8 +31,12 @@
         <div class="nav-menu" id="navMenu">
           <a href="index.html" class="nav-link">Головна</a>
           <a href="index.html#industries" class="nav-link">Галузі</a>
-          <a href="/public/message.html" class="nav-link" id="profileLink">Повідомлення</a>
-          <a href="index.html#order" class="nav-link" id="orderLink">Замовити</a>
+          <a href="/public/message.html" class="nav-link" id="profileLink"
+            >Повідомлення</a
+          >
+          <a href="index.html#order" class="nav-link" id="orderLink"
+            >Замовити</a
+          >
           <a href="order.html" class="nav-link active">Заявки</a>
           <a href="profile.html" class="nav-link" id="profileLink">Профіль</a>
           <button class="nav-button" id="loginBtn">
@@ -59,17 +63,56 @@
       <section class="orders-section" id="orders">
         <div class="container">
           <h2 class="section-title">Перегляд заявок</h2>
-          
+
           <div class="orders-filter">
-            <div class="filter-title">Фільтрувати за статусом:</div>
-            <div class="filter-buttons">
-              <button class="filter-btn active" data-status="all">Всі заявки</button>
-              <button class="filter-btn" data-status="pending">Очікують розгляду</button>
-              <button class="filter-btn" data-status="completed">Виконані</button>
-              <button class="filter-btn" data-status="rejected">Відхилені</button>
+            <div class="filter-group">
+              <div class="filter-title">Фільтрувати за статусом:</div>
+              <div class="filter-buttons">
+                <button class="filter-btn active" data-status="all">
+                  Всі заявки
+                </button>
+                <button class="filter-btn" data-status="pending">
+                  Очікують розгляду
+                </button>
+                <button class="filter-btn" data-status="completed">
+                  Виконані
+                </button>
+                <button class="filter-btn" data-status="rejected">
+                  Відхилені
+                </button>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-title">Фільтрувати за галуззю:</div>
+              <div class="industry-filter">
+                <select id="industryFilter" class="industry-select">
+                  <option value="all">Всі галузі</option>
+                  <option value="Інформаційні технології">
+                    Інформаційні технології
+                  </option>
+                  <option value="Медицина">Медицина</option>
+                  <option value="Енергетика">Енергетика</option>
+                  <option value="Аграрна галузь">Аграрна галузь</option>
+                  <option value="Фінанси та банківська справа">
+                    Фінанси та банківська справа
+                  </option>
+                  <option value="Освіта">Освіта</option>
+                  <option value="Туризм і гостинність">
+                    Туризм і гостинність
+                  </option>
+                  <option value="Будівництво та нерухомість">
+                    Будівництво та нерухомість
+                  </option>
+                  <option value="Транспорт">Транспорт</option>
+                  <option value="Мистецтво і культура">
+                    Мистецтво і культура
+                  </option>
+                </select>
+              </div>
             </div>
           </div>
-          
+
           <div class="orders-container" id="ordersContainer">
             <!-- Orders will be dynamically populated here -->
             <div class="loading-spinner">
@@ -77,8 +120,12 @@
               <span>Завантаження заявок...</span>
             </div>
           </div>
-          
-          <div class="no-orders-message" id="noOrdersMessage" style="display: none;">
+
+          <div
+            class="no-orders-message"
+            id="noOrdersMessage"
+            style="display: none"
+          >
             <i class="fas fa-inbox"></i>
             <p>Немає заявок для відображення</p>
           </div>
@@ -97,6 +144,35 @@
         </div>
         <div class="order-modal-actions" id="orderModalActions">
           <!-- Action buttons will be populated here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Industry Mismatch Modal -->
+    <div class="modal-overlay" id="industryMismatchModal">
+      <div class="order-modal">
+        <button class="modal-close" id="industryModalClose">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="order-modal-content">
+          <h2 class="modal-title">Невідповідність галузі</h2>
+          <div class="modal-info-group">
+            <div class="modal-value">
+              <i class="fas fa-exclamation-triangle warning-icon"></i>
+              <p>
+                Ви не можете прийняти цю заявку, оскільки вона не відповідає
+                вашій галузі.
+              </p>
+              <p>Ваша галузь: <span id="masterIndustry">Не вказано</span></p>
+              <p>Галузь заявки: <span id="orderIndustry">Не вказано</span></p>
+            </div>
+          </div>
+        </div>
+        <div class="order-modal-actions">
+          <button class="modal-btn modal-btn-close" id="industryModalCloseBtn">
+            <i class="fas fa-times"></i>
+            Закрити
+          </button>
         </div>
       </div>
     </div>

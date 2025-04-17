@@ -46,6 +46,9 @@ document.addEventListener("DOMContentLoaded", () => {
         loadUserOrders();
       } else if (tabName === "reviews") {
         loadUserReviews();
+      } else if (tabName === "profile") {
+        // Reload profile data when the profile tab is clicked
+        loadUserProfile();
       }
     });
   });
@@ -98,7 +101,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("email").value = data.profile.email || "";
         document.getElementById("phone").value = data.profile.phone || "";
         document.getElementById("address").value = data.profile.address || "";
-        document.getElementById("bio").value = data.profile.bio || "";
+        if (document.getElementById("bio")) {
+          document.getElementById("bio").value = data.profile.bio || "";
+        }
 
         if (data.profile.date_of_birth) {
           const date = new Date(data.profile.date_of_birth);
@@ -155,7 +160,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Load user services if master
         if (data.profile.role_master) {
-          loadUserServices(userId);
+          await loadUserServices(userId);
+
+          // After loading services, check for selected industry
+          await loadUserSelectedIndustry();
         }
       }
     } catch (error) {
@@ -253,6 +261,57 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Function to load user's selected industry
+  async function loadUserSelectedIndustry() {
+    try {
+      const userId = getUserId();
+      if (!userId) return;
+
+      // First try to get from localStorage
+      let selectedIndustry = localStorage.getItem("selectedIndustry");
+
+      // If not in localStorage, try to get from server
+      if (!selectedIndustry) {
+        const response = await fetch(`/api/user-selected-industry/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.selectedIndustry) {
+            selectedIndustry = data.selectedIndustry;
+            // Save to localStorage for future use
+            localStorage.setItem("selectedIndustry", selectedIndustry);
+          }
+        }
+      }
+
+      // If we have a selected industry, check the corresponding checkbox
+      if (selectedIndustry) {
+        const checkbox = Array.from(
+          document.querySelectorAll('input[name="industry"]')
+        ).find((cb) => cb.value === selectedIndustry);
+
+        if (checkbox) {
+          // Check only the selected industry
+          checkbox.checked = true;
+
+          // Trigger the change event to show the appropriate skills section
+          const event = new Event("change");
+          checkbox.dispatchEvent(event);
+
+          // Also ensure skills section is visible
+          const industry = checkbox.dataset.industry;
+          if (industry) {
+            const skillsSection = document.getElementById(`${industry}-skills`);
+            if (skillsSection) {
+              skillsSection.classList.add("visible");
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading selected industry:", error);
+    }
+  }
+
   // Function to load user services
   async function loadUserServices(userId) {
     try {
@@ -265,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (data.services && data.services.length > 0) {
-        // Reset all checkboxes
+        // Uncheck all checkboxes first
         document
           .querySelectorAll('#services input[type="checkbox"]')
           .forEach((checkbox) => {
@@ -278,17 +337,35 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const selectedIndustries = [];
+        let selectedIndustry = null;
 
+        // First pass: find the selected_industry if it exists
+        for (const service of data.services) {
+          if (service.service_type === "selected_industry") {
+            selectedIndustry = service.service_name;
+            localStorage.setItem("selectedIndustry", selectedIndustry);
+            break;
+          }
+        }
+
+        // Second pass: process all services
         data.services.forEach((service) => {
           if (service.service_type === "industry") {
+            // Only check the industry checkbox if it's the selected industry or if no selected industry exists
             const checkbox = Array.from(
               document.querySelectorAll('#services input[name="industry"]')
             ).find((cb) => cb.value === service.service_name);
 
             if (checkbox) {
-              checkbox.checked = true;
-              if (checkbox.dataset.industry) {
-                selectedIndustries.push(checkbox.dataset.industry);
+              // Only check this checkbox if it's the selected industry or if no selected industry exists
+              if (
+                !selectedIndustry ||
+                service.service_name === selectedIndustry
+              ) {
+                checkbox.checked = true;
+                if (checkbox.dataset.industry) {
+                  selectedIndustries.push(checkbox.dataset.industry);
+                }
               }
             }
           } else if (service.service_type.endsWith("-skills-text")) {
@@ -303,6 +380,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
         });
+
+        // If no selected industry was found but we have industries, select the first one
+        if (!selectedIndustry && selectedIndustries.length === 0) {
+          const firstIndustryCheckbox = document.querySelector(
+            '#services input[name="industry"]'
+          );
+          if (firstIndustryCheckbox) {
+            firstIndustryCheckbox.checked = true;
+            if (firstIndustryCheckbox.dataset.industry) {
+              selectedIndustries.push(firstIndustryCheckbox.dataset.industry);
+            }
+            localStorage.setItem(
+              "selectedIndustry",
+              firstIndustryCheckbox.value
+            );
+          }
+        }
 
         // Show industry-specific skills sections
         selectedIndustries.forEach((industry) => {
@@ -469,14 +563,18 @@ document.addEventListener("DOMContentLoaded", () => {
               ? `${review.user_first_name.charAt(
                   0
                 )}${review.user_last_name.charAt(0)}`
-              : review.user_username.charAt(0).toUpperCase();
+              : review.user_username
+              ? review.user_username.charAt(0).toUpperCase()
+              : "A";
 
           reviewCard.innerHTML = `
             <div class="review-header">
               <div class="reviewer-info">
                 <div class="reviewer-avatar">${reviewerInitials}</div>
                 <div>
-                  <div class="reviewer-name">${reviewerName}</div>
+                  <div class="reviewer-name">${
+                    reviewerName || "Анонімний користувач"
+                  }</div>
                   <div class="review-date">${formatDate(
                     review.created_at
                   )}</div>
@@ -487,7 +585,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </div>
             <div class="review-content">
-              ${review.comment || "Без коментаря"}
+              ${review.comment || review.text || "Без коментаря"}
             </div>
             <div class="review-order">
               Замовлення: ${review.order_title || "Замовлення"} (${
@@ -560,6 +658,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Create error element if it doesn't exist
       const errorDiv = document.createElement("div");
       errorDiv.id = "error-message";
+      errorDiv.className = "message error-message";
       errorDiv.style.display = "none";
       document.body.appendChild(errorDiv);
     }
@@ -583,6 +682,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Create success element if it doesn't exist
       const successDiv = document.createElement("div");
       successDiv.id = "success-message";
+      successDiv.className = "message success-message";
       successDiv.style.display = "none";
       document.body.appendChild(successDiv);
     }
@@ -595,6 +695,30 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         successElement.style.display = "none";
         successElement.style.animation = "";
+      }, 400);
+    }, 5000);
+  }
+
+  // Function to show info message
+  function showInfo(message) {
+    const infoElement = document.getElementById("info-message");
+    if (!infoElement) {
+      // Create info element if it doesn't exist
+      const infoDiv = document.createElement("div");
+      infoDiv.id = "info-message";
+      infoDiv.className = "message info-message";
+      infoDiv.style.display = "none";
+      document.body.appendChild(infoDiv);
+    }
+
+    infoElement.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+    infoElement.style.display = "flex";
+
+    setTimeout(() => {
+      infoElement.style.animation = "fadeInScale 0.4s ease-out reverse";
+      setTimeout(() => {
+        infoElement.style.display = "none";
+        infoElement.style.animation = "";
       }, 400);
     }, 5000);
   }
@@ -619,6 +743,26 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!skillsSection) return;
 
       if (this.checked) {
+        // Save selected industry to localStorage
+        localStorage.setItem("selectedIndustry", this.value);
+
+        // Also save to server if user is logged in
+        const userId = getUserId();
+        if (userId) {
+          fetch(`/api/user-selected-industry/${userId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+              selectedIndustry: this.value,
+            }),
+          }).catch((err) =>
+            console.error("Failed to save selected industry to server:", err)
+          );
+        }
+
         // Determine animation direction based on position in the list
         const allIndustries = Array.from(
           document.querySelectorAll('input[name="industry"]')
@@ -1014,6 +1158,207 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Save profile handler
+  window.saveProfile = async (event) => {
+    event.preventDefault();
+
+    // Save current selected industry
+    const selectedIndustry = localStorage.getItem("selectedIndustry");
+
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
+
+    if (!userId || !token) {
+      showError("Необхідно авторизуватися для збереження профілю");
+      return;
+    }
+
+    // Show loading state
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton
+      ? submitButton.innerHTML
+      : "Зберегти";
+    if (submitButton) {
+      submitButton.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
+      submitButton.disabled = true;
+    }
+
+    try {
+      // Get form data
+      const formData = {
+        first_name: document.getElementById("first_name").value,
+        last_name: document.getElementById("last_name").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        address: document.getElementById("address").value,
+        date_of_birth: document.getElementById("date_of_birth").value,
+        role_master: document.getElementById("role_master").checked,
+      };
+
+      // Update user profile
+      const profileResponse = await fetch(`/profile/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error("Помилка при оновленні профілю");
+      }
+
+      const profileData = await profileResponse.json();
+
+      // If user is a master, save selected industries and services
+      if (formData.role_master) {
+        // Get all selected industry checkboxes
+        const selectedIndustryCheckboxes = Array.from(
+          document.querySelectorAll('input[name="industry"]:checked')
+        );
+
+        if (selectedIndustryCheckboxes.length === 0) {
+          throw new Error("Будь ласка, виберіть хоча б одну галузь");
+        }
+
+        // First, get existing services to identify which ones to delete
+        const existingServicesResponse = await fetch(`/services/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!existingServicesResponse.ok) {
+          throw new Error("Помилка при отриманні послуг");
+        }
+
+        const existingServicesData = await existingServicesResponse.json();
+
+        // Delete all existing services (both industries and specific services)
+        for (const service of existingServicesData.services) {
+          await fetch(`/services/${service.id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        }
+
+        // Add all the selected industries
+        for (const checkbox of selectedIndustryCheckboxes) {
+          await fetch(`/services/${userId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              service_name: checkbox.value,
+              service_type: "industry",
+            }),
+          });
+
+          // Now handle services for this industry
+          const industryId = checkbox.dataset.industry;
+          const serviceCheckboxes = document.querySelectorAll(
+            `input[name="service-${industryId}"]:checked`
+          );
+
+          // Add selected services for this industry
+          for (const serviceCheckbox of serviceCheckboxes) {
+            await fetch(`/services/${userId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                service_name: serviceCheckbox.value,
+                service_type: "service",
+              }),
+            });
+          }
+
+          // Add skills text for this industry if it exists
+          const skillsTextarea = document.getElementById(
+            `${industryId}-skills-text`
+          );
+          if (skillsTextarea && skillsTextarea.value.trim()) {
+            await fetch(`/services/${userId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                service_name: skillsTextarea.value.trim(),
+                service_type: `${industryId}-skills-text`,
+              }),
+            });
+          }
+        }
+
+        // Add custom skills if they exist
+        const customSkills = document.getElementById("custom-skills");
+        if (customSkills && customSkills.value.trim()) {
+          await fetch(`/services/${userId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              service_name: customSkills.value.trim(),
+              service_type: "custom-skills",
+            }),
+          });
+        }
+
+        // Save selected industry
+        if (selectedIndustry) {
+          await fetch(`/services/${userId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              service_name: selectedIndustry,
+              service_type: "selected_industry",
+            }),
+          });
+        }
+      }
+
+      // Show success message
+      showSuccess("Профіль успішно оновлено");
+
+      // If profile requires approval, show message
+      if (profileData.requiresApproval) {
+        showInfo(
+          "Ваш запит на роль майстра відправлено на розгляд адміністратору"
+        );
+      }
+
+      // Reload the page without clearing the form
+      setTimeout(() => {
+        // Reload profile data instead of refreshing the page
+        loadUserProfile();
+      }, 1000);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      showError("Помилка при збереженні профілю: " + error.message);
+    } finally {
+      // Reset button state
+      if (submitButton) {
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+      }
+    }
+  };
+
   // Load profile on page load
   loadUserProfile();
 
@@ -1028,206 +1373,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 });
-
-// Function to save profile and services
-async function saveProfile(event) {
-  event.preventDefault();
-
-  const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
-
-  if (!userId || !token) {
-    showError("Необхідно авторизуватися для збереження профілю");
-    return;
-  }
-
-  // Show loading state
-  const submitButton = event.target.querySelector('button[type="submit"]');
-  const originalButtonText = submitButton ? submitButton.innerHTML : "Зберегти";
-  if (submitButton) {
-    submitButton.innerHTML =
-      '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-    submitButton.disabled = true;
-  }
-
-  try {
-    // Get form data
-    const formData = {
-      first_name: document.getElementById("first_name").value,
-      last_name: document.getElementById("last_name").value,
-      email: document.getElementById("email").value,
-      phone: document.getElementById("phone").value,
-      address: document.getElementById("address").value,
-      date_of_birth: document.getElementById("date_of_birth").value,
-      role_master: document.getElementById("role_master").checked,
-    };
-
-    // Update user profile
-    const profileResponse = await fetch(`/profile/${userId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(formData),
-    });
-
-    if (!profileResponse.ok) {
-      throw new Error("Помилка при оновленні профілю");
-    }
-
-    const profileData = await profileResponse.json();
-
-    // If user is a master, save selected industries and services
-    if (formData.role_master) {
-      // Get all selected industry checkboxes
-      const selectedIndustryCheckboxes = Array.from(
-        document.querySelectorAll('input[name="industry"]:checked')
-      );
-
-      if (selectedIndustryCheckboxes.length === 0) {
-        throw new Error("Будь ласка, виберіть хоча б одну галузь");
-      }
-
-      // First, get existing services to identify which ones to delete
-      const existingServicesResponse = await fetch(`/services/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!existingServicesResponse.ok) {
-        throw new Error("Помилка при отриманні послуг");
-      }
-
-      const existingServicesData = await existingServicesResponse.json();
-
-      // Delete all existing services (both industries and specific services)
-      for (const service of existingServicesData.services) {
-        await fetch(`/services/${service.id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      }
-
-      // Add only the selected industries
-      for (const checkbox of selectedIndustryCheckboxes) {
-        await fetch(`/services/${userId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            service_name: checkbox.value,
-            service_type: "industry",
-          }),
-        });
-
-        // Now handle services for this industry
-        const industryName = checkbox.value;
-        const serviceCheckboxes = document.querySelectorAll(
-          `input[name="service-${checkbox.dataset.industry}"]:checked`
-        );
-
-        // Add selected services for this industry
-        for (const serviceCheckbox of serviceCheckboxes) {
-          await fetch(`/services/${userId}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              service_name: serviceCheckbox.value,
-              service_type: "service",
-            }),
-          });
-        }
-
-        // Add skills text for this industry if it exists
-        const skillsTextarea = document.getElementById(
-          `${checkbox.dataset.industry}-skills-text`
-        );
-        if (skillsTextarea && skillsTextarea.value.trim()) {
-          await fetch(`/services/${userId}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              service_name: skillsTextarea.value.trim(),
-              service_type: `${checkbox.dataset.industry}-skills-text`,
-            }),
-          });
-        }
-      }
-
-      // Add custom skills if they exist
-      const customSkills = document.getElementById("custom-skills");
-      if (customSkills && customSkills.value.trim()) {
-        await fetch(`/services/${userId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            service_name: customSkills.value.trim(),
-            service_type: "custom-skills",
-          }),
-        });
-      }
-    }
-
-    // Show success message
-    showSuccess("Профіль успішно оновлено! Відправлено на модерацію майстра");
-
-    // Remove the conditional message about approval since we're always showing it in the success message
-    // if (profileData.requiresApproval) {
-    //   showInfo(
-    //     "Ваш запит на роль майстра відправлено на розгляд адміністратору"
-    //   );
-    // }
-
-    // Reload profile data to show updated information
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
-  } catch (error) {
-    console.error("Error saving profile:", error);
-    showError("Помилка при збереженні профілю: " + error.message);
-  } finally {
-    // Reset button state
-    if (submitButton) {
-      submitButton.innerHTML = originalButtonText;
-      submitButton.disabled = false;
-    }
-  }
-}
-
-// Helper function to show info message
-function showInfo(message) {
-  const infoElement = document.getElementById("info-message");
-  if (!infoElement) {
-    // Create info element if it doesn't exist
-    const infoDiv = document.createElement("div");
-    infoDiv.id = "info-message";
-    infoDiv.style.display = "none";
-    document.body.appendChild(infoDiv);
-  }
-
-  infoElement.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
-  infoElement.style.display = "flex";
-
-  setTimeout(() => {
-    infoElement.style.animation = "fadeInScale 0.4s ease-out reverse";
-    setTimeout(() => {
-      infoElement.style.display = "none";
-      infoElement.style.animation = "";
-    }, 400);
-  }, 5000);
-}

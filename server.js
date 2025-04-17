@@ -19,7 +19,7 @@ const socketIo = require("socket.io");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3005;
+const port = process.env.PORT || 3008;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -1134,6 +1134,109 @@ app.get("/api/news/latest/:limit", async (req, res) => {
 
 console.log("✅ News API endpoints have been added successfully!");
 
+// Update the endpoint to get user's selected industry
+app.get("/api/user-selected-industry/:userId", async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    // First try to get the user's explicitly selected industry
+    const result = await executeQuery(
+      `
+      SELECT service_name 
+      FROM user_services 
+      WHERE user_id = $1 AND service_type = 'selected_industry'
+      LIMIT 1
+    `,
+      [userId]
+    );
+
+    if (result.rows.length > 0) {
+      res.status(200).json({
+        success: true,
+        selectedIndustry: result.rows[0].service_name,
+      });
+    } else {
+      // If no explicitly selected industry, get the first industry
+      const industriesResult = await executeQuery(
+        `
+        SELECT service_name 
+        FROM user_services 
+        WHERE user_id = $1 AND service_type = 'industry'
+        LIMIT 1
+      `,
+        [userId]
+      );
+
+      if (industriesResult.rows.length > 0) {
+        res.status(200).json({
+          success: true,
+          selectedIndustry: industriesResult.rows[0].service_name,
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          selectedIndustry: null,
+        });
+      }
+    }
+  } catch (err) {
+    console.error("❌ Error getting user's selected industry:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+});
+
+// Update the endpoint to save user's selected industry
+app.post("/api/user-selected-industry/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  const { selectedIndustry } = req.body;
+
+  if (!selectedIndustry) {
+    return res.status(400).json({
+      success: false,
+      message: "Selected industry is required",
+    });
+  }
+
+  try {
+    // First, delete any existing selected industry
+    await executeQuery(
+      `
+      DELETE FROM user_services 
+      WHERE user_id = $1 AND service_type = 'selected_industry'
+    `,
+      [userId]
+    );
+
+    // Then insert the new selected industry
+    await executeQuery(
+      `
+      INSERT INTO user_services (user_id, service_name, service_type)
+      VALUES ($1, $2, 'selected_industry')
+    `,
+      [userId, selectedIndustry]
+    );
+
+    console.log(
+      `✅ Selected industry "${selectedIndustry}" saved for user ${userId}`
+    );
+    res.status(200).json({
+      success: true,
+      message: "Selected industry saved successfully",
+    });
+  } catch (err) {
+    console.error("❌ Error saving user's selected industry:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+});
+
 // Головна сторінка (реєстрація/авторизація)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "auth.html"));
@@ -1286,7 +1389,18 @@ app.get("/profile/:userId", async (req, res) => {
       return res.status(404).json({ message: "Профіль не знайдено" });
     }
 
-    res.status(200).json({ profile: profileResult.rows[0] });
+    // Also get the username
+    const userResult = await executeQuery(
+      "SELECT username FROM users WHERE id = $1",
+      [userId]
+    );
+
+    const profileData = {
+      ...profileResult.rows[0],
+      username: userResult.rows[0].username,
+    };
+
+    res.status(200).json({ profile: profileData });
   } catch (err) {
     console.error("❌ Помилка при отриманні профілю:", err.message);
     res.status(500).json({ message: "Помилка сервера", error: err.message });
@@ -1423,6 +1537,15 @@ app.post("/services/:userId", async (req, res) => {
       return res.status(404).json({ message: "Користувача не знайдено" });
     }
 
+    // Check if the service already exists for this user with the same type
+    if (service_type === "selected_industry") {
+      // For selected_industry, check if one already exists and remove it first
+      await executeQuery(
+        "DELETE FROM user_services WHERE user_id = $1 AND service_type = 'selected_industry'",
+        [userId]
+      );
+    }
+
     await executeQuery(
       "INSERT INTO user_services (user_id, service_name, service_type) VALUES ($1, $2, $3)",
       [userId, service_name, service_type]
@@ -1525,6 +1648,49 @@ app.post("/master-requests", async (req, res) => {
       "❌ Помилка при створенні запиту на роль майстра:",
       err.message
     );
+    res.status(500).json({ message: "Помилка сервера", error: err.message });
+  }
+});
+
+// Endpoint to handle password changes
+app.post("/change-password/:userId", authenticateToken, async (req, res) => {
+  const userId = req.params.userId;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: "Усі поля повинні бути заповнені" });
+  }
+
+  try {
+    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
+      userId,
+    ]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "Користувача не знайдено" });
+    }
+
+    const user = userResult.rows[0];
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Невірний поточний пароль" });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await executeQuery("UPDATE users SET password = $1 WHERE id = $2", [
+      hashedPassword,
+      userId,
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "Пароль успішно змінено",
+    });
+  } catch (err) {
+    console.error("❌ Помилка при зміні паролю:", err.message);
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
@@ -3429,6 +3595,11 @@ addProfileImageUrlColumn().catch((err) => {
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
+// Add a route to serve the profile page
+app.get("/profile", (req, res) => {
+  res.sendFile(path.join(__dirname, "profile.html"));
+});
+
 // Створіть HTTP сервер з вашого Express додатку
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -3888,3 +4059,15 @@ console.log("✅ Chat API endpoints have been added successfully!");
 server.listen(port, () => {
   console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);
 });
+
+// Make sure uploads directory exists
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Make sure public/uploads directory exists
+const publicUploadsDir = path.join(__dirname, "public/uploads");
+if (!fs.existsSync(publicUploadsDir)) {
+  fs.mkdirSync(publicUploadsDir, { recursive: true });
+}
