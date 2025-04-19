@@ -129,6 +129,20 @@
             <i class="fas fa-inbox"></i>
             <p>Немає заявок для відображення</p>
           </div>
+
+          <!-- Pagination Controls -->
+          <div class="pagination-controls" id="paginationControls">
+            <button class="pagination-btn" id="prevPageBtn" disabled>
+              <i class="fas fa-chevron-left"></i> Попередня
+            </button>
+            <div class="pagination-info" id="paginationInfo">
+              Сторінка <span id="currentPage">1</span> з
+              <span id="totalPages">1</span>
+            </div>
+            <button class="pagination-btn" id="nextPageBtn" disabled>
+              Наступна <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </section>
     </main>
@@ -172,6 +186,33 @@
           <button class="modal-btn modal-btn-close" id="industryModalCloseBtn">
             <i class="fas fa-times"></i>
             Закрити
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmationModal">
+      <div class="order-modal">
+        <button class="modal-close" id="confirmationModalClose">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="order-modal-content">
+          <h2 class="modal-title">Підтвердження дії</h2>
+          <div class="modal-info-group">
+            <div class="modal-value" id="confirmationMessage">
+              Ви впевнені, що хочете виконати цю дію?
+            </div>
+          </div>
+        </div>
+        <div class="order-modal-actions">
+          <button class="modal-btn modal-btn-confirm" id="confirmBtn">
+            <i class="fas fa-check"></i>
+            Підтвердити
+          </button>
+          <button class="modal-btn modal-btn-close" id="cancelBtn">
+            <i class="fas fa-times"></i>
+            Скасувати
           </button>
         </div>
       </div>
@@ -291,6 +332,8 @@
       </div>
     </footer>
 
+    <!-- Socket.io script -->
+    <script src="/socket.io/socket.io.js"></script>
     <script src="./js/order.js"></script>
   </body>
 </html>
