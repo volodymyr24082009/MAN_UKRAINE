@@ -1944,63 +1944,114 @@ app.get("/admin/users-with-services", async (req, res) => {
   }
 });
 
-// Improved endpoint for user-master-timeline to use real data
+// ПОКРАЩЕНИЙ ендпоінт для user-master-timeline з гарним форматуванням місяців
 app.get("/api/user-master-timeline", async (req, res) => {
   try {
     console.log("Отримано запит на /api/user-master-timeline");
 
-    // Get the last 6 months
+    // Створюємо масив останніх 6 місяців з гарним форматуванням
     const months = [];
     const currentDate = new Date();
+    
+    // Масив українських назв місяців для гарного відображення
+    const ukrMonths = [
+      "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+      "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
+    ];
+    
+    // Короткі назви місяців для графіків
+    const shortMonths = [
+      "Січ", "Лют", "Бер", "Кві", "Тра", "Чер",
+      "Лип", "Сер", "Вер", "Жов", "Лис", "Гру"
+    ];
 
     for (let i = 5; i >= 0; i--) {
       const date = new Date(currentDate);
       date.setMonth(currentDate.getMonth() - i);
-
-      const monthName = date.toLocaleString("uk-UA", { month: "long" });
+      
+      const monthIndex = date.getMonth();
       const year = date.getFullYear();
-      const monthYear = `${monthName} ${year} р.`;
-
+      
+      // Повна назва місяця для API
+      const monthName = ukrMonths[monthIndex];
+      // Коротка назва місяця для графіків
+      const shortMonthName = shortMonths[monthIndex];
+      
+      const monthYear = `${monthName} ${year}`;
+      const shortMonthYear = `${shortMonthName} ${year}`;
+      
       const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
 
       months.push({
         month: monthYear,
+        shortMonth: shortMonthYear,
+        timestamp: date.getTime(),
         startDate: startOfMonth,
         endDate: endOfMonth,
+        monthIndex: monthIndex,
+        year: year
       });
     }
 
-    // Get user and master counts for each month
+    // Отримуємо дані для кожного місяця
     const timelineData = [];
 
     for (const monthData of months) {
-      // Query to get users and masters count up to the end of this month
-      const result = await executeQuery(
-        `
-        SELECT 
-          (SELECT COUNT(*) FROM users u 
-           JOIN user_profile up ON u.id = up.user_id 
-           WHERE u.id <= (SELECT MAX(id) FROM users WHERE created_at <= $1)
-           AND (up.role_master = false OR up.role_master IS NULL)) as users_count,
-          
-          (SELECT COUNT(*) FROM users u 
-           JOIN user_profile up ON u.id = up.user_id 
-           WHERE u.id <= (SELECT MAX(id) FROM users WHERE created_at <= $1)
-           AND up.role_master = true) as masters_count
-      `,
-        [monthData.endDate]
-      );
+      // Отримуємо кількість користувачів (без майстрів)
+      const usersResult = await executeQuery(`
+        SELECT COUNT(*) as count
+        FROM users u
+        JOIN user_profile up ON u.id = up.user_id
+        WHERE u.created_at <= $1
+        AND (up.role_master = false OR up.role_master IS NULL)
+      `, [monthData.endDate]);
+      
+      // Отримуємо кількість майстрів
+      const mastersResult = await executeQuery(`
+        SELECT COUNT(*) as count
+        FROM users u
+        JOIN user_profile up ON u.id = up.user_id
+        WHERE u.created_at <= $1
+        AND up.role_master = true
+      `, [monthData.endDate]);
+      
+      // Отримуємо кількість замовлень за цей місяць
+      const ordersResult = await executeQuery(`
+        SELECT COUNT(*) as count
+        FROM orders
+        WHERE created_at BETWEEN $1 AND $2
+      `, [monthData.startDate, monthData.endDate]);
 
-      const usersCount = Number.parseInt(result.rows[0].users_count) || 0;
-      const mastersCount = Number.parseInt(result.rows[0].masters_count) || 0;
+      // Отримуємо кількість завершених замовлень за цей місяць
+      const completedOrdersResult = await executeQuery(`
+        SELECT COUNT(*) as count
+        FROM orders
+        WHERE created_at BETWEEN $1 AND $2
+        AND status = 'completed'
+      `, [monthData.startDate, monthData.endDate]);
+
+      const usersCount = parseInt(usersResult.rows[0].count) || 0;
+      const mastersCount = parseInt(mastersResult.rows[0].count) || 0;
+      const ordersCount = parseInt(ordersResult.rows[0].count) || 0;
+      const completedOrdersCount = parseInt(completedOrdersResult.rows[0].count) || 0;
 
       timelineData.push({
         month: monthData.month,
+        shortMonth: monthData.shortMonth,
+        timestamp: monthData.timestamp,
         users: usersCount,
         masters: mastersCount,
+        orders: ordersCount,
+        completedOrders: completedOrdersCount,
+        // Додаємо додаткові метадані для сортування та відображення
+        monthIndex: monthData.monthIndex,
+        year: monthData.year
       });
     }
+
+    // Сортуємо дані за часом (від найстарішого до найновішого)
+    timelineData.sort((a, b) => a.timestamp - b.timestamp);
 
     console.log("Відправлення даних часової шкали:", timelineData);
     res.json(timelineData);
@@ -2133,87 +2184,6 @@ app.get("/api/user-master-count", async (req, res) => {
   } catch (error) {
     console.error(
       "❌ Помилка при отриманні кількості користувачів та майстрів:",
-      error.message
-    );
-    res.status(500).json({ message: "Помилка сервера", error: error.message });
-  }
-});
-
-// Improve the user-master-timeline endpoint to use real data
-app.get("/api/user-master-timeline", async (req, res) => {
-  try {
-    console.log("Отримано запит на /api/user-master-timeline");
-
-    // Create array of last 6 months
-    const months = [];
-    const currentDate = new Date();
-
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(currentDate);
-      date.setMonth(currentDate.getMonth() - i);
-      months.push({
-        month: date.toLocaleString("uk-UA", { month: "long", year: "numeric" }),
-        timestamp: date.getTime(),
-        startDate: new Date(date.getFullYear(), date.getMonth(), 1),
-        endDate: new Date(date.getFullYear(), date.getMonth() + 1, 0),
-      });
-    }
-
-    // Get total counts
-    const countResult = await executeQuery(`
-      SELECT 
-        COUNT(*) FILTER (WHERE role_master = false OR role_master IS NULL) as users_count,
-        COUNT(*) FILTER (WHERE role_master = true) as masters_count
-      FROM user_profile
-    `);
-
-    const totalUsers = Number.parseInt(countResult.rows[0].users_count) || 0;
-    const totalMasters =
-      Number.parseInt(countResult.rows[0].masters_count) || 0;
-
-    // Get orders count by month
-    const ordersResult = await executeQuery(`
-      SELECT 
-        DATE_TRUNC('month', created_at) as month,
-        COUNT(*) as count
-      FROM orders
-      WHERE created_at >= NOW() - INTERVAL '6 months'
-      GROUP BY DATE_TRUNC('month', created_at)
-      ORDER BY month
-    `);
-
-    // Create a map of month to orders count
-    const ordersCountByMonth = {};
-    ordersResult.rows.forEach((row) => {
-      const monthKey = new Date(row.month).toLocaleString("uk-UA", {
-        month: "long",
-        year: "numeric",
-      });
-      ordersCountByMonth[monthKey] = Number.parseInt(row.count);
-    });
-
-    // Create timeline data with progressive growth
-    // This is a simplified approach since we don't have exact registration dates
-    const timeline = months.map((month, index) => {
-      const factor = (index + 1) / months.length;
-      const ordersCount =
-        ordersCountByMonth[month.month] ||
-        Math.round(totalUsers * 0.2 * factor);
-
-      return {
-        month: month.month,
-        timestamp: month.timestamp,
-        users: Math.round(totalUsers * (0.5 + factor * 0.5)), // Start from 50% of current total
-        masters: Math.round(totalMasters * (0.4 + factor * 0.6)), // Start from 40% of current total
-        orders: ordersCount,
-      };
-    });
-
-    console.log("Відправлення даних часової шкали:", timeline);
-    res.json(timeline);
-  } catch (error) {
-    console.error(
-      "❌ Помилка при отриманні даних часової шкали:",
       error.message
     );
     res.status(500).json({ message: "Помилка сервера", error: error.message });
