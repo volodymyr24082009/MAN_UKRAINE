@@ -15,14 +15,13 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./css/news.css" />
+    <link rel="stylesheet" href="css/news.css" />
     <meta name="theme-color" content="#1a2238" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <link rel="stylesheet" href="css/header.css" />
   </head>
   <body>
     <header class="header">
@@ -43,7 +42,11 @@
             </ul>
           </nav>
           <div class="header-actions">
-            <button class="theme-toggle" id="themeToggle">
+            <button
+              class="theme-toggle"
+              id="themeToggle"
+              aria-label="Змінити тему"
+            >
               <i class="fas fa-moon"></i>
             </button>
             <div class="user-menu" id="userMenu">
@@ -55,7 +58,11 @@
                 <!-- Dropdown content will be populated by JS -->
               </div>
             </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <button
+              class="mobile-menu-toggle"
+              id="mobileMenuToggle"
+              aria-label="Меню"
+            >
               <i class="fas fa-bars"></i>
             </button>
           </div>
@@ -71,9 +78,9 @@
         </div>
       </section>
 
-      <section class="news-filters">
+      <section class="news-section">
         <div class="container">
-          <div class="filters-wrapper">
+          <div class="news-filters">
             <div class="search-box">
               <input type="text" id="newsSearch" placeholder="Пошук новин..." />
               <i class="fas fa-search"></i>
@@ -87,11 +94,7 @@
               <button class="filter-btn" data-category="tips">Поради</button>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section class="news-grid">
-        <div class="container">
           <div class="news-container" id="newsContainer">
             <!-- News items will be dynamically populated here -->
             <div class="news-loading">
@@ -99,6 +102,7 @@
               <p>Завантаження новин...</p>
             </div>
           </div>
+
           <div class="pagination" id="newsPagination">
             <!-- Pagination will be dynamically populated -->
           </div>
@@ -109,12 +113,28 @@
     <footer class="footer">
       <div class="container">
         <div class="footer-content">
-          <div class="footer-logo">
-            <a href="index.html">
-              <i class="fas fa-tools"></i>
-              <span>ProFix Network</span>
-            </a>
-            <p>Ваш надійний партнер у світі ремонту та обслуговування</p>
+          <div class="footer-info">
+            <div class="footer-logo">
+              <a href="index.html">
+                <i class="fas fa-tools"></i>
+                <span>ProFix Network</span>
+              </a>
+              <p>Ваш надійний партнер у світі ремонту та обслуговування</p>
+            </div>
+            <div class="social-links">
+              <a href="#" aria-label="Facebook"
+                ><i class="fab fa-facebook-f"></i
+              ></a>
+              <a href="#" aria-label="Twitter"
+                ><i class="fab fa-twitter"></i
+              ></a>
+              <a href="#" aria-label="Instagram"
+                ><i class="fab fa-instagram"></i
+              ></a>
+              <a href="#" aria-label="LinkedIn"
+                ><i class="fab fa-linkedin-in"></i
+              ></a>
+            </div>
           </div>
           <div class="footer-links">
             <div class="footer-column">
@@ -136,15 +156,6 @@
                 <li><i class="fas fa-envelope"></i> info@profixnetwork.com</li>
               </ul>
             </div>
-            <div class="footer-column">
-              <h3>Соціальні мережі</h3>
-              <div class="social-links">
-                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                <a href="#"><i class="fab fa-twitter"></i></a>
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-linkedin-in"></i></a>
-              </div>
-            </div>
           </div>
         </div>
         <div class="footer-bottom">
@@ -155,10 +166,12 @@
 
     <!-- News Modal -->
     <div class="modal-backdrop" id="newsModal">
-      <div class="modal news-modal">
+      <div class="modal">
         <div class="modal-header">
           <h3 class="modal-title" id="newsModalTitle">Заголовок новини</h3>
-          <button class="modal-close" id="closeNewsModal">&times;</button>
+          <button class="modal-close" id="closeNewsModal" aria-label="Закрити">
+            &times;
+          </button>
         </div>
         <div class="modal-body" id="newsModalBody">
           <!-- News content will be dynamically populated -->
@@ -170,20 +183,32 @@
               <span id="newsViewCount">0</span>
             </div>
             <div class="news-likes">
-              <button id="newsLikeBtn" class="like-btn">
+              <button id="newsLikeBtn" class="like-btn" aria-label="Вподобати">
                 <i class="far fa-heart"></i>
               </button>
               <span id="newsLikeCount">0</span>
             </div>
           </div>
           <div class="news-share">
-            <button class="share-btn" data-platform="facebook">
+            <button
+              class="share-btn"
+              data-platform="facebook"
+              aria-label="Поділитися у Facebook"
+            >
               <i class="fab fa-facebook-f"></i>
             </button>
-            <button class="share-btn" data-platform="twitter">
+            <button
+              class="share-btn"
+              data-platform="twitter"
+              aria-label="Поділитися у Twitter"
+            >
               <i class="fab fa-twitter"></i>
             </button>
-            <button class="share-btn" data-platform="telegram">
+            <button
+              class="share-btn"
+              data-platform="telegram"
+              aria-label="Поділитися у Telegram"
+            >
               <i class="fab fa-telegram"></i>
             </button>
           </div>
@@ -191,6 +216,6 @@
       </div>
     </div>
 
-    <script src="./js/news.js"></script>
+    <script src="js/news.js"></script>
   </body>
 </html>
