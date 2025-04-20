@@ -15,6 +15,10 @@ const punycode = require("punycode/");
 const http = require("http");
 const socketIo = require("socket.io");
 
+// Add these imports at the top of your file (after existing imports)
+const compression = require("compression");
+const helmet = require("helmet");
+
 // Load environment variables
 dotenv.config();
 
@@ -57,6 +61,70 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname)));
+
+// Add these middleware configurations after your existing middleware setup
+// (after the app.use(cors()), app.use(bodyParser.json()), etc. lines)
+
+// Add compression middleware to compress responses
+app.use(compression());
+
+// Add helmet for security headers including cache control
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // You may need to configure this based on your needs
+  })
+);
+
+// Add cache control middleware
+app.use((req, res, next) => {
+  // For static assets that should be cached
+  if (
+    req.url.match(/\.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$/)
+  ) {
+    // Cache for 1 day, but revalidate with server
+    res.setHeader("Cache-Control", "public, max-age=86400, must-revalidate");
+  } else {
+    // For HTML and API responses - no caching
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+  }
+  next();
+});
+
+// Add ETag support for better caching
+app.set("etag", "strong");
+
+// Add versioning to static assets (add this before your static middleware)
+const version = Date.now().toString();
+app.use((req, res, next) => {
+  if (req.url.match(/\.(css|js)$/)) {
+    // Append version query parameter to force reload when files change
+    req.url = req.url.includes("?")
+      ? `${req.url}&v=${version}`
+      : `${req.url}?v=${version}`;
+  }
+  next();
+});
+
+// Modify your static middleware to include caching options
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    maxAge: "1d", // Cache for 1 day
+    etag: true,
+    lastModified: true,
+  })
+);
+app.use(
+  express.static(path.join(__dirname), {
+    maxAge: "1d", // Cache for 1 day
+    etag: true,
+    lastModified: true,
+  })
+);
 
 // Helper function for database queries with retry logic
 const executeQuery = async (queryText, params = [], retries = 3) => {
@@ -1952,36 +2020,64 @@ app.get("/api/user-master-timeline", async (req, res) => {
     // Створюємо масив останніх 6 місяців з гарним форматуванням
     const months = [];
     const currentDate = new Date();
-    
+
     // Масив українських назв місяців для гарного відображення
     const ukrMonths = [
-      "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
-      "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
+      "Січень",
+      "Лютий",
+      "Березень",
+      "Квітень",
+      "Травень",
+      "Червень",
+      "Липень",
+      "Серпень",
+      "Вересень",
+      "Жовтень",
+      "Листопад",
+      "Грудень",
     ];
-    
+
     // Короткі назви місяців для графіків
     const shortMonths = [
-      "Січ", "Лют", "Бер", "Кві", "Тра", "Чер",
-      "Лип", "Сер", "Вер", "Жов", "Лис", "Гру"
+      "Січ",
+      "Лют",
+      "Бер",
+      "Кві",
+      "Тра",
+      "Чер",
+      "Лип",
+      "Сер",
+      "Вер",
+      "Жов",
+      "Лис",
+      "Гру",
     ];
 
     for (let i = 5; i >= 0; i--) {
       const date = new Date(currentDate);
       date.setMonth(currentDate.getMonth() - i);
-      
+
       const monthIndex = date.getMonth();
       const year = date.getFullYear();
-      
+
       // Повна назва місяця для API
       const monthName = ukrMonths[monthIndex];
       // Коротка назва місяця для графіків
       const shortMonthName = shortMonths[monthIndex];
-      
+
       const monthYear = `${monthName} ${year}`;
       const shortMonthYear = `${shortMonthName} ${year}`;
-      
+
       const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+      const endOfMonth = new Date(
+        date.getFullYear(),
+        date.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
 
       months.push({
         month: monthYear,
@@ -1990,7 +2086,7 @@ app.get("/api/user-master-timeline", async (req, res) => {
         startDate: startOfMonth,
         endDate: endOfMonth,
         monthIndex: monthIndex,
-        year: year
+        year: year,
       });
     }
 
@@ -1999,42 +2095,55 @@ app.get("/api/user-master-timeline", async (req, res) => {
 
     for (const monthData of months) {
       // Отримуємо кількість користувачів (без майстрів)
-      const usersResult = await executeQuery(`
+      const usersResult = await executeQuery(
+        `
         SELECT COUNT(*) as count
         FROM users u
         JOIN user_profile up ON u.id = up.user_id
         WHERE u.created_at <= $1
         AND (up.role_master = false OR up.role_master IS NULL)
-      `, [monthData.endDate]);
-      
+      `,
+        [monthData.endDate]
+      );
+
       // Отримуємо кількість майстрів
-      const mastersResult = await executeQuery(`
+      const mastersResult = await executeQuery(
+        `
         SELECT COUNT(*) as count
         FROM users u
         JOIN user_profile up ON u.id = up.user_id
         WHERE u.created_at <= $1
         AND up.role_master = true
-      `, [monthData.endDate]);
-      
+      `,
+        [monthData.endDate]
+      );
+
       // Отримуємо кількість замовлень за цей місяць
-      const ordersResult = await executeQuery(`
+      const ordersResult = await executeQuery(
+        `
         SELECT COUNT(*) as count
         FROM orders
         WHERE created_at BETWEEN $1 AND $2
-      `, [monthData.startDate, monthData.endDate]);
+      `,
+        [monthData.startDate, monthData.endDate]
+      );
 
       // Отримуємо кількість завершених замовлень за цей місяць
-      const completedOrdersResult = await executeQuery(`
+      const completedOrdersResult = await executeQuery(
+        `
         SELECT COUNT(*) as count
         FROM orders
         WHERE created_at BETWEEN $1 AND $2
         AND status = 'completed'
-      `, [monthData.startDate, monthData.endDate]);
+      `,
+        [monthData.startDate, monthData.endDate]
+      );
 
-      const usersCount = parseInt(usersResult.rows[0].count) || 0;
-      const mastersCount = parseInt(mastersResult.rows[0].count) || 0;
-      const ordersCount = parseInt(ordersResult.rows[0].count) || 0;
-      const completedOrdersCount = parseInt(completedOrdersResult.rows[0].count) || 0;
+      const usersCount = Number.parseInt(usersResult.rows[0].count) || 0;
+      const mastersCount = Number.parseInt(mastersResult.rows[0].count) || 0;
+      const ordersCount = Number.parseInt(ordersResult.rows[0].count) || 0;
+      const completedOrdersCount =
+        Number.parseInt(completedOrdersResult.rows[0].count) || 0;
 
       timelineData.push({
         month: monthData.month,
@@ -2046,7 +2155,7 @@ app.get("/api/user-master-timeline", async (req, res) => {
         completedOrders: completedOrdersCount,
         // Додаємо додаткові метадані для сортування та відображення
         monthIndex: monthData.monthIndex,
-        year: monthData.year
+        year: monthData.year,
       });
     }
 
