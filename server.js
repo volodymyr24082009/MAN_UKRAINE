@@ -23,7 +23,7 @@ const helmet = require("helmet");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3012;
+const port = process.env.PORT || 3013;
 
 // Improved database connection configuration
 const pool = new Pool({

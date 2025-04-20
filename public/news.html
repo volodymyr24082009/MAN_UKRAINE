@@ -24,52 +24,38 @@
     />
   </head>
   <body>
-    <header class="header">
-      <div class="container">
-        <div class="header-content">
-          <a href="index.html" class="logo">
-            <i class="fas fa-tools"></i>
-            <span>ProFix Network</span>
-          </a>
-          <nav class="main-nav">
-            <ul class="nav-list">
-              <li><a href="index.html">Головна</a></li>
-              <li><a href="services.html">Послуги</a></li>
-              <li><a href="masters.html">Майстри</a></li>
-              <li><a href="news.html" class="active">Новини</a></li>
-              <li><a href="about.html">Про нас</a></li>
-              <li><a href="contact.html">Контакти</a></li>
-            </ul>
-          </nav>
-          <div class="header-actions">
-            <button
-              class="theme-toggle"
-              id="themeToggle"
-              aria-label="Змінити тему"
-            >
-              <i class="fas fa-moon"></i>
-            </button>
-            <div class="user-menu" id="userMenu">
-              <button class="user-menu-btn" id="userMenuBtn">
-                <i class="fas fa-user-circle"></i>
-                <span id="userMenuName">Увійти</span>
-              </button>
-              <div class="user-menu-dropdown" id="userMenuDropdown">
-                <!-- Dropdown content will be populated by JS -->
-              </div>
-            </div>
-            <button
-              class="mobile-menu-toggle"
-              id="mobileMenuToggle"
-              aria-label="Меню"
-            >
-              <i class="fas fa-bars"></i>
-            </button>
-          </div>
+     <!-- Header -->
+     <header class="header">
+      <div class="header-container">
+        <a href="index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          <span>ProFix Network Hub</span>
+        </a>
+        <div class="nav-menu" id="navMenu">
+          <a href="index.html" class="nav-link active">Головна</a>
+          <a href="message.html" class="nav-link" id="message">Повідомлення</a>
+
+          <a href="chat.html" class="nav-link" id="chat">Чат</a>
+          <a href="news.html" class="nav-link" id="news">Новини</a>
+          <a href="info.html" class="nav-link" id="info"
+            >Повідомлення(майстри)</a
+          >
+          <a href="order.html" class="nav-link" id="orders">Замовлення</a>
+          <a href="profile.html" class="nav-link" id="profileLink">Профіль</a>
+          <button class="nav-button" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i>Увійти
+          </button>
+          <label class="theme-switch"
+            ><input type="checkbox" id="themeToggle" /><span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span></span
+            ></label
+          >
         </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
       </div>
     </header>
-
     <main>
       <section class="news-hero">
         <div class="container">
