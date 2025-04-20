@@ -1267,3 +1267,15 @@ document.addEventListener("DOMContentLoaded", function () {
     link.setAttribute("href", "admin-login.html");
   });
 });
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/service-worker.js")
+      .then((reg) =>
+        console.log("✅ Service Worker зареєстрований:", reg.scope)
+      )
+      .catch((err) =>
+        console.log("❌ Реєстрація Service Worker не вдалася:", err)
+      );
+  });
+}

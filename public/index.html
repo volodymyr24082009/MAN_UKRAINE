@@ -11,33 +11,9 @@
       name="description"
       content="ProFix Network Hub - платформа, що з'єднує клієнтів з професійними майстрами для різних галузей"
     />
-
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#3498db" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="apple-mobile-web-app-title" content="ProFix Network" />
-
-    <!-- PWA Icons -->
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="196x196"
-      href="/icons/favicon-196.png"
-    />
-    <link rel="apple-touch-icon" href="/icons/apple-icon-180.png" />
-    <link
-      rel="apple-touch-startup-image"
-      href="/icons/apple-splash-2048-2732.jpg"
-      media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
-    />
-
-    <!-- Manifest -->
     <link rel="manifest" href="/manifest.json" />
-
+    <meta name="theme-color" content="#6a00ff" />
+    <link rel="icon" href="/icons/icon-192.png" />
     <!-- Stylesheets -->
     <link
       rel="stylesheet"
@@ -50,10 +26,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/index.css" />
     <link rel="stylesheet" href="css/header.css" />
+    <link rel="stylesheet" href="css/pwa-banner.css" />
   </head>
   <body>
     <!-- PWA Install Banner -->
-    <div id="installBanner" class="pwa-install-banner" style="display: none">
+    <div id="installBanner" class="pwa-install-banner">
       <div class="install-content">
         <div class="install-icon">
           <i class="fas fa-download"></i>
@@ -545,8 +522,6 @@
     </footer>
 
     <script src="js/index.js"></script>
-    <script src="js/pwa.js"></script>
-    <script src="auth.js"></script>
-    <script src="role.js"></script>
+    
   </body>
 </html>
