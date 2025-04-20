@@ -23,7 +23,7 @@ const helmet = require("helmet");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3010;
+const port = process.env.PORT || 3012;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -62,69 +62,229 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname)));
 
-// Add these middleware configurations after your existing middleware setup
+// Add this middleware configuration after your existing middleware setup
 // (after the app.use(cors()), app.use(bodyParser.json()), etc. lines)
 
 // Add compression middleware to compress responses
 app.use(compression());
 
-// Add helmet for security headers including cache control
+// Add helmet for security headers
 app.use(
   helmet({
     contentSecurityPolicy: false, // You may need to configure this based on your needs
   })
 );
 
-// Add cache control middleware
+// Force cache clearing middleware - add this before your static middleware
 app.use((req, res, next) => {
-  // For static assets that should be cached
-  if (
-    req.url.match(/\.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$/)
-  ) {
-    // Cache for 1 day, but revalidate with server
-    res.setHeader("Cache-Control", "public, max-age=86400, must-revalidate");
-  } else {
-    // For HTML and API responses - no caching
-    res.setHeader(
-      "Cache-Control",
-      "no-store, no-cache, must-revalidate, proxy-revalidate"
-    );
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
-  }
-  next();
-});
+  // Set headers to prevent caching for all requests
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
 
-// Add ETag support for better caching
-app.set("etag", "strong");
-
-// Add versioning to static assets (add this before your static middleware)
-const version = Date.now().toString();
-app.use((req, res, next) => {
-  if (req.url.match(/\.(css|js)$/)) {
-    // Append version query parameter to force reload when files change
+  // Add timestamp to force browser to make a new request
+  if (req.url.match(/\.(css|js|jpg|jpeg|png|gif|ico|svg)$/)) {
+    const timestamp = Date.now();
     req.url = req.url.includes("?")
-      ? `${req.url}&v=${version}`
-      : `${req.url}?v=${version}`;
+      ? `${req.url}&_t=${timestamp}`
+      : `${req.url}?_t=${timestamp}`;
   }
+
   next();
 });
 
-// Modify your static middleware to include caching options
+// Add a route to clear client-side cache via JavaScript
+app.get("/clear-cache.js", (req, res) => {
+  res.setHeader("Content-Type", "application/javascript");
+  res.send(`
+    // Clear browser cache on page load
+    (function() {
+      // Clear localStorage
+      localStorage.clear();
+      
+      // Clear sessionStorage
+      sessionStorage.clear();
+      
+      // Clear application cache if available
+      if (window.applicationCache && window.applicationCache.swapCache) {
+        try {
+          window.applicationCache.swapCache();
+        } catch (e) {
+          console.error("Failed to swap application cache:", e);
+        }
+      }
+      
+      // Force reload from server (not from cache)
+      if (window.performance && window.performance.navigation) {
+        if (window.performance.navigation.type !== 1) { // Not a reload
+          const currentLocation = window.location.href;
+          const cacheBuster = Date.now();
+          const separator = currentLocation.indexOf('?') !== -1 ? '&' : '?';
+          window.location.href = currentLocation + separator + '_cb=' + cacheBuster;
+        }
+      }
+      
+      console.log("Cache cleared at " + new Date().toLocaleTimeString());
+    })();
+  `);
+});
+
+// Add a script tag to your HTML files to include the cache clearing script
+// You can do this by modifying your HTML files or by using a middleware
+app.use((req, res, next) => {
+  // Store the original send function
+  const originalSend = res.send;
+
+  // Override the send function
+  res.send = function (body) {
+    // Only modify HTML responses
+    if (
+      typeof body === "string" &&
+      res.get("Content-Type")?.includes("text/html")
+    ) {
+      // Add the cache clearing script before the closing </body> tag
+      body = body.replace(
+        "</body>",
+        '<script src="/clear-cache.js"></script></body>'
+      );
+    }
+
+    // Call the original send function with the modified body
+    return originalSend.call(this, body);
+  };
+
+  next();
+});
+
+// Modify your static middleware to disable caching
 app.use(
   express.static(path.join(__dirname, "public"), {
-    maxAge: "1d", // Cache for 1 day
-    etag: true,
-    lastModified: true,
+    etag: false,
+    lastModified: false,
+    maxAge: 0,
+    setHeaders: (res) => {
+      res.setHeader(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, proxy-revalidate"
+      );
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    },
   })
 );
+
 app.use(
   express.static(path.join(__dirname), {
-    maxAge: "1d", // Cache for 1 day
-    etag: true,
-    lastModified: true,
+    etag: false,
+    lastModified: false,
+    maxAge: 0,
+    setHeaders: (res) => {
+      res.setHeader(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, proxy-revalidate"
+      );
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    },
   })
 );
+
+// Add a service worker that clears the cache
+app.get("/cache-clearer-sw.js", (req, res) => {
+  res.setHeader("Content-Type", "application/javascript");
+  res.send(`
+    // Service Worker to clear caches
+    const CACHE_NAME = 'site-cache-v1';
+    
+    self.addEventListener('install', function(event) {
+      // Skip waiting to activate immediately
+      self.skipWaiting();
+      
+      event.waitUntil(
+        caches.keys().then(function(cacheNames) {
+          return Promise.all(
+            cacheNames.map(function(cacheName) {
+              return caches.delete(cacheName);
+            })
+          );
+        })
+      );
+    });
+    
+    self.addEventListener('activate', function(event) {
+      // Claim clients to control all open pages
+      event.waitUntil(clients.claim());
+      
+      // Clear all caches again
+      event.waitUntil(
+        caches.keys().then(function(cacheNames) {
+          return Promise.all(
+            cacheNames.map(function(cacheName) {
+              return caches.delete(cacheName);
+            })
+          );
+        })
+      );
+    });
+    
+    // Intercept all fetch requests
+    self.addEventListener('fetch', function(event) {
+      // Skip the cache and always go to network
+      event.respondWith(
+        fetch(event.request).catch(function() {
+          return new Response('Network error occurred', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers({
+              'Content-Type': 'text/plain'
+            })
+          });
+        })
+      );
+    });
+  `);
+});
+
+// Register the service worker in your HTML
+app.use((req, res, next) => {
+  // Store the original send function
+  const originalSend = res.send;
+
+  // Override the send function
+  res.send = function (body) {
+    // Only modify HTML responses
+    if (
+      typeof body === "string" &&
+      res.get("Content-Type")?.includes("text/html")
+    ) {
+      // Add the service worker registration script before the closing </head> tag
+      body = body.replace(
+        "</head>",
+        `<script>
+          // Register service worker to clear cache
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/cache-clearer-sw.js')
+              .then(function(registration) {
+                console.log('Cache clearer service worker registered:', registration.scope);
+              })
+              .catch(function(error) {
+                console.log('Service worker registration failed:', error);
+              });
+          }
+        </script></head>`
+      );
+    }
+
+    // Call the original send function with the modified body
+    return originalSend.call(this, body);
+  };
+
+  next();
+});
 
 // Helper function for database queries with retry logic
 const executeQuery = async (queryText, params = [], retries = 3) => {
