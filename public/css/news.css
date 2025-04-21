@@ -71,7 +71,7 @@ body {
   line-height: 1.6;
 }
 
-body.light {
+html.light body {
   background: var(--background-light);
   color: var(--text-light);
 }
@@ -81,9 +81,10 @@ body.light {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  flex: 1;
 }
 
-/* Header Styles */
+/* Updated Header Styles to match index.css */
 .header {
   position: sticky;
   top: 0;
@@ -95,7 +96,7 @@ body.light {
     box-shadow var(--transition-medium);
 }
 
-body.light .header {
+html.light .header {
   background-color: var(--background-light);
   box-shadow: var(--shadow-light);
 }
@@ -143,7 +144,7 @@ body.light .header {
   position: relative;
 }
 
-body.light .nav-list a {
+html.light .nav-list a {
   color: var(--text-light);
 }
 
@@ -188,9 +189,9 @@ body.light .nav-list a {
   border-radius: var(--border-radius-md);
 }
 
-body.light .theme-toggle,
-body.light .user-menu-btn,
-body.light .mobile-menu-toggle {
+html.light .theme-toggle,
+html.light .user-menu-btn,
+html.light .mobile-menu-toggle {
   color: var(--text-light);
 }
 
@@ -201,9 +202,9 @@ body.light .mobile-menu-toggle {
   color: var(--primary-color);
 }
 
-body.light .theme-toggle:hover,
-body.light .user-menu-btn:hover,
-body.light .mobile-menu-toggle:hover {
+html.light .theme-toggle:hover,
+html.light .user-menu-btn:hover,
+html.light .mobile-menu-toggle:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
@@ -232,7 +233,7 @@ body.light .mobile-menu-toggle:hover {
   transition: all var(--transition-fast);
 }
 
-body.light .user-menu-dropdown {
+html.light .user-menu-dropdown {
   background: var(--card-bg-light);
   box-shadow: var(--shadow-light);
 }
@@ -253,7 +254,7 @@ body.light .user-menu-dropdown {
   transition: all var(--transition-fast);
 }
 
-body.light .user-menu-dropdown a {
+html.light .user-menu-dropdown a {
   color: var(--text-light);
 }
 
@@ -262,7 +263,7 @@ body.light .user-menu-dropdown a {
   color: var(--primary-color);
 }
 
-body.light .user-menu-dropdown a:hover {
+html.light .user-menu-dropdown a:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
@@ -278,7 +279,7 @@ body.light .user-menu-dropdown a:hover {
   border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
 }
 
-body.light .news-hero {
+html.light .news-hero {
   background: linear-gradient(
       rgba(248, 249, 250, 0.8),
       rgba(248, 249, 250, 0.8)
@@ -342,7 +343,7 @@ body.light .news-hero {
   box-shadow: var(--shadow-dark);
 }
 
-body.light .news-filters {
+html.light .news-filters {
   background: var(--card-bg-light);
   box-shadow: var(--shadow-light);
 }
@@ -365,7 +366,7 @@ body.light .news-filters {
   transition: all var(--transition-fast);
 }
 
-body.light .search-box input {
+html.light .search-box input {
   border: 1px solid var(--border-light);
   background: rgba(0, 0, 0, 0.05);
   color: var(--text-light);
@@ -387,7 +388,7 @@ body.light .search-box input {
   font-size: 1.1rem;
 }
 
-body.light .search-box i {
+html.light .search-box i {
   color: var(--text-light);
 }
 
@@ -409,7 +410,7 @@ body.light .search-box i {
   transition: all var(--transition-fast);
 }
 
-body.light .filter-btn {
+html.light .filter-btn {
   border: 1px solid var(--border-light);
   color: var(--text-light);
 }
@@ -447,7 +448,7 @@ body.light .filter-btn {
   position: relative;
 }
 
-body.light .news-card {
+html.light .news-card {
   background: var(--card-bg-light);
   box-shadow: var(--shadow-light);
 }
@@ -457,7 +458,7 @@ body.light .news-card {
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
-body.light .news-card:hover {
+html.light .news-card:hover {
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
@@ -514,7 +515,7 @@ body.light .news-card:hover {
   transition: color var(--transition-fast);
 }
 
-body.light .news-title {
+html.light .news-title {
   color: var(--text-light);
 }
 
@@ -538,7 +539,7 @@ body.light .news-title {
   padding-top: 15px;
 }
 
-body.light .news-footer {
+html.light .news-footer {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -578,8 +579,8 @@ body.light .news-footer {
   opacity: 0.8;
 }
 
-body.light .news-views,
-body.light .news-likes {
+html.light .news-views,
+html.light .news-likes {
   color: var(--text-light);
 }
 
@@ -592,7 +593,7 @@ body.light .news-likes {
   box-shadow: var(--shadow-dark);
 }
 
-body.light .news-loading {
+html.light .news-loading {
   background: var(--card-bg-light);
   box-shadow: var(--shadow-light);
 }
@@ -632,7 +633,7 @@ body.light .news-loading {
   justify-content: center;
 }
 
-body.light .pagination button {
+html.light .pagination button {
   border: 1px solid var(--border-light);
   color: var(--text-light);
 }
@@ -663,7 +664,7 @@ body.light .pagination button {
   border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
 }
 
-body.light .footer {
+html.light .footer {
   background: var(--footer-bg-light);
 }
 
@@ -758,7 +759,7 @@ body.light .footer {
   padding: 3px 0;
 }
 
-body.light .footer-column a {
+html.light .footer-column a {
   color: var(--text-light);
 }
 
@@ -779,7 +780,7 @@ body.light .footer-column a {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-body.light .footer-bottom {
+html.light .footer-bottom {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -823,7 +824,7 @@ body.light .footer-bottom {
   transition: all var(--transition-medium);
 }
 
-body.light .modal {
+html.light .modal {
   background: var(--card-bg-light);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
 }
@@ -840,7 +841,7 @@ body.light .modal {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-body.light .modal-header {
+html.light .modal-header {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -859,7 +860,7 @@ body.light .modal-header {
   transition: all var(--transition-fast);
 }
 
-body.light .modal-close {
+html.light .modal-close {
   color: var(--text-light);
 }
 
@@ -912,7 +913,7 @@ body.light .modal-close {
   box-shadow: var(--shadow-dark);
 }
 
-body.light .gallery-item {
+html.light .gallery-item {
   box-shadow: var(--shadow-light);
 }
 
@@ -936,7 +937,7 @@ body.light .gallery-item {
   border-radius: var(--border-radius-md);
 }
 
-body.light .news-modal-links {
+html.light .news-modal-links {
   background: rgba(0, 0, 0, 0.03);
 }
 
@@ -956,7 +957,7 @@ body.light .news-modal-links {
   padding: 8px 0;
 }
 
-body.light .news-modal-links a {
+html.light .news-modal-links a {
   color: var(--text-light);
 }
 
@@ -977,7 +978,7 @@ body.light .news-modal-links a {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-body.light .modal-footer {
+html.light .modal-footer {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -991,7 +992,7 @@ body.light .modal-footer {
   padding: 5px;
 }
 
-body.light .like-btn {
+html.light .like-btn {
   color: var(--text-light);
 }
 
@@ -1049,7 +1050,7 @@ body.light .like-btn {
     box-shadow: var(--shadow-dark);
   }
 
-  body.light .main-nav {
+  html.light .main-nav {
     background: var(--background-light);
     box-shadow: var(--shadow-light);
   }

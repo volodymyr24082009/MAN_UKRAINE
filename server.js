@@ -4310,3 +4310,85 @@ const publicUploadsDir = path.join(__dirname, "public/uploads");
 if (!fs.existsSync(publicUploadsDir)) {
   fs.mkdirSync(publicUploadsDir, { recursive: true });
 }
+// Add these endpoints to your server.js file
+
+// Update the endpoint to get user's selected industries
+app.get("/api/user-selected-industries/:userId", async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    // Get all industries for this user
+    const result = await executeQuery(
+      `
+      SELECT service_name 
+      FROM user_services 
+      WHERE user_id = $1 AND service_type = 'industry'
+    `,
+      [userId]
+    );
+
+    const selectedIndustries = result.rows.map(row => row.service_name);
+
+    res.status(200).json({
+      success: true,
+      selectedIndustries: selectedIndustries
+    });
+  } catch (err) {
+    console.error("❌ Error getting user's selected industries:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+});
+
+// Update the endpoint to save user's selected industries
+app.post("/api/user-selected-industries/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  const { selectedIndustries } = req.body;
+
+  if (!selectedIndustries || !Array.isArray(selectedIndustries) || selectedIndustries.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Selected industries are required and must be an array",
+    });
+  }
+
+  try {
+    // First, delete any existing selected industries
+    await executeQuery(
+      `
+      DELETE FROM user_services 
+      WHERE user_id = $1 AND service_type = 'industry'
+    `,
+      [userId]
+    );
+
+    // Then insert all the selected industries
+    for (const industry of selectedIndustries) {
+      await executeQuery(
+        `
+        INSERT INTO user_services (user_id, service_name, service_type)
+        VALUES ($1, $2, 'industry')
+      `,
+        [userId, industry]
+      );
+    }
+
+    console.log(
+      `✅ Selected industries saved for user ${userId}: ${selectedIndustries.join(', ')}`
+    );
+    res.status(200).json({
+      success: true,
+      message: "Selected industries saved successfully",
+    });
+  } catch (err) {
+    console.error("❌ Error saving user's selected industries:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+});

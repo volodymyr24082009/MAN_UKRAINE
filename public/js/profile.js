@@ -1,3 +1,5 @@
+// Complete fixed profile.js code
+
 // Theme toggle functionality
 document.addEventListener("DOMContentLoaded", () => {
   const themeToggle = document.getElementById("themeToggle");
@@ -73,6 +75,44 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "/auth.html";
     }, 2000);
     return null;
+  }
+
+  // Function to get all selected industries
+  function getSelectedIndustries() {
+    const checkboxes = document.querySelectorAll(
+      'input[name="industry"]:checked'
+    );
+    return Array.from(checkboxes).map((cb) => cb.value);
+  }
+
+  // Function to save selected industries
+  function saveSelectedIndustries() {
+    const selectedIndustries = getSelectedIndustries();
+
+    // Save to localStorage as JSON string
+    localStorage.setItem(
+      "selectedIndustries",
+      JSON.stringify(selectedIndustries)
+    );
+
+    // Save to server if user is logged in
+    const userId = getUserId();
+    if (userId) {
+      fetch(`/api/user-selected-industries/${userId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          selectedIndustries: selectedIndustries,
+        }),
+      }).catch((err) =>
+        console.error("Failed to save selected industries to server:", err)
+      );
+    }
+
+    return selectedIndustries;
   }
 
   // Function to load user profile
@@ -162,8 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.profile.role_master) {
           await loadUserServices(userId);
 
-          // After loading services, check for selected industry
-          await loadUserSelectedIndustry();
+          // After loading services, check for selected industries
+          await loadUserSelectedIndustries();
         }
       }
     } catch (error) {
@@ -261,54 +301,79 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Function to load user's selected industry
-  async function loadUserSelectedIndustry() {
+  // Function to load user's selected industries
+  async function loadUserSelectedIndustries() {
     try {
       const userId = getUserId();
       if (!userId) return;
 
       // First try to get from localStorage
-      let selectedIndustry = localStorage.getItem("selectedIndustry");
+      let selectedIndustries = [];
+      const storedIndustries = localStorage.getItem("selectedIndustries");
+
+      if (storedIndustries) {
+        try {
+          selectedIndustries = JSON.parse(storedIndustries);
+        } catch (e) {
+          console.error("Error parsing stored industries:", e);
+        }
+      }
 
       // If not in localStorage, try to get from server
-      if (!selectedIndustry) {
-        const response = await fetch(`/api/user-selected-industry/${userId}`);
+      if (selectedIndustries.length === 0) {
+        const response = await fetch(`/api/user-selected-industries/${userId}`);
         if (response.ok) {
           const data = await response.json();
-          if (data.success && data.selectedIndustry) {
-            selectedIndustry = data.selectedIndustry;
+          if (
+            data.success &&
+            data.selectedIndustries &&
+            data.selectedIndustries.length > 0
+          ) {
+            selectedIndustries = data.selectedIndustries;
             // Save to localStorage for future use
-            localStorage.setItem("selectedIndustry", selectedIndustry);
+            localStorage.setItem(
+              "selectedIndustries",
+              JSON.stringify(selectedIndustries)
+            );
           }
         }
       }
 
-      // If we have a selected industry, check the corresponding checkbox
-      if (selectedIndustry) {
-        const checkbox = Array.from(
-          document.querySelectorAll('input[name="industry"]')
-        ).find((cb) => cb.value === selectedIndustry);
+      // If we have selected industries, check the corresponding checkboxes
+      if (selectedIndustries.length > 0) {
+        // Uncheck all first
+        document.querySelectorAll('input[name="industry"]').forEach((cb) => {
+          cb.checked = false;
+        });
 
-        if (checkbox) {
-          // Check only the selected industry
-          checkbox.checked = true;
+        // Check each selected industry
+        selectedIndustries.forEach((industryValue) => {
+          const checkbox = Array.from(
+            document.querySelectorAll('input[name="industry"]')
+          ).find((cb) => cb.value === industryValue);
 
-          // Trigger the change event to show the appropriate skills section
-          const event = new Event("change");
-          checkbox.dispatchEvent(event);
+          if (checkbox) {
+            checkbox.checked = true;
 
-          // Also ensure skills section is visible
-          const industry = checkbox.dataset.industry;
-          if (industry) {
-            const skillsSection = document.getElementById(`${industry}-skills`);
-            if (skillsSection) {
-              skillsSection.classList.add("visible");
+            // Trigger the change event to show the appropriate skills section
+            const event = new Event("change");
+            checkbox.dispatchEvent(event);
+
+            // Also ensure skills section is visible
+            const industry = checkbox.dataset.industry;
+            if (industry) {
+              const skillsSection = document.getElementById(
+                `${industry}-skills`
+              );
+              if (skillsSection) {
+                skillsSection.classList.add("visible");
+              }
             }
           }
-        }
+        });
       }
     } catch (error) {
-      console.error("Error loading selected industry:", error);
+      console.error("Error loading selected industries:", error);
     }
   }
 
@@ -337,35 +402,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const selectedIndustries = [];
-        let selectedIndustry = null;
+        const selectedIndustryValues = [];
 
-        // First pass: find the selected_industry if it exists
-        for (const service of data.services) {
-          if (service.service_type === "selected_industry") {
-            selectedIndustry = service.service_name;
-            localStorage.setItem("selectedIndustry", selectedIndustry);
-            break;
-          }
-        }
-
-        // Second pass: process all services
+        // Process all services
         data.services.forEach((service) => {
           if (service.service_type === "industry") {
-            // Only check the industry checkbox if it's the selected industry or if no selected industry exists
             const checkbox = Array.from(
-              document.querySelectorAll('#services input[name="industry"]')
+              document.querySelectorAll('input[name="industry"]')
             ).find((cb) => cb.value === service.service_name);
 
             if (checkbox) {
-              // Only check this checkbox if it's the selected industry or if no selected industry exists
-              if (
-                !selectedIndustry ||
-                service.service_name === selectedIndustry
-              ) {
-                checkbox.checked = true;
-                if (checkbox.dataset.industry) {
-                  selectedIndustries.push(checkbox.dataset.industry);
-                }
+              checkbox.checked = true;
+              selectedIndustryValues.push(service.service_name);
+              if (checkbox.dataset.industry) {
+                selectedIndustries.push(checkbox.dataset.industry);
               }
             }
           } else if (service.service_type.endsWith("-skills-text")) {
@@ -381,22 +431,11 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
-        // If no selected industry was found but we have industries, select the first one
-        if (!selectedIndustry && selectedIndustries.length === 0) {
-          const firstIndustryCheckbox = document.querySelector(
-            '#services input[name="industry"]'
-          );
-          if (firstIndustryCheckbox) {
-            firstIndustryCheckbox.checked = true;
-            if (firstIndustryCheckbox.dataset.industry) {
-              selectedIndustries.push(firstIndustryCheckbox.dataset.industry);
-            }
-            localStorage.setItem(
-              "selectedIndustry",
-              firstIndustryCheckbox.value
-            );
-          }
-        }
+        // Save selected industries to localStorage
+        localStorage.setItem(
+          "selectedIndustries",
+          JSON.stringify(selectedIndustryValues)
+        );
 
         // Show industry-specific skills sections
         selectedIndustries.forEach((industry) => {
@@ -743,25 +782,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!skillsSection) return;
 
       if (this.checked) {
-        // Save selected industry to localStorage
-        localStorage.setItem("selectedIndustry", this.value);
-
-        // Also save to server if user is logged in
-        const userId = getUserId();
-        if (userId) {
-          fetch(`/api/user-selected-industry/${userId}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              selectedIndustry: this.value,
-            }),
-          }).catch((err) =>
-            console.error("Failed to save selected industry to server:", err)
-          );
-        }
+        // Save all selected industries
+        const selectedIndustries = saveSelectedIndustries();
+        console.log("Saved industries:", selectedIndustries);
 
         // Determine animation direction based on position in the list
         const allIndustries = Array.from(
@@ -809,6 +832,9 @@ document.addEventListener("DOMContentLoaded", () => {
             "slide-in-top",
             "slide-in-bottom"
           );
+
+          // Save all selected industries after unchecking
+          saveSelectedIndustries();
 
           // Update last active industry
           const activeCheckboxes = Array.from(
@@ -1162,8 +1188,14 @@ document.addEventListener("DOMContentLoaded", () => {
   window.saveProfile = async (event) => {
     event.preventDefault();
 
-    // Save current selected industry
-    const selectedIndustry = localStorage.getItem("selectedIndustry");
+    // Get all selected industries
+    const selectedIndustries = getSelectedIndustries();
+
+    // Save to localStorage
+    localStorage.setItem(
+      "selectedIndustries",
+      JSON.stringify(selectedIndustries)
+    );
 
     const userId = localStorage.getItem("userId");
     const token = localStorage.getItem("token");
@@ -1316,20 +1348,17 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         }
 
-        // Save selected industry
-        if (selectedIndustry) {
-          await fetch(`/services/${userId}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              service_name: selectedIndustry,
-              service_type: "selected_industry",
-            }),
-          });
-        }
+        // Save all selected industries to the server
+        await fetch(`/api/user-selected-industries/${userId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            selectedIndustries: selectedIndustries,
+          }),
+        });
       }
 
       // Show success message
