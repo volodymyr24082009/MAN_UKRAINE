@@ -5,8 +5,8 @@ let socket = null;
 let localStream = null;
 let remoteStream = null;
 let peerConnection = null;
-let selectedMasterId = null;
-let selectedMasterName = "";
+let callerId = null;
+let callerName = "";
 let callTimer = null;
 let callDuration = 0;
 let callInProgress = false;
@@ -29,12 +29,11 @@ const iceServers = {
 
 // DOM elements
 const initialScreen = document.getElementById("initial-screen");
-const masterSelection = document.getElementById("master-selection");
 const callScreen = document.getElementById("call-screen");
 const callHistory = document.getElementById("call-history");
 const callNotification = document.getElementById("call-notification");
-const mastersList = document.getElementById("masters-list");
-const callMasterName = document.getElementById("call-master-name");
+const historyList = document.getElementById("history-list");
+const callUserName = document.getElementById("call-user-name");
 const callTimerElement = document.getElementById("call-timer");
 const callStatusElement = document.getElementById("call-status");
 const localVideo = document.getElementById("local-video");
@@ -49,29 +48,26 @@ const toggleMicBtn = document.getElementById("toggle-mic-btn");
 const toggleCameraBtn = document.getElementById("toggle-camera-btn");
 const endCallBtn = document.getElementById("end-call-btn");
 const toggleFullscreenBtn = document.getElementById("toggle-fullscreen-btn");
-const startCallBtn = document.getElementById("start-call-btn");
-const callSelectedMasterBtn = document.getElementById(
-  "call-selected-master-btn"
-);
-const cancelSelectionBtn = document.getElementById("cancel-selection-btn");
-const viewHistoryBtn = document.getElementById("view-history-btn");
-const backFromHistoryBtn = document.getElementById("back-from-history-btn");
-const industrySelect = document.getElementById("industry-select");
-const masterSearch = document.getElementById("master-search");
-const searchBtn = document.getElementById("search-btn");
+const onlineStatus = document.getElementById("online-status");
 const incomingCallName = document.getElementById("incoming-call-name");
 const acceptCallBtn = document.getElementById("accept-call-btn");
 const declineCallBtn = document.getElementById("decline-call-btn");
 const usernameDisplay = document.getElementById("username-display");
 const logoutBtn = document.getElementById("logout-btn");
+const totalCallsElement = document.getElementById("total-calls");
+const acceptedCallsElement = document.getElementById("accepted-calls");
+const missedCallsElement = document.getElementById("missed-calls");
+const avgDurationElement = document.getElementById("avg-duration");
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", () => {
   checkAuthentication();
   initializeEventListeners();
+  loadCallHistory();
+  loadCallStats();
 });
 
-// Check if user is authenticated
+// Check if user is authenticated and is a master
 function checkAuthentication() {
   const token = localStorage.getItem("token");
   userId = localStorage.getItem("userId");
@@ -94,9 +90,9 @@ function checkAuthentication() {
         username = data.profile.username || "";
         usernameDisplay.textContent = username;
 
-        // If user is a master, redirect to master page
-        if (data.profile.role_master) {
-          window.location.href = "/videom.html";
+        // If user is not a master, redirect to user page
+        if (!data.profile.role_master) {
+          window.location.href = "/video.html";
         }
       }
     })
@@ -109,57 +105,8 @@ function checkAuthentication() {
 
 // Initialize event listeners
 function initializeEventListeners() {
-  // Start call button
-  startCallBtn.addEventListener("click", () => {
-    initialScreen.classList.add("hidden");
-    masterSelection.classList.remove("hidden");
-    loadMasters();
-  });
-
-  // Call selected master button
-  callSelectedMasterBtn.addEventListener("click", () => {
-    if (selectedMasterId) {
-      startCall(selectedMasterId, selectedMasterName);
-    }
-  });
-
-  // Cancel selection button
-  cancelSelectionBtn.addEventListener("click", () => {
-    masterSelection.classList.add("hidden");
-    initialScreen.classList.remove("hidden");
-    selectedMasterId = null;
-    selectedMasterName = "";
-    callSelectedMasterBtn.disabled = true;
-  });
-
-  // View history button
-  viewHistoryBtn.addEventListener("click", () => {
-    initialScreen.classList.add("hidden");
-    callHistory.classList.remove("hidden");
-    loadCallHistory();
-  });
-
-  // Back from history button
-  backFromHistoryBtn.addEventListener("click", () => {
-    callHistory.classList.add("hidden");
-    initialScreen.classList.remove("hidden");
-  });
-
-  // Industry filter
-  industrySelect.addEventListener("change", () => {
-    loadMasters();
-  });
-
-  // Master search
-  searchBtn.addEventListener("click", () => {
-    loadMasters();
-  });
-
-  masterSearch.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      loadMasters();
-    }
-  });
+  // Online status change
+  onlineStatus.addEventListener("change", updateOnlineStatus);
 
   // Call controls
   toggleMicBtn.addEventListener("click", toggleMicrophone);
@@ -185,11 +132,11 @@ function initializeSocket() {
   socket.on("connect", () => {
     console.log("Connected to Socket.io server");
 
-    // Join as a user
+    // Join as a master
     socket.emit("join", {
       id: userId,
       username: username,
-      type: "user",
+      type: "master",
     });
   });
 
@@ -229,139 +176,27 @@ function initializeSocket() {
   });
 }
 
-// Load masters from the server
-function loadMasters() {
-  const token = localStorage.getItem("token");
-  const industry = industrySelect.value;
-  const searchQuery = masterSearch.value.trim();
+// Update online status
+function updateOnlineStatus() {
+  const status = onlineStatus.value;
 
-  mastersList.innerHTML =
-    '<div class="loading">Завантаження списку майстрів...</div>';
+  // Emit status change to server
+  socket.emit("status-change", {
+    id: userId,
+    status: status,
+  });
 
-  let url = "/admin/masters";
-  if (industry || searchQuery) {
-    url += "?";
-    if (industry) {
-      url += `industry=${encodeURIComponent(industry)}`;
-    }
-    if (searchQuery) {
-      url += industry
-        ? `&search=${encodeURIComponent(searchQuery)}`
-        : `search=${encodeURIComponent(searchQuery)}`;
-    }
-  }
-
-  fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((response) => response.json())
-    .then((masters) => {
-      if (masters.length === 0) {
-        mastersList.innerHTML =
-          '<div class="loading">Майстрів не знайдено</div>';
-        return;
-      }
-
-      // Filter only approved masters
-      const approvedMasters = masters.filter(
-        (master) => master.approval_status === "approved"
-      );
-
-      if (approvedMasters.length === 0) {
-        mastersList.innerHTML =
-          '<div class="loading">Затверджених майстрів не знайдено</div>';
-        return;
-      }
-
-      // Populate industries filter if it's empty
-      if (industrySelect.options.length <= 1) {
-        const industries = new Set();
-        approvedMasters.forEach((master) => {
-          if (master.industries && master.industries.length > 0) {
-            master.industries.forEach((industry) => industries.add(industry));
-          }
-        });
-
-        industries.forEach((industry) => {
-          const option = document.createElement("option");
-          option.value = industry;
-          option.textContent = industry;
-          industrySelect.appendChild(option);
-        });
-      }
-
-      // Render masters list
-      mastersList.innerHTML = "";
-      approvedMasters.forEach((master) => {
-        const masterItem = document.createElement("div");
-        masterItem.className = "master-item";
-        masterItem.dataset.id = master.id;
-        masterItem.dataset.name =
-          `${master.first_name || ""} ${master.last_name || ""}`.trim() ||
-          master.username;
-
-        // Check if master matches the selected industry
-        if (
-          industry &&
-          (!master.industries || !master.industries.includes(industry))
-        ) {
-          masterItem.style.display = "none";
-        }
-
-        masterItem.innerHTML = `
-                <div class="master-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="master-info">
-                    <div class="master-name">${master.first_name || ""} ${
-          master.last_name || ""
-        }</div>
-                    <div class="master-industry">${
-                      master.industries
-                        ? master.industries.join(", ")
-                        : "Не вказано"
-                    }</div>
-                    <div class="master-status">
-                        <span class="status-indicator status-online"></span>
-                        <span>Онлайн</span>
-                    </div>
-                </div>
-            `;
-
-        masterItem.addEventListener("click", () => {
-          // Deselect all masters
-          document.querySelectorAll(".master-item").forEach((item) => {
-            item.classList.remove("selected");
-          });
-
-          // Select this master
-          masterItem.classList.add("selected");
-          selectedMasterId = master.id;
-          selectedMasterName = masterItem.dataset.name;
-          callSelectedMasterBtn.disabled = false;
-        });
-
-        mastersList.appendChild(masterItem);
-      });
-    })
-    .catch((error) => {
-      console.error("Error loading masters:", error);
-      mastersList.innerHTML =
-        '<div class="loading">Помилка завантаження списку майстрів</div>';
-    });
+  console.log("Status changed to:", status);
 }
 
 // Load call history from the server
 function loadCallHistory() {
   const token = localStorage.getItem("token");
-  const historyList = document.getElementById("history-list");
 
   historyList.innerHTML =
     '<div class="loading">Завантаження історії дзвінків...</div>';
 
-  fetch(`/api/call-history/${userId}`, {
+  fetch(`/api/call-history/master/${userId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -426,7 +261,7 @@ function loadCallHistory() {
                 </div>
                 <div class="history-info">
                     <div class="history-name">${
-                      call.master_name || "Невідомий майстер"
+                      call.user_name || "Невідомий користувач"
                     }</div>
                     <div class="history-details">
                         <span class="history-time">${formattedDate}, ${formattedTime}</span>
@@ -446,124 +281,54 @@ function loadCallHistory() {
     });
 }
 
-// Start a call to a master
-function startCall(masterId, masterName) {
-  // Hide master selection screen
-  masterSelection.classList.add("hidden");
+// Load call statistics
+function loadCallStats() {
+  const token = localStorage.getItem("token");
 
-  // Show call screen
-  callScreen.classList.remove("hidden");
-  callMasterName.textContent = masterName;
-  callStatusElement.textContent = "Підключення...";
-
-  // Initialize WebRTC
-  initializeWebRTC(masterId, masterName);
-}
-
-// Initialize WebRTC connection
-async function initializeWebRTC(masterId, masterName) {
-  try {
-    // Get user media (camera and microphone)
-    localStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
+  fetch(`/api/call-stats/master/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      totalCallsElement.textContent = data.total || 0;
+      acceptedCallsElement.textContent = data.accepted || 0;
+      missedCallsElement.textContent = data.missed || 0;
+      avgDurationElement.textContent = data.avgDuration
+        ? formatDuration(data.avgDuration)
+        : "0:00";
+    })
+    .catch((error) => {
+      console.error("Error loading call stats:", error);
     });
-
-    // Display local video
-    localVideo.srcObject = localStream;
-    localVideoPlaceholder.style.display = "none";
-
-    // Create peer connection
-    peerConnection = new RTCPeerConnection(iceServers);
-
-    // Add local stream to peer connection
-    localStream.getTracks().forEach((track) => {
-      peerConnection.addTrack(track, localStream);
-    });
-
-    // Handle ICE candidates
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("ice-candidate", {
-          sender: userId,
-          receiver: masterId,
-          candidate: event.candidate,
-        });
-      }
-    };
-
-    // Handle connection state changes
-    peerConnection.onconnectionstatechange = () => {
-      console.log("Connection state:", peerConnection.connectionState);
-
-      if (peerConnection.connectionState === "connected") {
-        callStatusElement.textContent = "З'єднано";
-        startCallTimer();
-        callInProgress = true;
-
-        // Save call to history
-        saveCallToHistory(masterId, masterName, "in-progress");
-      } else if (
-        peerConnection.connectionState === "disconnected" ||
-        peerConnection.connectionState === "failed" ||
-        peerConnection.connectionState === "closed"
-      ) {
-        endCall();
-      }
-    };
-
-    // Handle remote stream
-    peerConnection.ontrack = (event) => {
-      remoteStream = event.streams[0];
-      remoteVideo.srcObject = remoteStream;
-      remoteVideoPlaceholder.style.display = "none";
-    };
-
-    // Create offer
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-
-    // Send offer to master
-    socket.emit("call-offer", {
-      sender: userId,
-      receiver: masterId,
-      offer: offer,
-      caller: {
-        id: userId,
-        username: username,
-      },
-    });
-
-    callStatusElement.textContent = "Дзвінок...";
-  } catch (error) {
-    console.error("Error initializing WebRTC:", error);
-    callStatusElement.textContent = "Помилка підключення";
-
-    // Close call screen after a delay
-    setTimeout(() => {
-      endCall();
-      initialScreen.classList.remove("hidden");
-      callScreen.classList.add("hidden");
-    }, 3000);
-  }
 }
 
 // Handle incoming call
 function handleIncomingCall(data) {
+  // Check if master is available
+  if (onlineStatus.value === "busy" || onlineStatus.value === "offline") {
+    // Automatically decline call if busy or offline
+    socket.emit("call-declined", {
+      sender: userId,
+      receiver: data.sender,
+    });
+
+    // Save call to history as missed
+    saveCallToHistory(data.sender, data.caller.username, "missed");
+    return;
+  }
+
   // Show notification
   callNotification.classList.remove("hidden");
   incomingCallName.textContent = data.caller.username;
 
   // Store call data
-  const callData = {
-    sender: data.sender,
-    receiver: userId,
-    offer: data.offer,
-    caller: data.caller,
-  };
+  callerId = data.sender;
+  callerName = data.caller.username;
 
   // Store call data in accept button
-  acceptCallBtn.dataset.callData = JSON.stringify(callData);
+  acceptCallBtn.dataset.callData = JSON.stringify(data);
 
   // Play ringtone
   ringtone.play();
@@ -582,12 +347,13 @@ async function acceptCall() {
     // Get call data
     const callData = JSON.parse(acceptCallBtn.dataset.callData);
 
-    // Hide initial screen
+    // Hide initial screen and history
     initialScreen.classList.add("hidden");
+    callHistory.classList.add("hidden");
 
     // Show call screen
     callScreen.classList.remove("hidden");
-    callMasterName.textContent = callData.caller.username;
+    callUserName.textContent = callData.caller.username;
     callStatusElement.textContent = "Підключення...";
 
     // Get user media
@@ -675,6 +441,7 @@ async function acceptCall() {
     setTimeout(() => {
       endCall();
       initialScreen.classList.remove("hidden");
+      callHistory.classList.remove("hidden");
       callScreen.classList.add("hidden");
     }, 3000);
   }
@@ -718,6 +485,7 @@ async function handleCallAnswer(data) {
     setTimeout(() => {
       endCall();
       initialScreen.classList.remove("hidden");
+      callHistory.classList.remove("hidden");
       callScreen.classList.add("hidden");
     }, 3000);
   }
@@ -734,11 +502,12 @@ function handleCallDeclined(data) {
   setTimeout(() => {
     endCall();
     initialScreen.classList.remove("hidden");
+    callHistory.classList.remove("hidden");
     callScreen.classList.add("hidden");
   }, 3000);
 
   // Save call to history
-  saveCallToHistory(data.sender, selectedMasterName, "rejected");
+  saveCallToHistory(data.sender, callerName, "rejected");
 }
 
 // Handle ICE candidate
@@ -763,11 +532,12 @@ function handleEndCall(data) {
   setTimeout(() => {
     endCall();
     initialScreen.classList.remove("hidden");
+    callHistory.classList.remove("hidden");
     callScreen.classList.add("hidden");
   }, 3000);
 
   // Save call to history
-  saveCallToHistory(data.sender, selectedMasterName, "completed");
+  saveCallToHistory(data.sender, callerName, "completed");
 }
 
 // End call
@@ -802,14 +572,14 @@ function endCall() {
   callDuration = 0;
 
   // If call was in progress, send end call message
-  if (callInProgress && selectedMasterId) {
+  if (callInProgress && callerId) {
     socket.emit("end-call", {
       sender: userId,
-      receiver: selectedMasterId,
+      receiver: callerId,
     });
 
     // Save call to history
-    saveCallToHistory(selectedMasterId, selectedMasterName, "completed");
+    saveCallToHistory(callerId, callerName, "completed");
   }
 
   // Reset call state
@@ -824,8 +594,13 @@ function endCall() {
   // Hide call screen
   callScreen.classList.add("hidden");
 
-  // Show initial screen
+  // Show initial screen and history
   initialScreen.classList.remove("hidden");
+  callHistory.classList.remove("hidden");
+
+  // Reload call history and stats
+  loadCallHistory();
+  loadCallStats();
 }
 
 // Toggle microphone
@@ -918,7 +693,7 @@ function formatDuration(seconds) {
 }
 
 // Save call to history
-function saveCallToHistory(masterId, masterName, status) {
+function saveCallToHistory(userId, userName, status) {
   const token = localStorage.getItem("token");
 
   fetch("/api/call-history", {
@@ -929,8 +704,8 @@ function saveCallToHistory(masterId, masterName, status) {
     },
     body: JSON.stringify({
       user_id: userId,
-      master_id: masterId,
-      master_name: masterName,
+      master_id: userId,
+      user_name: userName,
       status: status,
       duration: callDuration,
     }),
@@ -938,6 +713,10 @@ function saveCallToHistory(masterId, masterName, status) {
     .then((response) => response.json())
     .then((data) => {
       console.log("Call saved to history:", data);
+
+      // Reload call history and stats after saving
+      loadCallHistory();
+      loadCallStats();
     })
     .catch((error) => {
       console.error("Error saving call to history:", error);

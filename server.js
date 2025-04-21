@@ -23,7 +23,7 @@ const helmet = require("helmet");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3013;
+const port = process.env.PORT || 3014;
 
 // Improved database connection configuration
 const pool = new Pool({
@@ -2986,7 +2986,7 @@ app.get("/orders/:orderId", async (req, res) => {
              mp.last_name as master_last_name
       FROM orders o
       JOIN users u ON o.user_id = u.id
-      JOIN user_profile up ON u.id = up.user_id
+      JOIN user_profile up ON u.id = u.user_id
       LEFT JOIN users m ON o.master_id = m.id
       LEFT JOIN user_profile mp ON m.id = mp.user_id
       WHERE o.id = $1
@@ -4294,101 +4294,352 @@ app.get("/chat/master", (req, res) => {
 });
 
 console.log("✅ Chat API endpoints have been added successfully!");
-// На цей код:
-server.listen(port, () => {
-  console.log(`✅ Сервер успішно запущено на http://localhost:${port}`);
-});
+// Add these routes to your server.js file
 
-// Make sure uploads directory exists
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Make sure public/uploads directory exists
-const publicUploadsDir = path.join(__dirname, "public/uploads");
-if (!fs.existsSync(publicUploadsDir)) {
-  fs.mkdirSync(publicUploadsDir, { recursive: true });
-}
-// Add these endpoints to your server.js file
-
-// Update the endpoint to get user's selected industries
-app.get("/api/user-selected-industries/:userId", async (req, res) => {
-  const userId = req.params.userId;
-
+// Create video calls table if it doesn't exist
+const createVideoCallsTable = async () => {
   try {
-    // Get all industries for this user
-    const result = await executeQuery(
-      `
-      SELECT service_name 
-      FROM user_services 
-      WHERE user_id = $1 AND service_type = 'industry'
-    `,
-      [userId]
-    );
-
-    const selectedIndustries = result.rows.map(row => row.service_name);
-
-    res.status(200).json({
-      success: true,
-      selectedIndustries: selectedIndustries
-    });
-  } catch (err) {
-    console.error("❌ Error getting user's selected industries:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: err.message,
-    });
-  }
-});
-
-// Update the endpoint to save user's selected industries
-app.post("/api/user-selected-industries/:userId", async (req, res) => {
-  const userId = req.params.userId;
-  const { selectedIndustries } = req.body;
-
-  if (!selectedIndustries || !Array.isArray(selectedIndustries) || selectedIndustries.length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Selected industries are required and must be an array",
-    });
-  }
-
-  try {
-    // First, delete any existing selected industries
-    await executeQuery(
-      `
-      DELETE FROM user_services 
-      WHERE user_id = $1 AND service_type = 'industry'
-    `,
-      [userId]
-    );
-
-    // Then insert all the selected industries
-    for (const industry of selectedIndustries) {
-      await executeQuery(
-        `
-        INSERT INTO user_services (user_id, service_name, service_type)
-        VALUES ($1, $2, 'industry')
-      `,
-        [userId, industry]
+    // First check if the table exists
+    const tableExistsQuery = `
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'video_calls'
       );
+    `;
+
+    const tableExists = await executeQuery(tableExistsQuery);
+
+    if (tableExists.rows[0].exists) {
+      console.log("Video calls table exists, checking for required columns...");
+
+      // Get existing columns
+      const columnsResult = await executeQuery(`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'video_calls';
+      `);
+
+      const columns = columnsResult.rows.map((row) => row.column_name);
+      console.log("Existing video_calls table columns:", columns);
+
+      // Check for required columns and add them if missing
+      const requiredColumns = [
+        { name: "user_id", type: "INTEGER NOT NULL" },
+        { name: "master_id", type: "INTEGER NOT NULL" },
+        { name: "user_name", type: "VARCHAR(100)" },
+        { name: "master_name", type: "VARCHAR(100)" },
+        { name: "status", type: "VARCHAR(20) NOT NULL DEFAULT 'pending'" },
+        { name: "duration", type: "INTEGER DEFAULT 0" },
+        { name: "created_at", type: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+        { name: "updated_at", type: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+      ];
+
+      for (const column of requiredColumns) {
+        if (!columns.includes(column.name)) {
+          await executeQuery(`
+            ALTER TABLE video_calls 
+            ADD COLUMN ${column.name} ${column.type};
+          `);
+          console.log(`✅ Added ${column.name} column to video_calls table`);
+        }
+      }
+    } else {
+      // Create the table with all required columns
+      const videoCallsTableQuery = `
+        CREATE TABLE video_calls (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL,
+          master_id INTEGER NOT NULL,
+          user_name VARCHAR(100),
+          master_name VARCHAR(100),
+          status VARCHAR(20) NOT NULL DEFAULT 'pending',
+          duration INTEGER DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+
+      await executeQuery(videoCallsTableQuery);
+      console.log("✅ Created video_calls table with all required columns");
+    }
+  } catch (err) {
+    console.error("❌ Error creating/updating video_calls table:", err.message);
+  }
+};
+
+// Call this function during server initialization
+createVideoCallsTable().catch((err) => {
+  console.error("Failed to initialize video_calls table:", err.message);
+});
+
+// API endpoint to save call history
+app.post("/api/call-history", async (req, res) => {
+  try {
+    const { user_id, master_id, user_name, master_name, status, duration } =
+      req.body;
+
+    if (!user_id || !master_id) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    console.log(
-      `✅ Selected industries saved for user ${userId}: ${selectedIndustries.join(', ')}`
+    const result = await executeQuery(
+      `
+      INSERT INTO video_calls (user_id, master_id, user_name, master_name, status, duration)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
+    `,
+      [user_id, master_id, user_name, master_name, status, duration || 0]
     );
+
+    console.log(`✅ Saved video call to history with ID ${result.rows[0].id}`);
+
     res.status(200).json({
       success: true,
-      message: "Selected industries saved successfully",
+      message: "Call saved to history",
+      id: result.rows[0].id,
     });
   } catch (err) {
-    console.error("❌ Error saving user's selected industries:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: err.message,
-    });
+    console.error("❌ Error saving call history:", err.message);
+    res.status(500).json({ error: "Failed to save call history" });
   }
+});
+
+// API endpoint to get user's call history
+app.get("/api/call-history/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const result = await executeQuery(
+      `
+      SELECT id, user_id, master_id, master_name, status, duration, created_at
+      FROM video_calls
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+    `,
+      [userId]
+    );
+
+    res.status(200).json({ history: result.rows });
+  } catch (err) {
+    console.error("❌ Error getting call history:", err.message);
+    res.status(500).json({ error: "Failed to get call history" });
+  }
+});
+
+// API endpoint to get master's call history
+app.get("/api/call-history/master/:masterId", async (req, res) => {
+  try {
+    const masterId = req.params.masterId;
+
+    const result = await executeQuery(
+      `
+      SELECT id, user_id, master_id, user_name, status, duration, created_at
+      FROM video_calls
+      WHERE master_id = $1
+      ORDER BY created_at DESC
+    `,
+      [masterId]
+    );
+
+    res.status(200).json({ history: result.rows });
+  } catch (err) {
+    console.error("❌ Error getting master call history:", err.message);
+    res.status(500).json({ error: "Failed to get master call history" });
+  }
+});
+
+// API endpoint to get call statistics for a master
+app.get("/api/call-stats/master/:masterId", async (req, res) => {
+  try {
+    const masterId = req.params.masterId;
+
+    const result = await executeQuery(
+      `
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'completed') as accepted,
+        COUNT(*) FILTER (WHERE status = 'missed' OR status = 'rejected') as missed,
+        AVG(duration) FILTER (WHERE status = 'completed') as avg_duration
+      FROM video_calls
+      WHERE master_id = $1
+    `,
+      [masterId]
+    );
+
+    const stats = {
+      total: Number.parseInt(result.rows[0].total) || 0,
+      accepted: Number.parseInt(result.rows[0].accepted) || 0,
+      missed: Number.parseInt(result.rows[0].missed) || 0,
+      avgDuration: result.rows[0].avg_duration
+        ? Math.round(Number.parseFloat(result.rows[0].avg_duration))
+        : 0,
+    };
+
+    res.status(200).json(stats);
+  } catch (err) {
+    console.error("❌ Error getting call statistics:", err.message);
+    res.status(500).json({ error: "Failed to get call statistics" });
+  }
+});
+
+// API endpoint to update call status
+app.put("/api/call-history/:callId", async (req, res) => {
+  try {
+    const callId = req.params.callId;
+    const { status, duration } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: "Status is required" });
+    }
+
+    const result = await executeQuery(
+      `
+      UPDATE video_calls
+      SET status = $1, duration = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+      RETURNING id
+    `,
+      [status, duration || 0, callId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Call not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Call status updated",
+    });
+  } catch (err) {
+    console.error("❌ Error updating call status:", err.message);
+    res.status(500).json({ error: "Failed to update call status" });
+  }
+});
+
+// Route to check user type and redirect accordingly
+app.get("/video", (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.redirect("/auth.html");
+  }
+
+  try {
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "default_secret_key"
+    );
+    const userId = decoded.id;
+
+    // Check if user is a master
+    executeQuery("SELECT role_master FROM user_profile WHERE user_id = $1", [
+      userId,
+    ])
+      .then((result) => {
+        if (result.rows.length === 0) {
+          return res.redirect("/auth.html");
+        }
+
+        const isMaster = result.rows[0].role_master;
+
+        if (isMaster) {
+          res.redirect("/videom.html");
+        } else {
+          res.redirect("/video.html");
+        }
+      })
+      .catch((err) => {
+        console.error("❌ Error checking user type:", err.message);
+        res.redirect("/auth.html");
+      });
+  } catch (err) {
+    console.error("❌ Error verifying token:", err.message);
+    res.redirect("/auth.html");
+  }
+});
+
+// Enhanced Socket.io event handling for video calls
+io.on("connection", (socket) => {
+  // Handle call offer
+  socket.on("call-offer", (data) => {
+    console.log(`Call offer from ${data.sender} to ${data.receiver}`);
+
+    // Find the receiver's socket
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Forward the offer to the receiver
+      io.to(receiverSocketId).emit("call-offer", data);
+    } else {
+      // Notify the sender that the receiver is unavailable
+      socket.emit("call-unavailable", {
+        receiver: data.receiver,
+        message: "User is currently offline",
+      });
+    }
+  });
+
+  // Handle call answer
+  socket.on("call-answer", (data) => {
+    console.log(`Call answer from ${data.sender} to ${data.receiver}`);
+
+    // Find the receiver's socket
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Forward the answer to the receiver
+      io.to(receiverSocketId).emit("call-answer", data);
+    }
+  });
+
+  // Handle ICE candidates
+  socket.on("ice-candidate", (data) => {
+    // Find the receiver's socket
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Forward the ICE candidate to the receiver
+      io.to(receiverSocketId).emit("ice-candidate", data);
+    }
+  });
+
+  // Handle call end
+  socket.on("end-call", (data) => {
+    console.log(`Call ended by ${data.sender}`);
+
+    // Find the receiver's socket
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Notify the receiver that the call has ended
+      io.to(receiverSocketId).emit("end-call", data);
+    }
+  });
+
+  // Handle call declined
+  socket.on("call-declined", (data) => {
+    console.log(`Call declined by ${data.sender}`);
+
+    // Find the receiver's socket
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiver
+    )?.[0];
+
+    if (receiverSocketId) {
+      // Notify the receiver that the call was declined
+      io.to(receiverSocketId).emit("call-declined", data);
+    }
+  });
+});
+
+server.listen(port, () => {
+  console.log(`Сервер запущено на http://localhost:${port}`);
 });
