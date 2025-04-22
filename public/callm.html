@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Відеодзвінки - Сторона майстра</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/callm.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-headset"></i>
+                <span>ProFix Master</span>
+            </div>
+            <div class="user-info">
+                <div class="avatar">
+                    <img id="user-avatar" src="/placeholder.svg?height=50&width=50" alt="Аватар майстра">
+                    <span class="status online"></span>
+                </div>
+                <div class="user-details">
+                    <h3 id="username">Майстер</h3>
+                    <p id="user-status">Онлайн</p>
+                </div>
+            </div>
+            <div class="menu">
+                <button class="menu-item active" data-tab="clients">
+                    <i class="fas fa-users"></i>
+                    <span>Клієнти</span>
+                </button>
+                <button class="menu-item" data-tab="history">
+                    <i class="fas fa-history"></i>
+                    <span>Історія дзвінків</span>
+                </button>
+                <button class="menu-item" data-tab="stats">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Статистика</span>
+                </button>
+                <button class="menu-item" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Налаштування</span>
+                </button>
+            </div>
+            <div class="back-to-main">
+                <a href="/index.html">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>На головну</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="tab-content active" id="clients-tab">
+                <div class="header">
+                    <h2>Клієнти онлайн</h2>
+                    <div class="search-container">
+                        <input type="text" id="search-clients" placeholder="Пошук клієнтів...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="filter-container">
+                        <select id="status-filter">
+                            <option value="all">Всі статуси</option>
+                            <option value="online">Онлайн</option>
+                            <option value="offline">Офлайн</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="clients-list" id="clients-list">
+                    <!-- Список клієнтів буде додано через JavaScript -->
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Завантаження клієнтів...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="history-tab">
+                <div class="header">
+                    <h2>Історія дзвінків</h2>
+                    <div class="filter-container">
+                        <select id="history-filter">
+                            <option value="all">Всі дзвінки</option>
+                            <option value="completed">Завершені</option>
+                            <option value="missed">Пропущені</option>
+                            <option value="rejected">Відхилені</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="call-history" id="call-history">
+                    <!-- Історія дзвінків буде додана через JavaScript -->
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Завантаження історії...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="stats-tab">
+                <div class="header">
+                    <h2>Статистика дзвінків</h2>
+                </div>
+                <div class="stats-container">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Всього дзвінків</h3>
+                                <p id="total-calls">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Прийнято</h3>
+                                <p id="accepted-calls">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Пропущено</h3>
+                                <p id="missed-calls">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Середня тривалість</h3>
+                                <p id="avg-duration">0:00</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Дзвінків сьогодні</h3>
+                                <p id="today-calls">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Відсоток прийнятих</h3>
+                                <p id="acceptance-rate">0%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Активність за тиждень</h3>
+                        <canvas id="weekly-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="settings-tab">
+                <div class="header">
+                    <h2>Налаштування</h2>
+                </div>
+                <div class="settings-container">
+                    <div class="settings-group">
+                        <h3>Налаштування аудіо та відео</h3>
+                        <div class="setting-item">
+                            <label for="audio-input">Мікрофон:</label>
+                            <select id="audio-input">
+                                <!-- Буде додано через JavaScript -->
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="video-input">Камера:</label>
+                            <select id="video-input">
+                                <!-- Буде додано через JavaScript -->
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="audio-output">Динаміки:</label>
+                            <select id="audio-output">
+                                <!-- Буде додано через JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h3>Тестування пристроїв</h3>
+                        <div class="device-test">
+                            <button id="test-audio" class="test-button">
+                                <i class="fas fa-microphone"></i>
+                                Перевірити мікрофон
+                            </button>
+                            <div id="audio-level" class="level-meter">
+                                <div class="level-bar"></div>
+                            </div>
+                        </div>
+                        <div class="device-test">
+                            <button id="test-video" class="test-button">
+                                <i class="fas fa-video"></i>
+                                Перевірити камеру
+                            </button>
+                            <div id="video-preview-container" class="video-preview">
+                                <video id="video-preview" autoplay muted></video>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h3>Налаштування статусу</h3>
+                        <div class="setting-item">
+                            <label for="availability-status">Доступність:</label>
+                            <select id="availability-status">
+                                <option value="available">Доступний</option>
+                                <option value="busy">Зайнятий</option>
+                                <option value="away">Відійшов</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="auto-answer">Автовідповідь:</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="auto-answer">
+                                <label for="auto-answer"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальне вікно для дзвінка -->
+    <div class="call-modal" id="call-modal">
+        <div class="call-container">
+            <div class="call-header">
+                <h3 id="call-status">З'єднання...</h3>
+                <span id="call-timer">00:00</span>
+            </div>
+            <div class="video-container">
+                <div class="remote-video-container">
+                    <video id="remote-video" autoplay></video>
+                    <div class="remote-info">
+                        <h4 id="remote-name">Клієнт</h4>
+                    </div>
+                </div>
+                <div class="local-video-container">
+                    <video id="local-video" autoplay muted></video>
+                </div>
+            </div>
+            <div class="call-controls">
+                <button id="toggle-mic" class="control-button">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="toggle-video" class="control-button">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button id="end-call" class="control-button end-call">
+                    <i class="fas fa-phone-slash"></i>
+                </button>
+                <button id="toggle-fullscreen" class="control-button">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальне вікно для вхідного дзвінка -->
+    <div class="incoming-call-modal" id="incoming-call-modal">
+        <div class="incoming-call-container">
+            <div class="caller-info">
+                <div class="caller-avatar">
+                    <img id="caller-avatar" src="/placeholder.svg?height=80&width=80" alt="Аватар">
+                </div>
+                <h3 id="caller-name">Ім'я клієнта</h3>
+                <p>Вхідний дзвінок</p>
+            </div>
+            <div class="incoming-call-controls">
+                <button id="accept-call" class="call-button accept">
+                    <i class="fas fa-phone"></i>
+                    Прийняти
+                </button>
+                <button id="decline-call" class="call-button decline">
+                    <i class="fas fa-phone-slash"></i>
+                    Відхилити
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Звуки -->
+    <audio id="ringtone" loop>
+        <source src="/sounds/ringtone.mp3" type="audio/mp3">
+    </audio>
+    <audio id="call-end-sound">
+        <source src="/sounds/call-end.mp3" type="audio/mp3">
+    </audio>
+
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/callm.js"></script>
+</body>
+</html>

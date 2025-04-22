@@ -4278,11 +4278,6 @@ if (!fs.existsSync(chatUploadsDir)) {
   fs.mkdirSync(chatUploadsDir, { recursive: true });
 }
 
-// Create the sounds directory and add placeholder for sound files
-const soundsDir = path.join(__dirname, "public/sounds");
-if (!fs.existsSync(soundsDir)) {
-  fs.mkdirSync(soundsDir, { recursive: true });
-}
 
 // Serve the chat pages
 app.get("/chat/user", (req, res) => {
@@ -4642,4 +4637,609 @@ io.on("connection", (socket) => {
 
 server.listen(port, () => {
   console.log(`Сервер запущено на http://localhost:${port}`);
+});
+// Створення таблиці для історії відеодзвінків
+const createCallHistoryTable = async () => {
+  try {
+    // Перевіряємо, чи існує таблиця
+    const tableExistsQuery = `
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'call_history'
+      );
+    `;
+
+    const tableExists = await executeQuery(tableExistsQuery);
+
+    if (tableExists.rows[0].exists) {
+      console.log("Таблиця історії дзвінків існує, перевіряємо необхідні колонки...");
+
+      // Отримуємо існуючі колонки
+      const columnsResult = await executeQuery(`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'call_history';
+      `);
+
+      const columns = columnsResult.rows.map((row) => row.column_name);
+      console.log("Існуючі колонки таблиці call_history:", columns);
+
+      // Перевіряємо необхідні колонки і додаємо їх, якщо вони відсутні
+      const requiredColumns = [
+        { name: "caller_id", type: "INTEGER NOT NULL" },
+        { name: "receiver_id", type: "INTEGER NOT NULL" },
+        { name: "caller_type", type: "VARCHAR(10) NOT NULL" }, // 'user' або 'master'
+        { name: "start_time", type: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+        { name: "end_time", type: "TIMESTAMP" },
+        { name: "duration", type: "INTEGER DEFAULT 0" }, // в секундах
+        { name: "status", type: "VARCHAR(20) NOT NULL DEFAULT 'missed'" }, // 'completed', 'missed', 'rejected'
+        { name: "has_video", type: "BOOLEAN DEFAULT FALSE" },
+        { name: "notes", type: "TEXT" }
+      ];
+
+      for (const column of requiredColumns) {
+        if (!columns.includes(column.name)) {
+          await executeQuery(`
+            ALTER TABLE call_history 
+            ADD COLUMN ${column.name} ${column.type};
+          `);
+          console.log(`✅ Додано колонку ${column.name} до таблиці call_history`);
+        }
+      }
+    } else {
+      // Створюємо таблицю з усіма необхідними колонками
+      const callHistoryTableQuery = `
+        CREATE TABLE call_history (
+          id SERIAL PRIMARY KEY,
+          caller_id INTEGER NOT NULL,
+          receiver_id INTEGER NOT NULL,
+          caller_type VARCHAR(10) NOT NULL,
+          start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          end_time TIMESTAMP,
+          duration INTEGER DEFAULT 0,
+          status VARCHAR(20) NOT NULL DEFAULT 'missed',
+          has_video BOOLEAN DEFAULT FALSE,
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+
+      await executeQuery(callHistoryTableQuery);
+      console.log("✅ Створено таблицю call_history з усіма необхідними колонками");
+    }
+  } catch (err) {
+    console.error("❌ Помилка при створенні/оновленні таблиці call_history:", err.message);
+  }
+};
+
+// Викликаємо цю функцію під час ініціалізації сервера
+createCallHistoryTable().catch((err) => {
+  console.error("Не вдалося ініціалізувати таблицю call_history:", err.message);
+});
+// Ендпоінт для створення нового запису про дзвінок
+app.post("/api/calls", async (req, res) => {
+  try {
+    const { caller_id, receiver_id, caller_type, has_video, notes } = req.body;
+
+    if (!caller_id || !receiver_id || !caller_type) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Відсутні обов'язкові поля" 
+      });
+    }
+
+    // Перевіряємо, чи існують користувачі
+    const callerExists = await executeQuery("SELECT * FROM users WHERE id = $1", [caller_id]);
+    const receiverExists = await executeQuery("SELECT * FROM users WHERE id = $1", [receiver_id]);
+
+    if (callerExists.rows.length === 0 || receiverExists.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Користувача не знайдено" 
+      });
+    }
+
+    // Створюємо новий запис про дзвінок
+    const result = await executeQuery(
+      `INSERT INTO call_history 
+       (caller_id, receiver_id, caller_type, has_video, notes, status) 
+       VALUES ($1, $2, $3, $4, $5, 'initiated')
+       RETURNING id`,
+      [caller_id, receiver_id, caller_type, has_video || false, notes || null]
+    );
+
+    console.log(`✅ Створено новий запис про дзвінок з ID ${result.rows[0].id}`);
+    res.status(201).json({
+      success: true,
+      message: "Запис про дзвінок створено",
+      call_id: result.rows[0].id
+    });
+  } catch (err) {
+    console.error("❌ Помилка при створенні запису про дзвінок:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Помилка сервера", 
+      error: err.message 
+    });
+  }
+});
+
+// Ендпоінт для оновлення статусу дзвінка
+app.put("/api/calls/:callId", async (req, res) => {
+  try {
+    const callId = req.params.callId;
+    const { status, end_time, duration } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Статус є обов'язковим полем" 
+      });
+    }
+
+    // Перевіряємо, чи існує запис про дзвінок
+    const callExists = await executeQuery("SELECT * FROM call_history WHERE id = $1", [callId]);
+    if (callExists.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Запис про дзвінок не знайдено" 
+      });
+    }
+
+    // Оновлюємо запис про дзвінок
+    let query = "UPDATE call_history SET status = $1";
+    const params = [status];
+    let paramIndex = 2;
+
+    if (end_time) {
+      query += `, end_time = $${paramIndex}`;
+      params.push(end_time);
+      paramIndex++;
+    }
+
+    if (duration !== undefined) {
+      query += `, duration = $${paramIndex}`;
+      params.push(duration);
+      paramIndex++;
+    }
+
+    query += ` WHERE id = $${paramIndex} RETURNING id`;
+    params.push(callId);
+
+    const result = await executeQuery(query, params);
+
+    console.log(`✅ Оновлено запис про дзвінок з ID ${result.rows[0].id}`);
+    res.status(200).json({
+      success: true,
+      message: "Запис про дзвінок оновлено",
+      call_id: result.rows[0].id
+    });
+  } catch (err) {
+    console.error("❌ Помилка при оновленні запису про дзвінок:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Помилка сервера", 
+      error: err.message 
+    });
+  }
+});
+
+// Ендпоінт для отримання історії дзвінків користувача
+app.get("/api/calls/user/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Перевіряємо, чи існує користувач
+    const userExists = await executeQuery("SELECT * FROM users WHERE id = $1", [userId]);
+    if (userExists.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Користувача не знайдено" 
+      });
+    }
+
+    // Отримуємо історію дзвінків користувача (як ініціатора, так і отримувача)
+    const result = await executeQuery(
+      `SELECT ch.*, 
+              u1.username as caller_username, 
+              u2.username as receiver_username,
+              up1.first_name as caller_first_name,
+              up1.last_name as caller_last_name,
+              up2.first_name as receiver_first_name,
+              up2.last_name as receiver_last_name
+       FROM call_history ch
+       JOIN users u1 ON ch.caller_id = u1.id
+       JOIN users u2 ON ch.receiver_id = u2.id
+       LEFT JOIN user_profile up1 ON u1.id = up1.user_id
+       LEFT JOIN user_profile up2 ON u2.id = up2.user_id
+       WHERE ch.caller_id = $1 OR ch.receiver_id = $1
+       ORDER BY ch.start_time DESC`,
+      [userId]
+    );
+
+    res.status(200).json({
+      success: true,
+      calls: result.rows
+    });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні історії дзвінків:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Помилка сервера", 
+      error: err.message 
+    });
+  }
+});
+
+// Ендпоінт для отримання статистики дзвінків користувача
+app.get("/api/calls/stats/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Перевіряємо, чи існує користувач
+    const userExists = await executeQuery("SELECT * FROM users WHERE id = $1", [userId]);
+    if (userExists.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Користувача не знайдено" 
+      });
+    }
+
+    // Отримуємо статистику дзвінків
+    const result = await executeQuery(
+      `SELECT 
+        COUNT(*) as total_calls,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed_calls,
+        COUNT(*) FILTER (WHERE status = 'missed') as missed_calls,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected_calls,
+        AVG(duration) FILTER (WHERE status = 'completed') as avg_duration,
+        SUM(duration) FILTER (WHERE status = 'completed') as total_duration
+       FROM call_history
+       WHERE caller_id = $1 OR receiver_id = $1`,
+      [userId]
+    );
+
+    const stats = result.rows[0];
+    
+    // Перетворюємо null значення на 0
+    Object.keys(stats).forEach(key => {
+      if (stats[key] === null) {
+        stats[key] = 0;
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      stats: stats
+    });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні статистики дзвінків:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Помилка сервера", 
+      error: err.message 
+    });
+  }
+});
+
+// Ендпоінт для отримання списку доступних майстрів для дзвінка
+app.get("/api/calls/available-masters", async (req, res) => {
+  try {
+    const industry = req.query.industry;
+
+    let query = `
+      SELECT u.id, u.username, up.first_name, up.last_name, up.email, up.phone
+      FROM users u
+      JOIN user_profile up ON u.id = up.user_id
+      WHERE up.role_master = true AND up.approval_status = 'approved'
+    `;
+    
+    const params = [];
+    
+    // Якщо вказана галузь, фільтруємо майстрів за нею
+    if (industry) {
+      query += `
+        AND EXISTS (
+          SELECT 1 FROM user_services us 
+          WHERE us.user_id = u.id 
+          AND us.service_type = 'industry' 
+          AND us.service_name = $1
+        )
+      `;
+      params.push(industry);
+    }
+    
+    query += ` ORDER BY u.username`;
+    
+    const result = await executeQuery(query, params);
+
+    // Перевіряємо, чи майстри онлайн (використовуючи activeUsers з socket.io)
+    const masters = result.rows.map(master => {
+      const masterSocketId = Array.from(activeUsers.entries()).find(
+        ([_, user]) => user.id === master.id.toString()
+      )?.[0];
+
+      return {
+        ...master,
+        online: !!masterSocketId
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      masters: masters
+    });
+  } catch (err) {
+    console.error("❌ Помилка при отриманні списку доступних майстрів:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Помилка сервера", 
+      error: err.message 
+    });
+  }
+});
+// Розширена обробка подій Socket.io для відеодзвінків
+io.on("connection", (socket) => {
+  console.log("Новий користувач підключився:", socket.id);
+
+  // Обробка приєднання до системи
+  socket.on("user-connected", (userData) => {
+    console.log(`Користувач ${userData.username} (ID: ${userData.userId}) підключився`);
+    
+    // Зберігаємо інформацію про користувача
+    activeUsers.set(socket.id, {
+      id: userData.userId,
+      username: userData.username,
+      role: userData.role,
+      socketId: socket.id
+    });
+    
+    // Повідомляємо всіх про оновлення статусу користувача
+    io.emit("user-status-changed", {
+      userId: userData.userId,
+      status: "online"
+    });
+  });
+
+  // Обробка запиту на дзвінок
+  socket.on("call-request", (data) => {
+    console.log(`Запит на дзвінок від ${data.callerId} до ${data.receiverId}`);
+    
+    // Знаходимо сокет отримувача
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.receiverId
+    )?.[0];
+    
+    if (receiverSocketId) {
+      // Отримувач онлайн, відправляємо запит на дзвінок
+      io.to(receiverSocketId).emit("incoming-call", {
+        callId: data.callId,
+        callerId: data.callerId,
+        callerName: data.callerName,
+        withVideo: data.withVideo
+      });
+    } else {
+      // Отримувач офлайн, відправляємо відповідь ініціатору
+      socket.emit("call-response", {
+        callId: data.callId,
+        status: "unavailable",
+        message: "Користувач зараз не в мережі"
+      });
+      
+      // Оновлюємо статус дзвінка в базі даних
+      executeQuery(
+        "UPDATE call_history SET status = 'missed', end_time = CURRENT_TIMESTAMP WHERE id = $1",
+        [data.callId]
+      ).catch(err => {
+        console.error("❌ Помилка при оновленні статусу дзвінка:", err.message);
+      });
+    }
+  });
+
+  // Обробка відповіді на дзвінок
+  socket.on("call-response", (data) => {
+    console.log(`Відповідь на дзвінок: ${data.status} для дзвінка ${data.callId}`);
+    
+    // Знаходимо сокет ініціатора дзвінка
+    const callerSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.callerId
+    )?.[0];
+    
+    if (callerSocketId) {
+      // Відправляємо відповідь ініціатору
+      io.to(callerSocketId).emit("call-response", {
+        callId: data.callId,
+        receiverId: data.receiverId,
+        status: data.status,
+        message: data.message
+      });
+      
+      // Якщо дзвінок прийнято, починаємо процес встановлення WebRTC з'єднання
+      if (data.status === "accepted") {
+        // Оновлюємо статус дзвінка в базі даних
+        executeQuery(
+          "UPDATE call_history SET status = 'in_progress' WHERE id = $1",
+          [data.callId]
+        ).catch(err => {
+          console.error("❌ Помилка при оновленні статусу дзвінка:", err.message);
+        });
+      } else {
+        // Дзвінок відхилено або пропущено
+        const status = data.status === "rejected" ? "rejected" : "missed";
+        
+        // Оновлюємо статус дзвінка в базі даних
+        executeQuery(
+          "UPDATE call_history SET status = $1, end_time = CURRENT_TIMESTAMP WHERE id = $2",
+          [status, data.callId]
+        ).catch(err => {
+          console.error("❌ Помилка при оновленні статусу дзвінка:", err.message);
+        });
+      }
+    }
+  });
+
+  // Обробка WebRTC сигналізації - SDP пропозиція
+  socket.on("webrtc-offer", (data) => {
+    console.log(`WebRTC пропозиція від ${data.from} до ${data.to}`);
+    
+    // Знаходимо сокет отримувача
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.to
+    )?.[0];
+    
+    if (receiverSocketId) {
+      // Відправляємо SDP пропозицію отримувачу
+      io.to(receiverSocketId).emit("webrtc-offer", {
+        callId: data.callId,
+        from: data.from,
+        offer: data.offer
+      });
+    }
+  });
+
+  // Обробка WebRTC сигналізації - SDP відповідь
+  socket.on("webrtc-answer", (data) => {
+    console.log(`WebRTC відповідь від ${data.from} до ${data.to}`);
+    
+    // Знаходимо сокет отримувача
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.to
+    )?.[0];
+    
+    if (receiverSocketId) {
+      // Відправляємо SDP відповідь отримувачу
+      io.to(receiverSocketId).emit("webrtc-answer", {
+        callId: data.callId,
+        from: data.from,
+        answer: data.answer
+      });
+    }
+  });
+
+  // Обробка WebRTC сигналізації - ICE кандидати
+  socket.on("ice-candidate", (data) => {
+    console.log(`ICE кандидат від ${data.from} до ${data.to}`);
+    
+    // Знаходимо сокет отримувача
+    const receiverSocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.to
+    )?.[0];
+    
+    if (receiverSocketId) {
+      // Відправляємо ICE кандидата отримувачу
+      io.to(receiverSocketId).emit("ice-candidate", {
+        callId: data.callId,
+        from: data.from,
+        candidate: data.candidate
+      });
+    }
+  });
+
+  // Обробка завершення дзвінка
+  socket.on("end-call", (data) => {
+    console.log(`Завершення дзвінка ${data.callId} від ${data.from}`);
+    
+    // Знаходимо сокет іншого учасника дзвінка
+    const otherPartySocketId = Array.from(activeUsers.entries()).find(
+      ([_, user]) => user.id === data.to
+    )?.[0];
+    
+    if (otherPartySocketId) {
+      // Повідомляємо іншого учасника про завершення дзвінка
+      io.to(otherPartySocketId).emit("end-call", {
+        callId: data.callId,
+        from: data.from,
+        duration: data.duration
+      });
+    }
+    
+    // Оновлюємо запис про дзвінок в базі даних
+    executeQuery(
+      `UPDATE call_history 
+       SET status = 'completed', 
+           end_time = CURRENT_TIMESTAMP, 
+           duration = $1 
+       WHERE id = $2`,
+      [data.duration || 0, data.callId]
+    ).catch(err => {
+      console.error("❌ Помилка при оновленні запису про дзвінок:", err.message);
+    });
+  });
+
+  // Обробка відключення
+  socket.on("disconnect", () => {
+    console.log("Користувач відключився:", socket.id);
+    
+    // Отримуємо інформацію про користувача
+    const user = activeUsers.get(socket.id);
+    
+    if (user) {
+      // Видаляємо користувача зі списку активних
+      activeUsers.delete(socket.id);
+      
+      // Повідомляємо всіх про оновлення статусу користувача
+      io.emit("user-status-changed", {
+        userId: user.id,
+        status: "offline"
+      });
+    }
+  });
+});
+// Створення директорій для звукових файлів
+const soundsDir = path.join(__dirname, "public/sounds");
+if (!fs.existsSync(soundsDir)) {
+  fs.mkdirSync(soundsDir, { recursive: true });
+  console.log("✅ Створено директорію для звукових файлів");
+}
+
+// Створення директорії для запису дзвінків (якщо потрібно)
+const callRecordingsDir = path.join(__dirname, "uploads/call-recordings");
+if (!fs.existsSync(callRecordingsDir)) {
+  fs.mkdirSync(callRecordingsDir, { recursive: true });
+  console.log("✅ Створено директорію для запису дзвінків");
+}
+// Маршрути для сторінок відеодзвінків
+app.get("/call.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "call.html"));
+});
+
+app.get("/callm.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "callm.html"));
+});
+
+// Маршрут для перенаправлення на відповідну сторінку в залежності від ролі користувача
+app.get("/call", (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1] || req.query.token;
+
+  if (!token) {
+    return res.redirect("/auth.html");
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_secret_key");
+    const userId = decoded.id;
+
+    // Перевіряємо, чи користувач є майстром
+    executeQuery("SELECT role_master FROM user_profile WHERE user_id = $1", [userId])
+      .then((result) => {
+        if (result.rows.length === 0) {
+          return res.redirect("/auth.html");
+        }
+
+        const isMaster = result.rows[0].role_master;
+
+        if (isMaster) {
+          res.redirect("/callm.html");
+        } else {
+          res.redirect("/call.html");
+        }
+      })
+      .catch((err) => {
+        console.error("❌ Помилка при перевірці ролі користувача:", err.message);
+        res.redirect("/auth.html");
+      });
+  } catch (err) {
+    console.error("❌ Помилка при перевірці токена:", err.message);
+    res.redirect("/auth.html");
+  }
 });
