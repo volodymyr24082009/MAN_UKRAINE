@@ -11,8 +11,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const mobileMenuBtn = document.getElementById("mobileMenuBtn");
   const navMenu = document.getElementById("navMenu");
 
-  // Connect to Socket.io server
-  const socket = io();
+  // Connect to Socket.io server with connection optimization options
+  const socket = io({
+    transports: ["websocket"], // Use WebSocket transport only for better performance
+    upgrade: false, // Disable transport upgrades
+    reconnectionAttempts: 5, // Limit reconnection attempts
+    timeout: 10000, // Connection timeout
+  });
 
   // User data
   let currentUser = {
@@ -20,6 +25,10 @@ document.addEventListener("DOMContentLoaded", () => {
     type: "",
     userId: null,
   };
+
+  // Chat history cache
+  let chatHistory = [];
+  const MAX_DISPLAYED_MESSAGES = 50; // Limit displayed messages for performance
 
   // Mobile menu toggle
   if (mobileMenuBtn && navMenu) {
@@ -68,7 +77,36 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   socket.on("message", (message) => {
+    // Add message to history
+    chatHistory.push(message);
     displayMessage(message, message.username === currentUser.username);
+  });
+
+  // Listen for chat history when joining
+  socket.on("chat-history", (history) => {
+    chatHistory = history;
+
+    // Clear existing messages before displaying history
+    messagesContainer.innerHTML = "";
+
+    // Display only the last MAX_DISPLAYED_MESSAGES messages for performance
+    const messagesToDisplay = history.slice(-MAX_DISPLAYED_MESSAGES);
+
+    // Display each message from history
+    messagesToDisplay.forEach((message) => {
+      displayMessage(message, message.username === currentUser.username);
+    });
+
+    // Add a system message indicating there are more messages if needed
+    if (history.length > MAX_DISPLAYED_MESSAGES) {
+      const systemMessage = {
+        username: "Система",
+        type: "system",
+        text: `Показано останні ${MAX_DISPLAYED_MESSAGES} повідомлень з ${history.length}`,
+        timestamp: new Date().toISOString(),
+      };
+      displayMessage(systemMessage, false, true);
+    }
   });
 
   socket.on("user-joined", (user) => {
@@ -94,6 +132,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Functions
   async function loadUserData() {
     try {
+      // Show loading spinner
+      loginContainer.innerHTML = `
+        <div class="login-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Завантаження даних користувача...</p>
+        </div>
+      `;
+
       // Fetch user profile data
       const profileResponse = await fetch(`/profile/${userId}`, {
         headers: {
@@ -140,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
       chatContent.classList.remove("hidden");
       logoutBtn.classList.remove("hidden");
 
-      // Join the chat
+      // Join the chat and request chat history
       socket.emit("join", currentUser);
 
       // Update login button in header
@@ -191,40 +237,90 @@ document.addEventListener("DOMContentLoaded", () => {
     messageInput.value = "";
   }
 
-  function displayMessage(message, isSent, isSystem = false) {
-    const messageElement = document.createElement("div");
+  // Optimized message display function with debouncing for better performance
+  const displayMessage = (() => {
+    const pendingMessages = [];
+    let isProcessing = false;
 
-    if (isSystem) {
-      messageElement.classList.add("message", "system");
-      messageElement.textContent = message.text;
-    } else {
-      messageElement.classList.add("message");
-      messageElement.classList.add(isSent ? "sent" : "received");
+    // Process messages in batches for better performance
+    function processPendingMessages() {
+      if (pendingMessages.length === 0) {
+        isProcessing = false;
+        return;
+      }
 
-      const messageInfo = document.createElement("div");
-      messageInfo.classList.add("message-info");
+      isProcessing = true;
+      const fragment = document.createDocumentFragment();
 
-      const userTypeSpan = document.createElement("span");
-      userTypeSpan.classList.add("user-type");
-      userTypeSpan.classList.add(message.type);
-      userTypeSpan.textContent =
-        message.type === "master" ? "Майстер" : "Користувач";
+      // Process up to 10 messages at once
+      const messagesToProcess = pendingMessages.splice(0, 10);
 
-      messageInfo.textContent = message.username;
-      messageInfo.appendChild(userTypeSpan);
+      messagesToProcess.forEach(({ message, isSent, isSystem }) => {
+        const messageElement = document.createElement("div");
 
-      const messageText = document.createElement("div");
-      messageText.textContent = message.text;
+        if (isSystem) {
+          messageElement.classList.add("message", "system");
+          messageElement.textContent = message.text;
+        } else {
+          messageElement.classList.add("message");
+          messageElement.classList.add(isSent ? "sent" : "received");
 
-      messageElement.appendChild(messageInfo);
-      messageElement.appendChild(messageText);
+          const messageInfo = document.createElement("div");
+          messageInfo.classList.add("message-info");
+
+          const userTypeSpan = document.createElement("span");
+          userTypeSpan.classList.add("user-type");
+          userTypeSpan.classList.add(message.type);
+          userTypeSpan.textContent =
+            message.type === "master" ? "Майстер" : "Користувач";
+
+          messageInfo.textContent = message.username;
+          messageInfo.appendChild(userTypeSpan);
+
+          const messageText = document.createElement("div");
+          messageText.textContent = message.text;
+
+          messageElement.appendChild(messageInfo);
+          messageElement.appendChild(messageText);
+        }
+
+        fragment.appendChild(messageElement);
+      });
+
+      messagesContainer.appendChild(fragment);
+
+      // Scroll to bottom only after all messages are added
+      if (pendingMessages.length === 0) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      // Continue processing remaining messages if any
+      if (pendingMessages.length > 0) {
+        setTimeout(processPendingMessages, 10); // Small delay to prevent UI blocking
+      } else {
+        isProcessing = false;
+      }
     }
 
-    messagesContainer.appendChild(messageElement);
+    // Return the actual function that will be called
+    return (message, isSent, isSystem = false) => {
+      pendingMessages.push({ message, isSent, isSystem });
 
-    // Scroll to bottom
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      if (!isProcessing) {
+        processPendingMessages();
+      }
+    };
+  })();
+
+  // Limit the number of messages in the container for performance
+  function pruneOldMessages() {
+    while (messagesContainer.children.length > MAX_DISPLAYED_MESSAGES) {
+      messagesContainer.removeChild(messagesContainer.firstChild);
+    }
   }
+
+  // Periodically prune old messages to maintain performance
+  setInterval(pruneOldMessages, 60000); // Check every minute
 
   // Load user data when page loads
   loadUserData();

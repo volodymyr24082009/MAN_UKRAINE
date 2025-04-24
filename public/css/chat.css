@@ -225,6 +225,7 @@ html.light .login-spinner p {
   gap: 20px;
 }
 
+/* Add these styles to optimize rendering performance */
 .messages-container {
   flex: 1;
   overflow-y: auto;
@@ -232,7 +233,26 @@ html.light .login-spinner p {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  will-change: transform; /* Optimize for animations */
+  contain: content; /* Improve rendering performance */
 }
+
+/* Add a style for history notification */
+.message.history-notice {
+  align-self: center;
+  background: rgba(52, 152, 219, 0.2);
+  color: var(--primary-color);
+  max-width: 90%;
+  text-align: center;
+  border-radius: var(--border-radius-md);
+  font-style: italic;
+  padding: 8px 15px;
+}
+
+html.light .message.history-notice {
+  background: rgba(52, 152, 219, 0.1);
+}
+
 
 .message {
   max-width: 80%;

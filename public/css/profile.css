@@ -135,12 +135,7 @@ html.light .header {
   justify-content: flex-end; /* Align items to the right */
   width: calc(100% - 200px); /* Give space for the logo */
 }
-#messages {
-  display: none;
-}
-#adminLink {
-  display: none;
-}
+
 .nav-link {
   color: #f8f9fa;
   text-decoration: none;
@@ -1152,43 +1147,6 @@ button[type="button"]:hover::before {
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
   padding: 20px;
-}
-
-/* Add Order Button Styling */
-.add-order-button-container {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.add-order-button {
-  background: linear-gradient(
-    45deg,
-    var(--primary-color),
-    var(--secondary-color)
-  );
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-md);
-  padding: 12px 25px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
-}
-
-.add-order-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
-}
-
-.add-order-button i {
-  font-size: 1.2rem;
 }
 
 .order-card {

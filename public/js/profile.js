@@ -25,55 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Function to check user role and update navigation visibility
-  async function checkUserRoleAndUpdateNav() {
-    const userId = getUserId();
-    if (!userId) return;
-
-    try {
-      const response = await fetch(`/profile/${userId}`);
-
-      if (!response.ok) {
-        throw new Error("Не вдалося завантажити профіль");
-      }
-
-      const data = await response.json();
-
-      if (data.profile) {
-        const isMaster = data.profile.role_master || false;
-
-        // Get navigation elements
-        const messageBtn = document.getElementById("message");
-        const infoBtn = document.getElementById("info");
-
-        // Show/hide based on user role
-        if (isMaster) {
-          // If master, hide message button and show info button
-          if (messageBtn) messageBtn.style.display = "none";
-          if (infoBtn) infoBtn.style.display = "inline-block"; // Use inline-block instead of block
-        } else {
-          // If regular user, show message button and hide info button
-          if (messageBtn) messageBtn.style.display = "inline-block"; // Use inline-block instead of block
-          if (infoBtn) infoBtn.style.display = "none";
-        }
-
-        console.log(`User role: ${isMaster ? "Master" : "Regular user"}`);
-        console.log(
-          `Message button display: ${
-            messageBtn ? messageBtn.style.display : "not found"
-          }`
-        );
-        console.log(
-          `Info button display: ${
-            infoBtn ? infoBtn.style.display : "not found"
-          }`
-        );
-      }
-    } catch (error) {
-      console.error("Error checking user role:", error);
-    }
-  }
-
   // Tab functionality
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", function () {
@@ -206,19 +157,12 @@ document.addEventListener("DOMContentLoaded", () => {
         // Display approval status if available
         if (data.profile.approval_status) {
           const statusElement = document.getElementById("approval-status");
-          const message = document.getElementById("message");
-          const adminLink = document.getElementById("adminLink");
           if (statusElement) {
             statusElement.textContent = getStatusText(
               data.profile.approval_status
             );
             statusElement.className = `status-${data.profile.approval_status}`;
             statusElement.style.display = "inline-block";
-            if (adminLink) adminLink.style.display = "none";
-            if (message) message.style.display = "none";
-          } else {
-            if (message) message.style.display = "block";
-            if (adminLink) adminLink.style.display = "block";
           }
         }
 
@@ -526,15 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!ordersContainer || !loadingElement) return;
 
-    // Keep the add order button visible
-    const addOrderButton = document.querySelector(
-      ".add-order-button-container"
-    );
     ordersContainer.innerHTML = "";
-    if (addOrderButton) {
-      ordersContainer.appendChild(addOrderButton);
-    }
-
     loadingElement.style.display = "flex";
 
     try {
@@ -614,23 +550,12 @@ document.addEventListener("DOMContentLoaded", () => {
           ordersContainer.appendChild(orderCard);
         });
       } else {
-        // Add a message if there are no orders, but keep the add order button
-        const noOrdersMessage = document.createElement("p");
-        noOrdersMessage.style.textAlign = "center";
-        noOrdersMessage.style.padding = "30px";
-        noOrdersMessage.textContent = "У вас ще немає замовлень";
-        ordersContainer.appendChild(noOrdersMessage);
+        ordersContainer.innerHTML =
+          '<p style="text-align: center; padding: 30px;">У вас ще немає замовлень</p>';
       }
     } catch (error) {
       loadingElement.style.display = "none";
-
-      // Keep the add order button and show error message
-      const errorMessage = document.createElement("p");
-      errorMessage.style.textAlign = "center";
-      errorMessage.style.padding = "30px";
-      errorMessage.style.color = "var(--danger-color)";
-      errorMessage.textContent = `Помилка: ${error.message}`;
-      ordersContainer.appendChild(errorMessage);
+      ordersContainer.innerHTML = `<p style="text-align: center; padding: 30px; color: var(--danger-color);">Помилка: ${error.message}</p>`;
     }
   }
 
@@ -1248,14 +1173,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Add order button functionality
-  const addOrderButton = document.getElementById("add-order-button");
-  if (addOrderButton) {
-    addOrderButton.addEventListener("click", () => {
-      window.location.href = "/index.html";
-    });
-  }
-
   // Logout handler
   const logoutBtn = document.getElementById("logout");
   if (logoutBtn) {
@@ -1458,9 +1375,6 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         // Reload profile data instead of refreshing the page
         loadUserProfile();
-
-        // Update navigation based on new role
-        checkUserRoleAndUpdateNav();
       }, 1000);
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -1476,9 +1390,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load profile on page load
   loadUserProfile();
-
-  // Check user role and update navigation on page load
-  checkUserRoleAndUpdateNav();
 
   // Check if we need to show a specific tab based on URL parameter
   const urlParams = new URLSearchParams(window.location.search);
