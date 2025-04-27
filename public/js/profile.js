@@ -2,6 +2,14 @@
 
 // Theme toggle functionality
 document.addEventListener("DOMContentLoaded", () => {
+  // Create Order button handler
+  const createOrderBtn = document.getElementById("create-order-btn");
+  if (createOrderBtn) {
+    createOrderBtn.addEventListener("click", () => {
+      window.location.href = "/index.html#order";
+    });
+  }
+
   const themeToggle = document.getElementById("themeToggle");
   const htmlElement = document.documentElement;
 

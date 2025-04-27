@@ -14,37 +14,39 @@
   <body>
     <div class="container">
       <!-- Header -->
-    <header class="header">
-      <div class="header-container">
-        <a href="index.html" class="logo">
-          <i class="fas fa-tools"></i>
-          <span>ProFix Network Hub</span>
-        </a>
-        <div class="nav-menu" id="navMenu">
-          <a href="index.html" class="nav-link active">Головна</a>
-          <a href="message.html" class="nav-link" id="message">Повідомлення</a>
+      <header class="header">
+        <div class="header-container">
+          <a href="index.html" class="logo">
+            <i class="fas fa-tools"></i>
+            <span>ProFix Network Hub</span>
+          </a>
+          <div class="nav-menu" id="navMenu">
+            <a href="index.html" class="nav-link active">Головна</a>
+            <a href="message.html" class="nav-link" id="message"
+              >Повідомлення</a
+            >
 
-          <a href="chat.html" class="nav-link" id="chat">Чат</a>
-          <a href="news.html" class="nav-link" id="news">Новини</a>
-          <a href="info.html" class="nav-link" id="info"
-            >Повідомлення(майстри)</a
-          >
-          <a href="order.html" class="nav-link" id="orders">Замовлення</a>
-          <a href="profile.html" class="nav-link" id="profileLink">Профіль</a>
-          <button class="nav-button" id="loginBtn">
-            <i class="fas fa-sign-in-alt"></i>Увійти
+            <a href="chat.html" class="nav-link" id="chat">Чат</a>
+            <a href="news.html" class="nav-link" id="news">Новини</a>
+            <a href="info.html" class="nav-link" id="info"
+              >Повідомлення(майстри)</a
+            >
+            <a href="order.html" class="nav-link" id="orders">Замовлення</a>
+            <a href="profile.html" class="nav-link" id="profileLink">Профіль</a>
+            <button class="nav-button" id="loginBtn">
+              <i class="fas fa-sign-in-alt"></i>Увійти
+            </button>
+            <label class="theme-switch"
+              ><input type="checkbox" id="themeToggle" /><span class="slider">
+                <span class="moon">🌙</span><span class="sun">☀️</span></span
+              ></label
+            >
+          </div>
+          <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <i class="fas fa-bars"></i>
           </button>
-          <label class="theme-switch"
-            ><input type="checkbox" id="themeToggle" /><span class="slider">
-              <span class="moon">🌙</span><span class="sun">☀️</span></span
-            ></label
-          >
         </div>
-        <button class="mobile-menu-btn" id="mobileMenuBtn">
-          <i class="fas fa-bars"></i>
-        </button>
-      </div>
-    </header>
+      </header>
       <main>
         <div class="profile-header">
           <div class="profile-header-left">
@@ -109,7 +111,6 @@
               <label for="email">Електронна пошта:</label>
               <input type="email" id="email" name="email" required />
             </div>
-
             <div class="form-group">
               <label for="phone">Телефон:</label>
               <input type="text" id="phone" name="phone" required />
@@ -460,6 +461,11 @@
           <div class="loading-container" id="orders-loading">
             <div class="loading-spinner"></div>
           </div>
+          <div class="create-order-container">
+            <button id="create-order-btn" class="create-order-btn">
+              <i class="fas fa-plus-circle"></i> Створити замовлення
+            </button>
+          </div>
           <div class="orders-container" id="orders-container"></div>
         </div>
 
@@ -695,7 +701,7 @@
       </div>
     </footer>
     <script src="./js/profile.js"></script>
-    <script src="auth.js"></script>
+    <script src="js/auth.js"></script>
     <script src="role.js"></script>
   </body>
 </html>
