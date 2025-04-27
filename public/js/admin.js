@@ -122,22 +122,11 @@ function loadAgeChart() {
   fetch("/api/age-demographics")
     .then((response) => response.json())
     .then((data) => {
-      // Check if we have valid data
-      if (!data || data.length === 0) {
-        console.error("No age demographics data received");
-        return;
-      }
-
-      const ctx = document.getElementById("ageChart").getContext("2d");
+      const ctx = document.getElementById("ageChart").getContext("2d")
 
       // Format data from real database values
-      const labels = data.map((item) => item.category);
-      const percentages = data.map((item) => item.percentage);
-
-      // Log the data for debugging
-      console.log("Age demographics data:", data);
-      console.log("Labels:", labels);
-      console.log("Percentages:", percentages);
+      const labels = data.map((item) => item.category)
+      const percentages = data.map((item) => item.percentage)
 
       // Create chart with real data
       const ageChart = new Chart(ctx, {
@@ -177,59 +166,45 @@ function loadAgeChart() {
             legend: {
               position: "top",
               labels: {
-                color: htmlElement.classList.contains("light")
-                  ? "#333"
-                  : "#fff",
+                color: htmlElement.classList.contains("light") ? "#333" : "#fff",
               },
             },
             tooltip: {
               callbacks: {
-                label: function (context) {
-                  return `${context.raw.toFixed(1)}%`;
-                },
+                label: (context) => `${context.raw.toFixed(1)}%`,
               },
             },
           },
           scales: {
             x: {
               grid: {
-                color: htmlElement.classList.contains("light")
-                  ? "rgba(0,0,0,0.1)"
-                  : "rgba(255,255,255,0.1)",
+                color: htmlElement.classList.contains("light") ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)",
               },
               ticks: {
-                color: htmlElement.classList.contains("light")
-                  ? "#333"
-                  : "#fff",
+                color: htmlElement.classList.contains("light") ? "#333" : "#fff",
               },
             },
             y: {
               beginAtZero: true,
               grid: {
-                color: htmlElement.classList.contains("light")
-                  ? "rgba(0,0,0,0.1)"
-                  : "rgba(255,255,255,0.1)",
+                color: htmlElement.classList.contains("light") ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)",
               },
               ticks: {
-                color: htmlElement.classList.contains("light")
-                  ? "#333"
-                  : "#fff",
-                callback: function (value) {
-                  return value + "%";
-                },
+                color: htmlElement.classList.contains("light") ? "#333" : "#fff",
+                callback: (value) => value + "%",
               },
             },
           },
         },
-      });
+      })
 
       // Store chart reference for theme updates
-      window.ageChart = ageChart;
+      window.ageChart = ageChart
     })
     .catch((error) => {
-      console.error("Error loading age demographics:", error);
-      showNotification("Помилка при завантаженні вікової демографії", "error");
-    });
+      console.error("Error loading age demographics:", error)
+      showNotification("Помилка при завантаженні вікової демографії", "error")
+    })
 }
 
 // Load Dashboard Data
@@ -242,19 +217,15 @@ function loadDashboardData() {
       document.getElementById("totalMasters").textContent = data.masters;
 
       // Calculate percentage change based on real growth data
-      const usersGrowthPercent =
-        data.users > 0 ? Math.round((data.usersGrowth / data.users) * 100) : 0;
-      const mastersGrowthPercent =
-        data.masters > 0
-          ? Math.round((data.mastersGrowth / data.masters) * 100)
-          : 0;
-
-      document.getElementById(
-        "usersChange"
-      ).textContent = `${usersGrowthPercent}%`;
-      document.getElementById(
-        "mastersChange"
-      ).textContent = `${mastersGrowthPercent}%`;
+      const usersGrowthPercent = data.users > 0 
+        ? Math.round((data.usersGrowth / data.users) * 100) 
+        : 0;
+      const mastersGrowthPercent = data.masters > 0 
+        ? Math.round((data.mastersGrowth / data.masters) * 100) 
+        : 0;
+      
+      document.getElementById("usersChange").textContent = `${usersGrowthPercent}%`;
+      document.getElementById("mastersChange").textContent = `${mastersGrowthPercent}%`;
     })
     .catch((error) => {
       console.error("Error loading user-master count:", error);
