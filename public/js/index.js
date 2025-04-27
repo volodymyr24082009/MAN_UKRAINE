@@ -442,12 +442,12 @@ document.addEventListener("click", function (event) {
   }
 });
 
-// Communication buttons with animations
+// Communication buttons with animations and redirects
 document.getElementById("messageBtn").addEventListener("click", () => {
   animateButton(event.currentTarget);
   setTimeout(() => {
     if (checkUserLoggedIn()) {
-      alert("Відкриття повідомлень");
+      window.location.href = "public/message.html";
     } else {
       document.getElementById("loginModal").classList.add("active");
     }
@@ -458,7 +458,7 @@ document.getElementById("chatBtn").addEventListener("click", () => {
   animateButton(event.currentTarget);
   setTimeout(() => {
     if (checkUserLoggedIn()) {
-      alert("Відкриття чату");
+      window.location.href = "public/chat.html";
     } else {
       document.getElementById("loginModal").classList.add("active");
     }
@@ -469,7 +469,7 @@ document.getElementById("voiceBtn").addEventListener("click", () => {
   animateButton(event.currentTarget);
   setTimeout(() => {
     if (checkUserLoggedIn()) {
-      alert("Голосовий виклик");
+      window.location.href = "public/voice.html";
     } else {
       document.getElementById("loginModal").classList.add("active");
     }
@@ -480,7 +480,7 @@ document.getElementById("videoBtn").addEventListener("click", () => {
   animateButton(event.currentTarget);
   setTimeout(() => {
     if (checkUserLoggedIn()) {
-      alert("Відео виклик");
+      window.location.href = "public/call.html";
     } else {
       document.getElementById("loginModal").classList.add("active");
     }
