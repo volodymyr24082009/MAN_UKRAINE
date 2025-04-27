@@ -1635,7 +1635,7 @@ app.get("/profile/:userId", async (req, res) => {
   }
 });
 
-// Оновлення профілю користувача
+// Оновлення профілю користувача з підтримкою telegram_username
 app.put("/profile/:userId", async (req, res) => {
   const userId = req.params.userId;
   const {
@@ -1647,34 +1647,31 @@ app.put("/profile/:userId", async (req, res) => {
     date_of_birth,
     role_master,
     approval_status,
+    telegram_username,
   } = req.body;
 
   try {
-    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
-      userId,
-    ]);
+    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [userId]);
     if (userResult.rows.length === 0) {
       return res.status(404).json({ message: "Користувача не знайдено" });
     }
 
-    // Отримуємо поточний профіль користувача для перевірки
+    // Отримуємо поточний профіль користувача
     const currentProfileResult = await executeQuery(
       "SELECT * FROM user_profile WHERE user_id = $1",
       [userId]
     );
-
     const currentProfile = currentProfileResult.rows[0];
     const wasMaster = currentProfile.role_master;
 
-    // Перевіряємо, чи користувач став майстром або змінив дані як майстер
+    // Якщо користувач став майстром або змінив дані майстра
     if (role_master && (!wasMaster || role_master !== wasMaster)) {
-      // Якщо користувач став майстром або змінив дані як майстер,
-      // встановлюємо статус "pending" для затвердження адміністратором
       await executeQuery(
         `UPDATE user_profile 
          SET first_name = $1, last_name = $2, email = $3, phone = $4, 
-             address = $5, date_of_birth = $6, role_master = $7, approval_status = 'pending'
-         WHERE user_id = $8`,
+             address = $5, date_of_birth = $6, role_master = $7, approval_status = 'pending',
+             telegram_username = $8
+         WHERE user_id = $9`,
         [
           first_name,
           last_name,
@@ -1683,6 +1680,7 @@ app.put("/profile/:userId", async (req, res) => {
           address,
           date_of_birth,
           role_master,
+          telegram_username,
           userId,
         ]
       );
@@ -1693,35 +1691,32 @@ app.put("/profile/:userId", async (req, res) => {
         [userId]
       );
 
-      // Якщо запит не існує, створюємо новий
       if (existingRequest.rows.length === 0) {
         await executeQuery(
           "INSERT INTO master_requests (user_id, status) VALUES ($1, 'pending')",
           [userId]
         );
       } else {
-        // Якщо запит існує, оновлюємо його статус
         await executeQuery(
           "UPDATE master_requests SET status = 'pending', updated_at = CURRENT_TIMESTAMP WHERE user_id = $1",
           [userId]
         );
       }
 
-      console.log(
-        `✅ Профіль користувача з ID ${userId} оновлено і відправлено на затвердження.`
-      );
+      console.log(`✅ Профіль користувача з ID ${userId} оновлено і відправлено на затвердження.`);
       res.status(200).json({
         success: true,
         message: "Профіль успішно оновлено і відправлено на затвердження",
         requiresApproval: true,
       });
     } else {
-      // Якщо це звичайний користувач, просто оновлюємо профіль
+      // Оновлення профілю звичайного користувача
       await executeQuery(
         `UPDATE user_profile 
          SET first_name = $1, last_name = $2, email = $3, phone = $4, 
-             address = $5, date_of_birth = $6, role_master = $7, approval_status = $8
-         WHERE user_id = $9`,
+             address = $5, date_of_birth = $6, role_master = $7, approval_status = $8,
+             telegram_username = $9
+         WHERE user_id = $10`,
         [
           first_name,
           last_name,
@@ -1731,6 +1726,7 @@ app.put("/profile/:userId", async (req, res) => {
           date_of_birth,
           role_master,
           approval_status,
+          telegram_username,
           userId,
         ]
       );
@@ -1747,6 +1743,7 @@ app.put("/profile/:userId", async (req, res) => {
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
+
 
 // Додавання послуги для користувача
 app.post("/services/:userId", async (req, res) => {
@@ -1880,7 +1877,7 @@ app.post("/master-requests", async (req, res) => {
   }
 });
 
-// Endpoint to handle password changes
+// Зміна пароля користувача
 app.post("/change-password/:userId", authenticateToken, async (req, res) => {
   const userId = req.params.userId;
   const { currentPassword, newPassword } = req.body;
@@ -1890,9 +1887,7 @@ app.post("/change-password/:userId", authenticateToken, async (req, res) => {
   }
 
   try {
-    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [
-      userId,
-    ]);
+    const userResult = await executeQuery("SELECT * FROM users WHERE id = $1", [userId]);
 
     if (userResult.rows.length === 0) {
       return res.status(404).json({ message: "Користувача не знайдено" });
@@ -1908,11 +1903,9 @@ app.post("/change-password/:userId", authenticateToken, async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-    await executeQuery("UPDATE users SET password = $1 WHERE id = $2", [
-      hashedPassword,
-      userId,
-    ]);
+    await executeQuery("UPDATE users SET password = $1 WHERE id = $2", [hashedPassword, userId]);
 
+    console.log(`✅ Пароль користувача з ID ${userId} успішно змінено.`);
     res.status(200).json({
       success: true,
       message: "Пароль успішно змінено",
@@ -1922,6 +1915,7 @@ app.post("/change-password/:userId", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
 });
+
 
 // Отримання всіх запитів на роль майстра
 app.get("/master-requests", async (req, res) => {
@@ -2333,7 +2327,7 @@ app.get("/api/user-master-timeline", async (req, res) => {
   }
 });
 
-// Improved endpoint for age-demographics to use real data
+// Improved endpoint for age-demographics to use real data from database
 app.get("/api/age-demographics", async (req, res) => {
   try {
     console.log("Отримано запит на /api/age-demographics");
@@ -4278,7 +4272,6 @@ if (!fs.existsSync(chatUploadsDir)) {
   fs.mkdirSync(chatUploadsDir, { recursive: true });
 }
 
-
 // Serve the chat pages
 app.get("/chat/user", (req, res) => {
   res.sendFile(path.join(__dirname, "communicationU.html"));
@@ -4652,7 +4645,9 @@ const createCallHistoryTable = async () => {
     const tableExists = await executeQuery(tableExistsQuery);
 
     if (tableExists.rows[0].exists) {
-      console.log("Таблиця історії дзвінків існує, перевіряємо необхідні колонки...");
+      console.log(
+        "Таблиця історії дзвінків існує, перевіряємо необхідні колонки..."
+      );
 
       // Отримуємо існуючі колонки
       const columnsResult = await executeQuery(`
@@ -4674,7 +4669,7 @@ const createCallHistoryTable = async () => {
         { name: "duration", type: "INTEGER DEFAULT 0" }, // в секундах
         { name: "status", type: "VARCHAR(20) NOT NULL DEFAULT 'missed'" }, // 'completed', 'missed', 'rejected'
         { name: "has_video", type: "BOOLEAN DEFAULT FALSE" },
-        { name: "notes", type: "TEXT" }
+        { name: "notes", type: "TEXT" },
       ];
 
       for (const column of requiredColumns) {
@@ -4683,7 +4678,9 @@ const createCallHistoryTable = async () => {
             ALTER TABLE call_history 
             ADD COLUMN ${column.name} ${column.type};
           `);
-          console.log(`✅ Додано колонку ${column.name} до таблиці call_history`);
+          console.log(
+            `✅ Додано колонку ${column.name} до таблиці call_history`
+          );
         }
       }
     } else {
@@ -4705,10 +4702,15 @@ const createCallHistoryTable = async () => {
       `;
 
       await executeQuery(callHistoryTableQuery);
-      console.log("✅ Створено таблицю call_history з усіма необхідними колонками");
+      console.log(
+        "✅ Створено таблицю call_history з усіма необхідними колонками"
+      );
     }
   } catch (err) {
-    console.error("❌ Помилка при створенні/оновленні таблиці call_history:", err.message);
+    console.error(
+      "❌ Помилка при створенні/оновленні таблиці call_history:",
+      err.message
+    );
   }
 };
 
@@ -4722,20 +4724,26 @@ app.post("/api/calls", async (req, res) => {
     const { caller_id, receiver_id, caller_type, has_video, notes } = req.body;
 
     if (!caller_id || !receiver_id || !caller_type) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Відсутні обов'язкові поля" 
+      return res.status(400).json({
+        success: false,
+        message: "Відсутні обов'язкові поля",
       });
     }
 
     // Перевіряємо, чи існують користувачі
-    const callerExists = await executeQuery("SELECT * FROM users WHERE id = $1", [caller_id]);
-    const receiverExists = await executeQuery("SELECT * FROM users WHERE id = $1", [receiver_id]);
+    const callerExists = await executeQuery(
+      "SELECT * FROM users WHERE id = $1",
+      [caller_id]
+    );
+    const receiverExists = await executeQuery(
+      "SELECT * FROM users WHERE id = $1",
+      [receiver_id]
+    );
 
     if (callerExists.rows.length === 0 || receiverExists.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Користувача не знайдено" 
+      return res.status(404).json({
+        success: false,
+        message: "Користувача не знайдено",
       });
     }
 
@@ -4748,18 +4756,20 @@ app.post("/api/calls", async (req, res) => {
       [caller_id, receiver_id, caller_type, has_video || false, notes || null]
     );
 
-    console.log(`✅ Створено новий запис про дзвінок з ID ${result.rows[0].id}`);
+    console.log(
+      `✅ Створено новий запис про дзвінок з ID ${result.rows[0].id}`
+    );
     res.status(201).json({
       success: true,
       message: "Запис про дзвінок створено",
-      call_id: result.rows[0].id
+      call_id: result.rows[0].id,
     });
   } catch (err) {
     console.error("❌ Помилка при створенні запису про дзвінок:", err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: "Помилка сервера", 
-      error: err.message 
+    res.status(500).json({
+      success: false,
+      message: "Помилка сервера",
+      error: err.message,
     });
   }
 });
@@ -4771,18 +4781,21 @@ app.put("/api/calls/:callId", async (req, res) => {
     const { status, end_time, duration } = req.body;
 
     if (!status) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Статус є обов'язковим полем" 
+      return res.status(400).json({
+        success: false,
+        message: "Статус є обов'язковим полем",
       });
     }
 
     // Перевіряємо, чи існує запис про дзвінок
-    const callExists = await executeQuery("SELECT * FROM call_history WHERE id = $1", [callId]);
+    const callExists = await executeQuery(
+      "SELECT * FROM call_history WHERE id = $1",
+      [callId]
+    );
     if (callExists.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Запис про дзвінок не знайдено" 
+      return res.status(404).json({
+        success: false,
+        message: "Запис про дзвінок не знайдено",
       });
     }
 
@@ -4812,14 +4825,14 @@ app.put("/api/calls/:callId", async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Запис про дзвінок оновлено",
-      call_id: result.rows[0].id
+      call_id: result.rows[0].id,
     });
   } catch (err) {
     console.error("❌ Помилка при оновленні запису про дзвінок:", err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: "Помилка сервера", 
-      error: err.message 
+    res.status(500).json({
+      success: false,
+      message: "Помилка сервера",
+      error: err.message,
     });
   }
 });
@@ -4830,11 +4843,13 @@ app.get("/api/calls/user/:userId", async (req, res) => {
     const userId = req.params.userId;
 
     // Перевіряємо, чи існує користувач
-    const userExists = await executeQuery("SELECT * FROM users WHERE id = $1", [userId]);
+    const userExists = await executeQuery("SELECT * FROM users WHERE id = $1", [
+      userId,
+    ]);
     if (userExists.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Користувача не знайдено" 
+      return res.status(404).json({
+        success: false,
+        message: "Користувача не знайдено",
       });
     }
 
@@ -4859,14 +4874,14 @@ app.get("/api/calls/user/:userId", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      calls: result.rows
+      calls: result.rows,
     });
   } catch (err) {
     console.error("❌ Помилка при отриманні історії дзвінків:", err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: "Помилка сервера", 
-      error: err.message 
+    res.status(500).json({
+      success: false,
+      message: "Помилка сервера",
+      error: err.message,
     });
   }
 });
@@ -4877,11 +4892,13 @@ app.get("/api/calls/stats/:userId", async (req, res) => {
     const userId = req.params.userId;
 
     // Перевіряємо, чи існує користувач
-    const userExists = await executeQuery("SELECT * FROM users WHERE id = $1", [userId]);
+    const userExists = await executeQuery("SELECT * FROM users WHERE id = $1", [
+      userId,
+    ]);
     if (userExists.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Користувача не знайдено" 
+      return res.status(404).json({
+        success: false,
+        message: "Користувача не знайдено",
       });
     }
 
@@ -4900,9 +4917,9 @@ app.get("/api/calls/stats/:userId", async (req, res) => {
     );
 
     const stats = result.rows[0];
-    
+
     // Перетворюємо null значення на 0
-    Object.keys(stats).forEach(key => {
+    Object.keys(stats).forEach((key) => {
       if (stats[key] === null) {
         stats[key] = 0;
       }
@@ -4910,14 +4927,14 @@ app.get("/api/calls/stats/:userId", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      stats: stats
+      stats: stats,
     });
   } catch (err) {
     console.error("❌ Помилка при отриманні статистики дзвінків:", err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: "Помилка сервера", 
-      error: err.message 
+    res.status(500).json({
+      success: false,
+      message: "Помилка сервера",
+      error: err.message,
     });
   }
 });
@@ -4933,9 +4950,9 @@ app.get("/api/calls/available-masters", async (req, res) => {
       JOIN user_profile up ON u.id = up.user_id
       WHERE up.role_master = true AND up.approval_status = 'approved'
     `;
-    
+
     const params = [];
-    
+
     // Якщо вказана галузь, фільтруємо майстрів за нею
     if (industry) {
       query += `
@@ -4948,33 +4965,36 @@ app.get("/api/calls/available-masters", async (req, res) => {
       `;
       params.push(industry);
     }
-    
+
     query += ` ORDER BY u.username`;
-    
+
     const result = await executeQuery(query, params);
 
     // Перевіряємо, чи майстри онлайн (використовуючи activeUsers з socket.io)
-    const masters = result.rows.map(master => {
+    const masters = result.rows.map((master) => {
       const masterSocketId = Array.from(activeUsers.entries()).find(
         ([_, user]) => user.id === master.id.toString()
       )?.[0];
 
       return {
         ...master,
-        online: !!masterSocketId
+        online: !!masterSocketId,
       };
     });
 
     res.status(200).json({
       success: true,
-      masters: masters
+      masters: masters,
     });
   } catch (err) {
-    console.error("❌ Помилка при отриманні списку доступних майстрів:", err.message);
-    res.status(500).json({ 
-      success: false, 
-      message: "Помилка сервера", 
-      error: err.message 
+    console.error(
+      "❌ Помилка при отриманні списку доступних майстрів:",
+      err.message
+    );
+    res.status(500).json({
+      success: false,
+      message: "Помилка сервера",
+      error: err.message,
     });
   }
 });
@@ -4984,53 +5004,55 @@ io.on("connection", (socket) => {
 
   // Обробка приєднання до системи
   socket.on("user-connected", (userData) => {
-    console.log(`Користувач ${userData.username} (ID: ${userData.userId}) підключився`);
-    
+    console.log(
+      `Користувач ${userData.username} (ID: ${userData.userId}) підключився`
+    );
+
     // Зберігаємо інформацію про користувача
     activeUsers.set(socket.id, {
       id: userData.userId,
       username: userData.username,
       role: userData.role,
-      socketId: socket.id
+      socketId: socket.id,
     });
-    
+
     // Повідомляємо всіх про оновлення статусу користувача
     io.emit("user-status-changed", {
       userId: userData.userId,
-      status: "online"
+      status: "online",
     });
   });
 
   // Обробка запиту на дзвінок
   socket.on("call-request", (data) => {
     console.log(`Запит на дзвінок від ${data.callerId} до ${data.receiverId}`);
-    
+
     // Знаходимо сокет отримувача
     const receiverSocketId = Array.from(activeUsers.entries()).find(
       ([_, user]) => user.id === data.receiverId
     )?.[0];
-    
+
     if (receiverSocketId) {
       // Отримувач онлайн, відправляємо запит на дзвінок
       io.to(receiverSocketId).emit("incoming-call", {
         callId: data.callId,
         callerId: data.callerId,
         callerName: data.callerName,
-        withVideo: data.withVideo
+        withVideo: data.withVideo,
       });
     } else {
       // Отримувач офлайн, відправляємо відповідь ініціатору
       socket.emit("call-response", {
         callId: data.callId,
         status: "unavailable",
-        message: "Користувач зараз не в мережі"
+        message: "Користувач зараз не в мережі",
       });
-      
+
       // Оновлюємо статус дзвінка в базі даних
       executeQuery(
         "UPDATE call_history SET status = 'missed', end_time = CURRENT_TIMESTAMP WHERE id = $1",
         [data.callId]
-      ).catch(err => {
+      ).catch((err) => {
         console.error("❌ Помилка при оновленні статусу дзвінка:", err.message);
       });
     }
@@ -5038,41 +5060,49 @@ io.on("connection", (socket) => {
 
   // Обробка відповіді на дзвінок
   socket.on("call-response", (data) => {
-    console.log(`Відповідь на дзвінок: ${data.status} для дзвінка ${data.callId}`);
-    
+    console.log(
+      `Відповідь на дзвінок: ${data.status} для дзвінка ${data.callId}`
+    );
+
     // Знаходимо сокет ініціатора дзвінка
     const callerSocketId = Array.from(activeUsers.entries()).find(
       ([_, user]) => user.id === data.callerId
     )?.[0];
-    
+
     if (callerSocketId) {
       // Відправляємо відповідь ініціатору
       io.to(callerSocketId).emit("call-response", {
         callId: data.callId,
         receiverId: data.receiverId,
         status: data.status,
-        message: data.message
+        message: data.message,
       });
-      
+
       // Якщо дзвінок прийнято, починаємо процес встановлення WebRTC з'єднання
       if (data.status === "accepted") {
         // Оновлюємо статус дзвінка в базі даних
         executeQuery(
           "UPDATE call_history SET status = 'in_progress' WHERE id = $1",
           [data.callId]
-        ).catch(err => {
-          console.error("❌ Помилка при оновленні статусу дзвінка:", err.message);
+        ).catch((err) => {
+          console.error(
+            "❌ Помилка при оновленні статусу дзвінка:",
+            err.message
+          );
         });
       } else {
         // Дзвінок відхилено або пропущено
         const status = data.status === "rejected" ? "rejected" : "missed";
-        
+
         // Оновлюємо статус дзвінка в базі даних
         executeQuery(
           "UPDATE call_history SET status = $1, end_time = CURRENT_TIMESTAMP WHERE id = $2",
           [status, data.callId]
-        ).catch(err => {
-          console.error("❌ Помилка при оновленні статусу дзвінка:", err.message);
+        ).catch((err) => {
+          console.error(
+            "❌ Помилка при оновленні статусу дзвінка:",
+            err.message
+          );
         });
       }
     }
@@ -5081,18 +5111,18 @@ io.on("connection", (socket) => {
   // Обробка WebRTC сигналізації - SDP пропозиція
   socket.on("webrtc-offer", (data) => {
     console.log(`WebRTC пропозиція від ${data.from} до ${data.to}`);
-    
+
     // Знаходимо сокет отримувача
     const receiverSocketId = Array.from(activeUsers.entries()).find(
       ([_, user]) => user.id === data.to
     )?.[0];
-    
+
     if (receiverSocketId) {
       // Відправляємо SDP пропозицію отримувачу
       io.to(receiverSocketId).emit("webrtc-offer", {
         callId: data.callId,
         from: data.from,
-        offer: data.offer
+        offer: data.offer,
       });
     }
   });
@@ -5100,18 +5130,18 @@ io.on("connection", (socket) => {
   // Обробка WebRTC сигналізації - SDP відповідь
   socket.on("webrtc-answer", (data) => {
     console.log(`WebRTC відповідь від ${data.from} до ${data.to}`);
-    
+
     // Знаходимо сокет отримувача
     const receiverSocketId = Array.from(activeUsers.entries()).find(
       ([_, user]) => user.id === data.to
     )?.[0];
-    
+
     if (receiverSocketId) {
       // Відправляємо SDP відповідь отримувачу
       io.to(receiverSocketId).emit("webrtc-answer", {
         callId: data.callId,
         from: data.from,
-        answer: data.answer
+        answer: data.answer,
       });
     }
   });
@@ -5119,18 +5149,18 @@ io.on("connection", (socket) => {
   // Обробка WebRTC сигналізації - ICE кандидати
   socket.on("ice-candidate", (data) => {
     console.log(`ICE кандидат від ${data.from} до ${data.to}`);
-    
+
     // Знаходимо сокет отримувача
     const receiverSocketId = Array.from(activeUsers.entries()).find(
       ([_, user]) => user.id === data.to
     )?.[0];
-    
+
     if (receiverSocketId) {
       // Відправляємо ICE кандидата отримувачу
       io.to(receiverSocketId).emit("ice-candidate", {
         callId: data.callId,
         from: data.from,
-        candidate: data.candidate
+        candidate: data.candidate,
       });
     }
   });
@@ -5138,21 +5168,21 @@ io.on("connection", (socket) => {
   // Обробка завершення дзвінка
   socket.on("end-call", (data) => {
     console.log(`Завершення дзвінка ${data.callId} від ${data.from}`);
-    
+
     // Знаходимо сокет іншого учасника дзвінка
     const otherPartySocketId = Array.from(activeUsers.entries()).find(
       ([_, user]) => user.id === data.to
     )?.[0];
-    
+
     if (otherPartySocketId) {
       // Повідомляємо іншого учасника про завершення дзвінка
       io.to(otherPartySocketId).emit("end-call", {
         callId: data.callId,
         from: data.from,
-        duration: data.duration
+        duration: data.duration,
       });
     }
-    
+
     // Оновлюємо запис про дзвінок в базі даних
     executeQuery(
       `UPDATE call_history 
@@ -5161,26 +5191,29 @@ io.on("connection", (socket) => {
            duration = $1 
        WHERE id = $2`,
       [data.duration || 0, data.callId]
-    ).catch(err => {
-      console.error("❌ Помилка при оновленні запису про дзвінок:", err.message);
+    ).catch((err) => {
+      console.error(
+        "❌ Помилка при оновленні запису про дзвінок:",
+        err.message
+      );
     });
   });
 
   // Обробка відключення
   socket.on("disconnect", () => {
     console.log("Користувач відключився:", socket.id);
-    
+
     // Отримуємо інформацію про користувача
     const user = activeUsers.get(socket.id);
-    
+
     if (user) {
       // Видаляємо користувача зі списку активних
       activeUsers.delete(socket.id);
-      
+
       // Повідомляємо всіх про оновлення статусу користувача
       io.emit("user-status-changed", {
         userId: user.id,
-        status: "offline"
+        status: "offline",
       });
     }
   });
@@ -5216,11 +5249,16 @@ app.get("/call", (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_secret_key");
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "default_secret_key"
+    );
     const userId = decoded.id;
 
     // Перевіряємо, чи користувач є майстром
-    executeQuery("SELECT role_master FROM user_profile WHERE user_id = $1", [userId])
+    executeQuery("SELECT role_master FROM user_profile WHERE user_id = $1", [
+      userId,
+    ])
       .then((result) => {
         if (result.rows.length === 0) {
           return res.redirect("/auth.html");
@@ -5235,11 +5273,44 @@ app.get("/call", (req, res) => {
         }
       })
       .catch((err) => {
-        console.error("❌ Помилка при перевірці ролі користувача:", err.message);
+        console.error(
+          "❌ Помилка при перевірці ролі користувача:",
+          err.message
+        );
         res.redirect("/auth.html");
       });
   } catch (err) {
     console.error("❌ Помилка при перевірці токена:", err.message);
     res.redirect("/auth.html");
   }
+}); // Add this function to create the telegram_username column
+const addTelegramUsernameColumn = async () => {
+  try {
+    // Check if the column exists
+    const columnExists = await executeQuery(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'user_profile' AND column_name = 'telegram_username'
+      );
+    `);
+
+    if (!columnExists.rows[0].exists) {
+      // Add the column if it doesn't exist
+      await executeQuery(`
+        ALTER TABLE user_profile 
+        ADD COLUMN telegram_username VARCHAR(100);
+      `);
+      console.log("✅ Added telegram_username column to user_profile table");
+    }
+  } catch (err) {
+    console.error(
+      "❌ Error checking/adding telegram_username column:",
+      err.message
+    );
+  }
+};
+
+// Call this function during server initialization
+addTelegramUsernameColumn().catch((err) => {
+  console.error("Failed to add telegram_username column:", err.message);
 });

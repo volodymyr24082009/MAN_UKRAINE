@@ -2,6 +2,14 @@
 
 // Theme toggle functionality
 document.addEventListener("DOMContentLoaded", () => {
+  // Create Order button handler
+  const createOrderBtn = document.getElementById("create-order-btn");
+  if (createOrderBtn) {
+    createOrderBtn.addEventListener("click", () => {
+      window.location.href = "/index.html#order";
+    });
+  }
+
   const themeToggle = document.getElementById("themeToggle");
   const htmlElement = document.documentElement;
 
@@ -139,6 +147,8 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("last_name").value =
           data.profile.last_name || "";
         document.getElementById("email").value = data.profile.email || "";
+        document.getElementById("telegram_username").value =
+          data.profile.telegram_username || "";
         document.getElementById("phone").value = data.profile.phone || "";
         document.getElementById("address").value = data.profile.address || "";
         if (document.getElementById("bio")) {
@@ -1222,6 +1232,7 @@ document.addEventListener("DOMContentLoaded", () => {
         first_name: document.getElementById("first_name").value,
         last_name: document.getElementById("last_name").value,
         email: document.getElementById("email").value,
+        telegram_username: document.getElementById("telegram_username").value,
         phone: document.getElementById("phone").value,
         address: document.getElementById("address").value,
         date_of_birth: document.getElementById("date_of_birth").value,
