@@ -469,7 +469,7 @@ document.getElementById("voiceBtn").addEventListener("click", () => {
   animateButton(event.currentTarget);
   setTimeout(() => {
     if (checkUserLoggedIn()) {
-      window.location.href = "public/voice.html";
+      window.location.href = "public/message.html";
     } else {
       document.getElementById("loginModal").classList.add("active");
     }
@@ -480,7 +480,7 @@ document.getElementById("videoBtn").addEventListener("click", () => {
   animateButton(event.currentTarget);
   setTimeout(() => {
     if (checkUserLoggedIn()) {
-      window.location.href = "public/call.html";
+      window.location.href = "public/message.html";
     } else {
       document.getElementById("loginModal").classList.add("active");
     }
