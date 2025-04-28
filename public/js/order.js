@@ -329,7 +329,6 @@ function fetchOrders(endpoint = "/orders") {
 
 // Filter orders based on current filters and render them
 function filterAndRenderOrders() {
-  // Create a copy of allOrders to avoid modifying the original array
   let filteredOrders = [...allOrders];
 
   // Apply status filter
@@ -375,15 +374,14 @@ function updatePaginationControls(page, total) {
 
 // Render orders to the container
 function renderOrders(orders, totalCount) {
-  // Clear the container first
-  ordersContainer.innerHTML = "";
-
   if (orders.length === 0) {
+    ordersContainer.innerHTML = "";
     noOrdersMessage.style.display = "flex";
     return;
   }
 
   noOrdersMessage.style.display = "none";
+  ordersContainer.innerHTML = "";
 
   orders.forEach((order) => {
     const orderCard = document.createElement("div");
