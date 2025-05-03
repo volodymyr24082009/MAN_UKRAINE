@@ -1279,3 +1279,14 @@ if ("serviceWorker" in navigator) {
       );
   });
 }
+// Observe elements with animation classes
+function setupAnimations() {
+  const animatedElements = document.querySelectorAll(
+    ".section-title, .order-form-container, .review-form-container, .footer-section, .stats-card, .partner-card"
+  );
+
+  animatedElements.forEach((element) => {
+    element.classList.add("to-animate");
+    observer.observe(element);
+  });
+}
