@@ -20,7 +20,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -83,7 +83,6 @@
         <div class="nav-menu" id="navMenu">
           <a href="index.html" class="nav-link active">Головна</a>
           <a href="message.html" class="nav-link" id="message">Повідомлення</a>
-
           <a href="chat.html" class="nav-link" id="chat">Чат</a>
           <a href="news.html" class="nav-link" id="news">Новини</a>
           <a href="info.html" class="nav-link" id="info"
@@ -94,11 +93,12 @@
           <button class="nav-button" id="loginBtn">
             <i class="fas fa-sign-in-alt"></i>Увійти
           </button>
-          <label class="theme-switch"
-            ><input type="checkbox" id="themeToggle" /><span class="slider">
-              <span class="moon">🌙</span><span class="sun">☀️</span></span
-            ></label
-          >
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span>
+            </span>
+          </label>
         </div>
         <button class="mobile-menu-btn" id="mobileMenuBtn">
           <i class="fas fa-bars"></i>
@@ -117,7 +117,7 @@
             завдань
           </p>
           <div class="hero-buttons">
-            <button class="hero-btn" id="orderNowBtn">
+            <button class="hero-btn primary" id="orderNowBtn">
               <i class="fas fa-clipboard-list"></i>
               Замовити послугу
             </button>
@@ -136,6 +136,9 @@
           <h2 class="section-title">ProFix Network Hub у цифрах</h2>
           <div class="stats-container">
             <div class="stats-card">
+              <div class="stats-icon">
+                <i class="fas fa-users"></i>
+              </div>
               <div class="stats-number" id="usersCount">0</div>
               <div class="stats-label">Користувачів</div>
               <div class="stats-subtext">Зареєстрованих на платформі</div>
@@ -149,6 +152,9 @@
             </div>
 
             <div class="stats-card">
+              <div class="stats-icon">
+                <i class="fas fa-user-tie"></i>
+              </div>
               <div class="stats-number" id="mastersCount">0</div>
               <div class="stats-label">Майстрів</div>
               <div class="stats-subtext">Сертифікованих спеціалістів</div>
@@ -162,6 +168,9 @@
             </div>
 
             <div class="stats-card">
+              <div class="stats-icon">
+                <i class="fas fa-tasks"></i>
+              </div>
               <div class="stats-number" id="ordersCount">0</div>
               <div class="stats-label">Проектів</div>
               <div class="stats-subtext">Успішно виконаних замовлень</div>
@@ -207,7 +216,7 @@
 
           <!-- Add Review Button -->
           <div class="add-review-container">
-            <button class="hero-btn" id="addReviewBtn">
+            <button class="hero-btn primary" id="addReviewBtn">
               <i class="fas fa-star"></i>
               Залишити відгук
             </button>
