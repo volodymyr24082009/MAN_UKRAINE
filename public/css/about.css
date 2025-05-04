@@ -494,9 +494,10 @@ html.light .team-card:hover {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
+/* Збільшуємо розмір фотографій команди */
 .team-image-container {
-  width: 150px;
-  height: 150px;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
   overflow: hidden;
   margin: 0 auto 20px;
@@ -705,6 +706,12 @@ html.light .contact-form-container:hover {
   .mission-image-container {
     order: -1;
   }
+
+  /* Адаптивний розмір фото команди */
+  .team-image-container {
+    width: 180px;
+    height: 180px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -763,9 +770,10 @@ html.light .contact-form-container:hover {
     font-size: 1.3rem;
   }
 
+  /* Адаптивний розмір фото команди */
   .team-image-container {
-    width: 120px;
-    height: 120px;
+    width: 150px;
+    height: 150px;
   }
 }
 
@@ -792,5 +800,11 @@ html.light .contact-form-container:hover {
 
   .contact-social {
     flex-wrap: wrap;
+  }
+
+  /* Адаптивний розмір фото команди */
+  .team-image-container {
+    width: 130px;
+    height: 130px;
   }
 }
