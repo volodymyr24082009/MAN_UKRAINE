@@ -12,31 +12,38 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="./css/header.css" />
     <link rel="stylesheet" href="css/privacy-policy.css" />
   </head>
   <body>
     <!-- Header -->
     <header class="header">
-      <div class="container header-container">
+      <div class="header-container">
         <a href="index.html" class="logo">
-          <i class="fas fa-network-wired"></i>
+          <i class="fas fa-tools"></i>
           <span>ProFix Network Hub</span>
         </a>
-        <nav class="nav-menu">
-          <a href="index.html" class="nav-link">Головна</a>
-          <a href="profile.html" class="nav-link">Профіль</a>
-          <a href="auth.html" class="nav-link">Реєстрація/Авторизація</a>
-          <a href="admin.html" class="nav-link">Адмін-панель</a>
-          <div class="theme-switch">
-            <i class="fas fa-sun"></i>
-            <label class="switch">
-              <input type="checkbox" id="theme-toggle" />
-              <span class="slider round"></span>
-            </label>
-            <i class="fas fa-moon"></i>
-          </div>
-        </nav>
-        <button class="mobile-menu-btn">
+        <div class="nav-menu" id="navMenu">
+          <a href="index.html" class="nav-link active">Головна</a>
+          <a href="message.html" class="nav-link" id="message">Повідомлення</a>
+          <a href="chat.html" class="nav-link" id="chat">Чат</a>
+          <a href="news.html" class="nav-link" id="news">Новини</a>
+          <a href="info.html" class="nav-link" id="info"
+            >Повідомлення(майстри)</a
+          >
+          <a href="order.html" class="nav-link" id="orders">Замовлення</a>
+          <a href="profile.html" class="nav-link" id="profileLink">Профіль</a>
+          <button class="nav-button" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i>Увійти
+          </button>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span>
+            </span>
+          </label>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
           <i class="fas fa-bars"></i>
         </button>
       </div>
@@ -402,13 +409,13 @@
               </a>
             </li>
             <li class="footer-link" id="profileFooterLink">
-              <a href="profile.html">
-                <i class="fas fa-chevron-right"></i> Профіль
+              <a href="faq.html">
+                <i class="fas fa-chevron-right"></i> Часті запитання
               </a>
             </li>
             <li class="footer-link" id="news">
-              <a href="news.html">
-                <i class="fas fa-chevron-right"></i> Новини
+              <a href="terms-of-use.html">
+                <i class="fas fa-chevron-right"></i> Умови використання
               </a>
             </li>
             <li class="footer-link">
