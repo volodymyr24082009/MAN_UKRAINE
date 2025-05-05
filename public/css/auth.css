@@ -464,17 +464,9 @@ html.light .modal-content {
   transform: translateY(0) scale(1);
 }
 
-.modal-header {
-  padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--border-dark);
-}
 
-html.light .modal-header {
-  border-bottom: 1px solid var(--border-light);
-}
+
+
 
 #modalTitle {
   font-size: 1.3rem;
