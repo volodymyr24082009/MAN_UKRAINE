@@ -50,11 +50,10 @@ function updateUIForLoginStatus() {
   }
 }
 
-// Redirect to auth page
 function redirectToAuth() {
-  window.location.href = "auth.html";
+  // Default to login form when redirecting from header
+  window.location.href = "auth.html#loginForm";
 }
-
 // Logout user
 function logoutUser() {
   localStorage.removeItem("userId");
@@ -1292,78 +1291,78 @@ function setupAnimations() {
 }
 //role.js
 function updateUIForLoginStatus() {
-  const isLoggedIn = checkUserLoggedIn()
-  const orderSection = document.getElementById("order")
-  const orderLink = document.getElementById("orderLink")
-  const profileLink = document.getElementById("profileLink")
-  const profileFooterLink = document.getElementById("profileFooterLink")
-  const loginBtn = document.getElementById("loginBtn")
-  const loginModal = document.getElementById("loginModal")
-  const reviewSection = document.getElementById("review-form")
+  const isLoggedIn = checkUserLoggedIn();
+  const orderSection = document.getElementById("order");
+  const orderLink = document.getElementById("orderLink");
+  const profileLink = document.getElementById("profileLink");
+  const profileFooterLink = document.getElementById("profileFooterLink");
+  const loginBtn = document.getElementById("loginBtn");
+  const loginModal = document.getElementById("loginModal");
+  const reviewSection = document.getElementById("review-form");
 
   if (isLoggedIn) {
     // User is logged in
-    if (orderSection) orderSection.style.display = "block"
-    if (orderLink) orderLink.style.display = "block"
-    if (profileLink) profileLink.style.display = "block"
-    if (profileFooterLink) profileFooterLink.style.display = "block"
-    if (reviewSection) reviewSection.style.display = "block"
+    if (orderSection) orderSection.style.display = "block";
+    if (orderLink) orderLink.style.display = "block";
+    if (profileLink) profileLink.style.display = "block";
+    if (profileFooterLink) profileFooterLink.style.display = "block";
+    if (reviewSection) reviewSection.style.display = "block";
     if (loginBtn) {
-      loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Вийти'
-      loginBtn.removeEventListener("click", redirectToAuth)
-      loginBtn.addEventListener("click", logoutUser)
+      loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Вийти';
+      loginBtn.removeEventListener("click", redirectToAuth);
+      loginBtn.addEventListener("click", logoutUser);
     }
 
     // Check user role and update UI accordingly
-    const userId = localStorage.getItem("userId")
+    const userId = localStorage.getItem("userId");
     if (userId && window.RoleSystem) {
-      window.RoleSystem.checkUserRole(userId)
+      window.RoleSystem.checkUserRole(userId);
     } else {
       // If RoleSystem is not available, hide master elements by default
-      const infoLink = document.getElementById("info")
-      if (infoLink) infoLink.style.display = "none"
+      const infoLink = document.getElementById("info");
+      if (infoLink) infoLink.style.display = "none";
     }
   } else {
     // User is not logged in
-    if (orderSection) orderSection.style.display = "none"
-    if (orderLink) orderLink.style.display = "none"
-    if (profileLink) profileLink.style.display = "none"
-    if (profileFooterLink) profileFooterLink.style.display = "none"
-    if (reviewSection) reviewSection.style.display = "none"
+    if (orderSection) orderSection.style.display = "none";
+    if (orderLink) orderLink.style.display = "none";
+    if (profileLink) profileLink.style.display = "none";
+    if (profileFooterLink) profileFooterLink.style.display = "none";
+    if (reviewSection) reviewSection.style.display = "none";
     if (loginBtn) {
-      loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Увійти'
-      loginBtn.removeEventListener("click", logoutUser)
-      loginBtn.addEventListener("click", redirectToAuth)
+      loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Увійти';
+      loginBtn.removeEventListener("click", logoutUser);
+      loginBtn.addEventListener("click", redirectToAuth);
     }
 
     // Show login modal for new users
     if (loginModal && !localStorage.getItem("modalShown")) {
       setTimeout(() => {
-        loginModal.classList.add("active")
-        localStorage.setItem("modalShown", "true")
-      }, 1500)
+        loginModal.classList.add("active");
+        localStorage.setItem("modalShown", "true");
+      }, 1500);
     }
 
     // Hide master elements for non-logged in users
-    const infoLink = document.getElementById("info")
-    if (infoLink) infoLink.style.display = "none"
+    const infoLink = document.getElementById("info");
+    if (infoLink) infoLink.style.display = "none";
   }
 }
 
 // Mock functions to resolve undeclared variable errors.  These should be replaced with actual implementations.
 function checkUserLoggedIn() {
   // Replace with actual implementation
-  return localStorage.getItem("token") !== null
+  return localStorage.getItem("token") !== null;
 }
 
 function redirectToAuth() {
   // Replace with actual implementation
-  window.location.href = "/auth" // Or wherever your auth endpoint is
+  window.location.href = "/auth"; // Or wherever your auth endpoint is
 }
 
 function logoutUser() {
   // Replace with actual implementation
-  localStorage.removeItem("token")
-  localStorage.removeItem("userId")
-  updateUIForLoginStatus() // Refresh the UI
+  localStorage.removeItem("token");
+  localStorage.removeItem("userId");
+  updateUIForLoginStatus(); // Refresh the UI
 }
