@@ -10,8 +10,12 @@ const multer = require("multer");
 const { sendMessage } = require("./bot");
 const fs = require("fs");
 const punycode = require("punycode/");
+
+// Add these imports at the beginning of your server.js file
 const http = require("http");
 const socketIo = require("socket.io");
+
+// Add these imports at the top of your file (after existing imports)
 const compression = require("compression");
 const helmet = require("helmet");
 
@@ -19,7 +23,7 @@ const helmet = require("helmet");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3015;
+const port = process.env.PORT || 3019;
 
 // Improved database connection configuration
 const pool = new Pool({
