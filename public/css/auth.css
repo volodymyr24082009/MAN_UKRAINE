@@ -770,6 +770,12 @@ html.light .input-group input {
   cursor: pointer;
   color: var(--text-dark);
   transition: color var(--transition-medium);
+  z-index: 2; /* Ensure it's above other elements */
+  width: 24px; /* Fixed width */
+  height: 24px; /* Fixed height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 html.light .password-toggle {
@@ -2036,6 +2042,28 @@ html.light .footer {
   .footer-container {
     padding: 0 20px;
   }
+
+  /* Ensure password toggle is always visible and properly positioned on mobile */
+  .password-toggle {
+    right: 15px !important; /* Force right positioning */
+    display: flex !important; /* Always display */
+    background-color: rgba(
+      0,
+      0,
+      0,
+      0.05
+    ); /* Slight background for visibility */
+    border-radius: 50%;
+  }
+
+  html.light .password-toggle {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  /* Ensure there's enough padding for the password field to accommodate the toggle button */
+  .input-group input[type="password"] {
+    padding-right: 45px !important;
+  }
 }
 
 @media (max-width: 576px) {
@@ -2078,6 +2106,23 @@ html.light .footer {
   .input-group input {
     padding: 12px 12px 12px 40px;
     font-size: 0.95rem;
+  }
+
+  /* Additional specific styling for password input on small screens */
+  .input-group input[type="password"] {
+    padding-right: 45px !important;
+  }
+
+  /* Enhance visibility of password toggle on small screens */
+  .password-toggle {
+    width: 30px;
+    height: 30px;
+    right: 10px !important;
+    background-color: rgba(52, 152, 219, 0.1);
+  }
+
+  .password-toggle:hover {
+    background-color: rgba(52, 152, 219, 0.2);
   }
 
   .auth-button {

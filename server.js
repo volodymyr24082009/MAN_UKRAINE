@@ -128,9 +128,6 @@ app.get("/clear-cache.js", (req, res) => {
     })();
   `);
 });
-
-// Add a script tag to your HTML files to include the cache clearing script
-// You can do this by modifying your HTML files or by using a middleware
 app.use((req, res, next) => {
   // Store the original send function
   const originalSend = res.send;
