@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   // Theme toggle functionality
   const themeToggle = document.getElementById("theme-toggle");
   const htmlElement = document.documentElement;
@@ -130,105 +130,117 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Print functionality
-  window.printFAQ = function () {
+  window.printFAQ = () => {
     window.print();
   };
 
   // Add direct event listener to print button
   const printButton = document.querySelector(".print-button");
   if (printButton) {
-    printButton.addEventListener("click", function () {
+    printButton.addEventListener("click", () => {
       window.print();
     });
   }
 
   // Expand all FAQ items before printing and collapse after
-  window.addEventListener("beforeprint", function () {
+  window.addEventListener("beforeprint", () => {
     document.querySelectorAll(".faq-item").forEach((item) => {
       item.classList.add("active");
     });
   });
 
-  window.addEventListener("afterprint", function () {
+  window.addEventListener("afterprint", () => {
     document.querySelectorAll(".faq-item").forEach((item) => {
       item.classList.remove("active");
     });
   });
-});
-//role.js
-function updateUIForLoginStatus() {
-  const isLoggedIn = checkUserLoggedIn()
-  const orderSection = document.getElementById("order")
-  const orderLink = document.getElementById("orderLink")
-  const profileLink = document.getElementById("profileLink")
-  const profileFooterLink = document.getElementById("profileFooterLink")
-  const loginBtn = document.getElementById("loginBtn")
-  const loginModal = document.getElementById("loginModal")
-  const reviewSection = document.getElementById("review-form")
 
-  if (isLoggedIn) {
-    // User is logged in
-    if (orderSection) orderSection.style.display = "block"
-    if (orderLink) orderLink.style.display = "block"
-    if (profileLink) profileLink.style.display = "block"
-    if (profileFooterLink) profileFooterLink.style.display = "block"
-    if (reviewSection) reviewSection.style.display = "block"
-    if (loginBtn) {
-      loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Вийти'
-      loginBtn.removeEventListener("click", redirectToAuth)
-      loginBtn.addEventListener("click", logoutUser)
-    }
+  // Check if user is logged in and update UI accordingly
+  function updateUIForLoginStatus() {
+    const isLoggedIn = checkUserLoggedIn();
+    const orderLink = document.getElementById("orderLink");
+    const profileLink = document.getElementById("profileLink");
+    const profileFooterLink = document.getElementById("profileFooterLink");
+    const loginBtn = document.getElementById("loginBtn");
+    const infoLink = document.getElementById("info");
 
-    // Check user role and update UI accordingly
-    const userId = localStorage.getItem("userId")
-    if (userId && window.RoleSystem) {
-      window.RoleSystem.checkUserRole(userId)
+    if (isLoggedIn) {
+      // User is logged in
+      if (orderLink) orderLink.style.display = "block";
+      if (profileLink) profileLink.style.display = "block";
+      if (profileFooterLink) profileFooterLink.style.display = "block";
+      if (loginBtn) {
+        loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Вийти';
+        loginBtn.removeEventListener("click", redirectToAuth);
+        loginBtn.addEventListener("click", logoutUser);
+      }
+
+      // Check user role for master elements
+      const userId = localStorage.getItem("userId");
+      if (userId && window.RoleSystem) {
+        window.RoleSystem.checkUserRole(userId);
+      } else {
+        // Hide master elements by default
+        if (infoLink) infoLink.style.display = "none";
+      }
     } else {
-      // If RoleSystem is not available, hide master elements by default
-      const infoLink = document.getElementById("info")
-      if (infoLink) infoLink.style.display = "none"
-    }
-  } else {
-    // User is not logged in
-    if (orderSection) orderSection.style.display = "none"
-    if (orderLink) orderLink.style.display = "none"
-    if (profileLink) profileLink.style.display = "none"
-    if (profileFooterLink) profileFooterLink.style.display = "none"
-    if (reviewSection) reviewSection.style.display = "none"
-    if (loginBtn) {
-      loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Увійти'
-      loginBtn.removeEventListener("click", logoutUser)
-      loginBtn.addEventListener("click", redirectToAuth)
-    }
+      // User is not logged in
+      if (orderLink) orderLink.style.display = "none";
+      if (profileLink) profileLink.style.display = "none";
+      if (profileFooterLink) profileFooterLink.style.display = "none";
+      if (loginBtn) {
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Увійти';
+        loginBtn.removeEventListener("click", logoutUser);
+        loginBtn.addEventListener("click", redirectToAuth);
+      }
 
-    // Show login modal for new users
-    if (loginModal && !localStorage.getItem("modalShown")) {
-      setTimeout(() => {
-        loginModal.classList.add("active")
-        localStorage.setItem("modalShown", "true")
-      }, 1500)
+      // Hide master elements for non-logged in users
+      if (infoLink) infoLink.style.display = "none";
     }
-
-    // Hide master elements for non-logged in users
-    const infoLink = document.getElementById("info")
-    if (infoLink) infoLink.style.display = "none"
   }
-}
 
-// Mock functions to resolve undeclared variable errors.  These should be replaced with actual implementations.
-function checkUserLoggedIn() {
-  // Replace with actual implementation
-  return localStorage.getItem("token") !== null
-}
+  // Helper functions for authentication
+  function checkUserLoggedIn() {
+    return localStorage.getItem("token") !== null;
+  }
 
-function redirectToAuth() {
-  // Replace with actual implementation
-  window.location.href = "/auth" // Or wherever your auth endpoint is
-}
+  function redirectToAuth() {
+    window.location.href = "auth.html";
+  }
 
-function logoutUser() {
-  // Replace with actual implementation
-  localStorage.removeItem("token")
-  localStorage.removeItem("userId")
-  updateUIForLoginStatus() // Refresh the UI
-}
+  function logoutUser() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    updateUIForLoginStatus();
+  }
+
+  // Initialize UI based on login status
+  updateUIForLoginStatus();
+
+  // Add animation classes to elements as they scroll into view
+  const animateOnScroll = () => {
+    const sections = document.querySelectorAll(".faq-section");
+
+    sections.forEach((section) => {
+      const sectionPosition = section.getBoundingClientRect().top;
+      const screenPosition = window.innerHeight / 1.3;
+
+      if (sectionPosition < screenPosition) {
+        section.style.opacity = "1";
+        section.style.transform = "translateY(0)";
+      }
+    });
+  };
+
+  // Set initial state for animations
+  document.querySelectorAll(".faq-section").forEach((section) => {
+    section.style.opacity = "0";
+    section.style.transform = "translateY(20px)";
+    section.style.transition = "all 0.6s ease-out";
+  });
+
+  // Run animation on scroll
+  window.addEventListener("scroll", animateOnScroll);
+  // Run once on page load
+  animateOnScroll();
+});
