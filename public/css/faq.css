@@ -174,6 +174,36 @@ html.light .nav-link {
   width: 100%;
 }
 
+.nav-link.active {
+  color: var(--primary-color);
+}
+
+.nav-link.active::after {
+  width: 100%;
+}
+
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.nav-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
 .theme-switch {
   display: flex;
   align-items: center;
@@ -281,6 +311,7 @@ html.light .mobile-menu-btn {
   border: 1px solid var(--border-dark);
   position: relative;
   overflow: hidden;
+  animation: fadeIn 0.8s ease-in-out;
 }
 
 html.light .faq-container {
@@ -328,6 +359,7 @@ html.light .faq-container {
   margin-bottom: 2rem;
   text-align: center;
   position: relative;
+  animation: slideDown 0.6s ease-in-out;
 }
 
 .faq-title::after {
@@ -339,10 +371,25 @@ html.light .faq-container {
   width: 100px;
   height: 3px;
   background: var(--primary-color);
+  animation: scaleIn 0.8s ease-in-out 0.3s forwards;
+  transform-origin: center;
+  opacity: 0;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: translateX(-50%) scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) scaleX(1);
+    opacity: 1;
+  }
 }
 
 .faq-section {
   margin-bottom: 2.5rem;
+  animation: fadeIn 0.8s ease-in-out;
 }
 
 .faq-section-title {
@@ -352,6 +399,7 @@ html.light .faq-container {
   margin-bottom: 1.5rem;
   position: relative;
   padding-left: 1.5rem;
+  animation: slideRight 0.6s ease-in-out;
 }
 
 .faq-section-title::before {
@@ -364,6 +412,7 @@ html.light .faq-container {
   height: 0.5rem;
   background-color: var(--primary-color);
   border-radius: 50%;
+  box-shadow: 0 0 10px var(--primary-color);
 }
 
 .faq-item {
@@ -372,6 +421,8 @@ html.light .faq-container {
   border-radius: var(--border-radius-md);
   overflow: hidden;
   transition: all var(--transition-medium);
+  animation: fadeIn 0.8s ease-in-out;
+  transform: translateY(0);
 }
 
 html.light .faq-item {
@@ -380,6 +431,7 @@ html.light .faq-item {
 
 .faq-item:hover {
   box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+  transform: translateY(-5px);
 }
 
 .faq-question {
@@ -389,12 +441,22 @@ html.light .faq-item {
   cursor: pointer;
   background: rgba(59, 130, 246, 0.05);
   position: relative;
+  transition: background var(--transition-medium);
+}
+
+.faq-question:hover {
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .faq-question i.fa-question-circle {
   color: var(--primary-color);
   font-size: 1.2rem;
   margin-right: 1rem;
+  transition: transform var(--transition-medium);
+}
+
+.faq-item:hover .faq-question i.fa-question-circle {
+  transform: rotate(15deg);
 }
 
 .faq-question h3 {
@@ -450,6 +512,8 @@ html.light .faq-item {
   padding: 1.5rem;
   border-radius: var(--border-radius-md);
   margin-bottom: 2rem;
+  animation: fadeIn 0.8s ease-in-out;
+  border: 1px solid rgba(59, 130, 246, 0.1);
 }
 
 .faq-toc-title {
@@ -518,6 +582,8 @@ html.light .faq-date {
   padding: 1.5rem;
   border-radius: var(--border-radius-md);
   margin-top: 2rem;
+  animation: fadeIn 0.8s ease-in-out;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .faq-contact-title {
@@ -531,6 +597,11 @@ html.light .faq-date {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+  transition: transform var(--transition-medium);
+}
+
+.faq-contact-info:hover {
+  transform: translateX(5px);
 }
 
 .faq-contact-info i {
@@ -891,6 +962,28 @@ html.light .footer-bottom {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
