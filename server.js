@@ -10,18 +10,13 @@ const multer = require("multer");
 const { sendMessage } = require("./bot");
 const fs = require("fs");
 const punycode = require("punycode/");
-
-// Add these imports at the beginning of your server.js file
 const http = require("http");
 const socketIo = require("socket.io");
-
-// Add these imports at the top of your file (after existing imports)
 const compression = require("compression");
 const helmet = require("helmet");
 
 // Load environment variables
 dotenv.config();
-
 const app = express();
 const port = process.env.PORT || 3019;
 
@@ -5696,4 +5691,30 @@ app.post("/api/news/:id/like", authenticateToken, async (req, res) => {
     console.error("❌ Error toggling like:", err.message);
     res.status(500).json({ message: "Помилка сервера", error: err.message });
   }
+});
+//Прохід в адмін панель
+const ADMIN_PASSWORD = '319560';
+
+// Middleware для обробки JSON
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Статичні файли
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Маршрут для перевірки пароля
+app.post('/check-password', (req, res) => {
+    const { password } = req.body;
+    
+    // Перевіряємо пароль
+    if (password === ADMIN_PASSWORD) {
+        res.json({ success: true });
+    } else {
+        res.json({ success: false });
+    }
+});
+
+// Маршрут для адмін-панелі
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });

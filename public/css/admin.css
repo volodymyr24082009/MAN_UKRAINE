@@ -1637,3 +1637,43 @@ html.light .news-content {
     transform: none !important;
   }
 }
+/* Адмін панель пароль */
+/* Password Modal Styles */
+#passwordModal {
+  opacity: 1;
+  visibility: visible;
+  z-index: 9999;
+}
+
+#passwordModal .modal {
+  transform: translateY(0);
+  max-width: 400px;
+}
+
+.password-error {
+  color: var(--danger-color);
+  margin-top: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}

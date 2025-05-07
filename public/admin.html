@@ -27,6 +27,35 @@
     />
   </head>
   <body>
+    <!-- Модальне вікно для пароля -->
+    <div class="modal-backdrop" id="passwordModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Вхід до адмін-панелі</h3>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Введіть пароль для доступу</label>
+            <input
+              type="password"
+              class="form-control"
+              id="adminPassword"
+              placeholder="Введіть пароль"
+            />
+            <div
+              id="passwordError"
+              class="password-error"
+              style="display: none; color: #e74c3c; margin-top: 10px"
+            >
+              Пароль введено неправильно
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="submitPasswordBtn">Увійти</button>
+        </div>
+      </div>
+    </div>
     <div class="admin-layout">
       <!-- Sidebar -->
       <div class="sidebar">
@@ -797,7 +826,7 @@
       <i class="fas fa-check-circle"></i>
       <span id="notificationText">Операція успішно виконана</span>
     </div>
-
+    <script src="./js/password.js"></script>
     <script src="./js/admin.js"></script>
     <script src="auth.js"></script>
     <script src="role.js"></script>
