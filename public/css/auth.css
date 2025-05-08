@@ -83,6 +83,7 @@ html.light body {
   flex: 1;
 }
 
+
 /* Auth Container */
 .auth-container {
   width: 100%;
@@ -463,6 +464,10 @@ html.light .modal-content {
   transform: translateY(0) scale(1);
 }
 
+
+
+
+
 #modalTitle {
   font-size: 1.3rem;
   font-weight: 700;
@@ -734,9 +739,7 @@ html.light .modal-footer {
     width: 95%;
   }
 
-  .modal-header {
-    padding: 15px;
-  }
+  
 
   #modalTitle {
     font-size: 1.2rem;
@@ -762,11 +765,6 @@ html.light .modal-footer {
   .container {
     padding: 0 10px;
   }
-
-  .header {
-    margin-bottom: 20px;
-  }
-
   .logo {
     font-size: 1.2rem;
   }

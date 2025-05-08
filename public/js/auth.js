@@ -1,519 +1,316 @@
-// Ініціалізація при завантаженні сторінки
-document.addEventListener("DOMContentLoaded", function () {
-  const themeToggle = document.getElementById("themeToggle");
-  const htmlElement = document.documentElement;
-  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-  const navMenu = document.getElementById("navMenu");
-  const loginTab = document.getElementById("loginTab");
-  const registerTab = document.getElementById("registerTab");
-  const loginForm = document.getElementById("loginForm");
-  const registerForm = document.getElementById("registerForm");
-  const showLoginFormBtn = document.getElementById("showLoginForm");
-  const showRegisterFormBtn = document.getElementById("showRegisterForm");
-  const passwordInput = document.getElementById("regPassword");
-  const passwordConfirmInput = document.getElementById("regPasswordConfirm");
-  const strengthMeter = document.getElementById("passwordStrengthMeter");
-  const strengthText = document.getElementById("passwordStrengthText");
-  const backToTopButton = document.getElementById("backToTop");
+// Theme Toggle
+const themeToggle = document.getElementById("themeToggle");
+const htmlElement = document.documentElement;
 
-  // Анімація елементів при прокрутці
-  function animateOnScroll() {
-    const elements = document.querySelectorAll(
-      ".animate-fade-in, .animate-slide-up, .animate-slide-down, .animate-slide-left, .animate-slide-right, .animate-scale-in"
-    );
+// Check for saved theme preference
+if (localStorage.getItem("theme") === "light") {
+  htmlElement.classList.remove("dark");
+  htmlElement.classList.add("light");
+  themeToggle.checked = true;
+}
 
-    elements.forEach((element) => {
-      const elementPosition = element.getBoundingClientRect().top;
-      const screenPosition = window.innerHeight / 1.2;
-
-      if (elementPosition < screenPosition) {
-        element.style.animationPlayState = "running";
-      }
-    });
-  }
-
-  // Ініціалізація анімацій
-  function initAnimations() {
-    const elements = document.querySelectorAll(
-      ".animate-fade-in, .animate-slide-up, .animate-slide-down, .animate-slide-left, .animate-slide-right, .animate-scale-in"
-    );
-
-    elements.forEach((element) => {
-      // Призупинити анімацію до прокрутки
-      element.style.animationPlayState = "paused";
-    });
-
-    // Запустити анімацію для елементів, які вже видно
-    animateOnScroll();
-  }
-
-  // Перевірка теми
-  if (localStorage.getItem("theme") === "light") {
+// Toggle theme when switch is clicked
+themeToggle.addEventListener("change", function () {
+  if (this.checked) {
     htmlElement.classList.remove("dark");
     htmlElement.classList.add("light");
-    themeToggle.checked = true;
+    localStorage.setItem("theme", "light");
+  } else {
+    htmlElement.classList.remove("light");
+    htmlElement.classList.add("dark");
+    localStorage.setItem("theme", "dark");
+  }
+});
+
+// Password visibility toggle
+document.querySelectorAll(".password-toggle").forEach((toggle) => {
+  toggle.addEventListener("click", function () {
+    const passwordField = this.previousElementSibling;
+    const type =
+      passwordField.getAttribute("type") === "password" ? "text" : "password";
+    passwordField.setAttribute("type", type);
+    this.classList.toggle("fa-eye");
+    this.classList.toggle("fa-eye-slash");
+  });
+});
+
+// Form switching
+document.getElementById("showLoginForm").addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("registerForm").style.display = "none";
+  document.getElementById("loginForm").style.display = "block";
+  document.getElementById("loginForm").style.animation =
+    "fadeIn 0.5s ease-out forwards";
+});
+
+document.getElementById("showRegisterForm").addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("loginForm").style.display = "none";
+  document.getElementById("registerForm").style.display = "block";
+  document.getElementById("registerForm").style.animation =
+    "fadeIn 0.5s ease-out forwards";
+});
+
+// Password strength meter
+const passwordInput = document.getElementById("regPassword");
+const strengthMeter = document.getElementById("passwordStrengthMeter");
+const strengthText = document.getElementById("passwordStrengthText");
+
+passwordInput.addEventListener("input", function () {
+  const password = this.value;
+  let strength = 0;
+  let feedback = "";
+
+  // Length check
+  if (password.length >= 8) {
+    strength += 1;
   }
 
-  // Перемикання теми
-  themeToggle.addEventListener("change", function () {
-    if (this.checked) {
-      htmlElement.classList.remove("dark");
-      htmlElement.classList.add("light");
-      localStorage.setItem("theme", "light");
-    } else {
-      htmlElement.classList.remove("light");
-      htmlElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    }
-  });
+  // Contains lowercase
+  if (/[a-z]/.test(password)) {
+    strength += 1;
+  }
 
-  // Мобільне меню
-  mobileMenuBtn.addEventListener("click", function () {
-    navMenu.classList.toggle("active");
-    this.classList.toggle("active");
+  // Contains uppercase
+  if (/[A-Z]/.test(password)) {
+    strength += 1;
+  }
 
-    // Зміна іконки
-    const icon = this.querySelector("i");
-    if (icon.classList.contains("fa-bars")) {
-      icon.classList.remove("fa-bars");
-      icon.classList.add("fa-times");
-    } else {
-      icon.classList.remove("fa-times");
-      icon.classList.add("fa-bars");
-    }
-  });
+  // Contains number
+  if (/[0-9]/.test(password)) {
+    strength += 1;
+  }
 
-  // Перемикання вкладок
-  loginTab.addEventListener("click", function () {
-    loginTab.classList.add("active");
-    registerTab.classList.remove("active");
+  // Contains special character
+  if (/[^A-Za-z0-9]/.test(password)) {
+    strength += 1;
+  }
 
-    // Анімація зміни форм
-    registerForm.style.animation = "fadeOut 0.3s forwards";
+  // Update UI based on strength
+  strengthMeter.className = "password-strength-meter";
+
+  if (password.length === 0) {
+    strengthMeter.style.width = "0";
+    strengthText.textContent = "";
+  } else if (strength < 2) {
+    strengthMeter.classList.add("strength-weak");
+    feedback = "Слабкий";
+  } else if (strength < 3) {
+    strengthMeter.classList.add("strength-medium");
+    feedback = "Середній";
+  } else if (strength < 5) {
+    strengthMeter.classList.add("strength-good");
+    feedback = "Хороший";
+  } else {
+    strengthMeter.classList.add("strength-strong");
+    feedback = "Сильний";
+  }
+
+  strengthText.textContent = feedback;
+});
+
+// Modal notification system
+function showModal(message, type = "success") {
+  const modalOverlay = document.getElementById("modalOverlay");
+  const modalContent = document.getElementById("modalContent");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalMessage = document.getElementById("modalMessage");
+  const modalClose = document.querySelector(".modal-close");
+  const modalOkButton = document.getElementById("modalOkButton");
+
+  // Set modal content
+  modalMessage.textContent = message;
+
+  // Set title and class based on type
+  modalContent.className = "modal-content";
+  modalContent.classList.add("modal-" + type);
+
+  switch (type) {
+    case "success":
+      modalTitle.textContent = "Успіх";
+      break;
+    case "error":
+      modalTitle.textContent = "Помилка";
+      break;
+    case "warning":
+      modalTitle.textContent = "Попередження";
+      break;
+    case "info":
+      modalTitle.textContent = "Інформація";
+      break;
+  }
+
+  // Show modal
+  modalOverlay.style.display = "flex";
+  modalOverlay.classList.add("active");
+
+  // Close modal when clicking the close button
+  modalClose.onclick = () => {
+    modalOverlay.classList.remove("active");
     setTimeout(() => {
-      registerForm.classList.remove("active");
-      loginForm.classList.add("active");
-      loginForm.style.animation = "fadeIn 0.5s forwards";
+      modalOverlay.style.display = "none";
     }, 300);
-  });
-
-  registerTab.addEventListener("click", function () {
-    registerTab.classList.add("active");
-    loginTab.classList.remove("active");
-
-    // Анімація зміни форм
-    loginForm.style.animation = "fadeOut 0.3s forwards";
-    setTimeout(() => {
-      loginForm.classList.remove("active");
-      registerForm.classList.add("active");
-      registerForm.style.animation = "fadeIn 0.5s forwards";
-    }, 300);
-  });
-
-  // Перемикання між формами через посилання
-  showLoginFormBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    loginTab.click();
-  });
-
-  showRegisterFormBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    registerTab.click();
-  });
-
-  // Перемикання видимості пароля
-  document.querySelectorAll(".password-toggle").forEach((toggle) => {
-    toggle.addEventListener("click", function () {
-      const passwordField = this.previousElementSibling;
-      const type =
-        passwordField.getAttribute("type") === "password" ? "text" : "password";
-      passwordField.setAttribute("type", type);
-
-      // Анімація іконки
-      this.classList.toggle("fa-eye");
-      this.classList.toggle("fa-eye-slash");
-      this.style.animation = "pulse 0.5s";
-      setTimeout(() => {
-        this.style.animation = "";
-      }, 500);
-    });
-  });
-
-  // Перевірка сили пароля та вимог
-  if (passwordInput) {
-    const lengthCheck = document.getElementById("length-check");
-    const uppercaseCheck = document.getElementById("uppercase-check");
-    const lowercaseCheck = document.getElementById("lowercase-check");
-    const numberCheck = document.getElementById("number-check");
-
-    passwordInput.addEventListener("input", function () {
-      const password = this.value;
-      let strength = 0;
-      let feedback = "";
-
-      // Перевірка вимог
-      const hasLength = password.length >= 8;
-      const hasLowercase = /[a-z]/.test(password);
-      const hasUppercase = /[A-Z]/.test(password);
-      const hasNumber = /[0-9]/.test(password);
-      const hasSpecial = /[^A-Za-z0-9]/.test(password);
-
-      // Оновлення індикаторів вимог з анімацією
-      toggleRequirementClass(lengthCheck, hasLength);
-      toggleRequirementClass(lowercaseCheck, hasLowercase);
-      toggleRequirementClass(uppercaseCheck, hasUppercase);
-      toggleRequirementClass(numberCheck, hasNumber);
-
-      // Розрахунок сили
-      if (hasLength) strength += 1;
-      if (hasLowercase) strength += 1;
-      if (hasUppercase) strength += 1;
-      if (hasNumber) strength += 1;
-      if (hasSpecial) strength += 1;
-
-      // Оновлення UI на основі сили
-      strengthMeter.className = "password-strength-meter";
-
-      if (password.length === 0) {
-        strengthMeter.style.width = "0";
-        strengthText.textContent = "";
-      } else if (strength < 2) {
-        strengthMeter.classList.add("strength-weak");
-        strengthMeter.style.width = "25%";
-        feedback = "Слабкий";
-      } else if (strength < 3) {
-        strengthMeter.classList.add("strength-medium");
-        strengthMeter.style.width = "50%";
-        feedback = "Середній";
-      } else if (strength < 5) {
-        strengthMeter.classList.add("strength-good");
-        strengthMeter.style.width = "75%";
-        feedback = "Хороший";
-      } else {
-        strengthMeter.classList.add("strength-strong");
-        strengthMeter.style.width = "100%";
-        feedback = "Сильний";
-      }
-
-      // Анімація зміни тексту
-      strengthText.style.animation = "fadeIn 0.3s";
-      strengthText.textContent = feedback;
-      setTimeout(() => {
-        strengthText.style.animation = "";
-      }, 300);
-
-      // Перевірка співпадіння паролів
-      if (passwordConfirmInput.value) {
-        checkPasswordMatch();
-      }
-    });
-
-    // Перевірка співпадіння паролів
-    function checkPasswordMatch() {
-      if (passwordConfirmInput.value === passwordInput.value) {
-        passwordConfirmInput.style.borderColor = "var(--success-color)";
-        passwordConfirmInput.style.boxShadow =
-          "0 0 0 2px rgba(46, 204, 113, 0.3)";
-      } else {
-        passwordConfirmInput.style.borderColor = "var(--danger-color)";
-        passwordConfirmInput.style.boxShadow =
-          "0 0 0 2px rgba(231, 76, 60, 0.3)";
-      }
-    }
-
-    passwordConfirmInput.addEventListener("input", checkPasswordMatch);
-  }
-
-  // Функція для оновлення класів вимог пароля
-  function toggleRequirementClass(element, isValid) {
-    if (isValid) {
-      if (!element.classList.contains("valid")) {
-        element.classList.add("valid");
-        element.querySelector("i").classList.remove("fa-circle");
-        element.querySelector("i").classList.add("fa-check-circle");
-        element.style.animation = "slideLeft 0.3s";
-        setTimeout(() => {
-          element.style.animation = "";
-        }, 300);
-      }
-    } else {
-      if (element.classList.contains("valid")) {
-        element.classList.remove("valid");
-        element.querySelector("i").classList.remove("fa-check-circle");
-        element.querySelector("i").classList.add("fa-circle");
-        element.style.animation = "slideRight 0.3s";
-        setTimeout(() => {
-          element.style.animation = "";
-        }, 300);
-      }
-    }
-  }
-
-  // Система сповіщень
-  window.showModal = function (message, type = "success") {
-    const modalOverlay = document.getElementById("modalOverlay");
-    const modalContent = document.getElementById("modalContent");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalMessage = document.getElementById("modalMessage");
-    const modalClose = document.querySelector(".modal-close");
-    const modalOkButton = document.getElementById("modalOkButton");
-
-    // Встановлення вмісту модального вікна
-    modalMessage.textContent = message;
-
-    // Встановлення заголовка та класу на основі типу
-    modalContent.className = "modal-content";
-    modalContent.classList.add("modal-" + type);
-
-    switch (type) {
-      case "success":
-        modalTitle.textContent = "Успіх";
-        break;
-      case "error":
-        modalTitle.textContent = "Помилка";
-        break;
-      case "warning":
-        modalTitle.textContent = "Попередження";
-        break;
-      case "info":
-        modalTitle.textContent = "Інформація";
-        break;
-    }
-
-    // Показ модального вікна з анімацією
-    modalOverlay.style.display = "flex";
-    setTimeout(() => {
-      modalOverlay.classList.add("active");
-    }, 10);
-
-    // Закриття модального вікна при натисканні на кнопку закриття
-    modalClose.onclick = () => {
-      modalOverlay.classList.remove("active");
-      setTimeout(() => {
-        modalOverlay.style.display = "none";
-      }, 300);
-    };
-
-    // Закриття модального вікна при натисканні на кнопку OK
-    modalOkButton.onclick = () => {
-      modalOverlay.classList.remove("active");
-      setTimeout(() => {
-        modalOverlay.style.display = "none";
-      }, 300);
-    };
-
-    // Закриття модального вікна при натисканні поза ним
-    modalOverlay.onclick = (event) => {
-      if (event.target === modalOverlay) {
-        modalOverlay.classList.remove("active");
-        setTimeout(() => {
-          modalOverlay.style.display = "none";
-        }, 300);
-      }
-    };
   };
 
-  // Валідація форми
-  function validatePassword(password) {
-    // Мінімум 8 символів, 1 велика літера, 1 мала літера, 1 цифра
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-    return regex.test(password);
-  }
+  // Close modal when clicking the OK button
+  modalOkButton.onclick = () => {
+    modalOverlay.classList.remove("active");
+    setTimeout(() => {
+      modalOverlay.style.display = "none";
+    }, 300);
+  };
 
-  function validateEmail(email) {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  }
-
-  // Обробка відправки форми
-  async function handleFormSubmit(
-    endpoint,
-    username,
-    password,
-    confirmPassword = null
-  ) {
-    try {
-      // Базова валідація
-      if (!username || !password) {
-        showModal("Усі поля повинні бути заповнені!", "error");
-        return;
-      }
-
-      // Валідація для реєстрації
-      if (endpoint === "/register") {
-        if (password !== confirmPassword) {
-          showModal("Паролі не співпадають!", "error");
-          return;
-        }
-
-        if (!validatePassword(password)) {
-          showModal(
-            "Пароль повинен містити мінімум 8 символів, 1 велику літеру, 1 малу літеру та 1 цифру",
-            "warning"
-          );
-          return;
-        }
-
-        // Перевірка згоди з умовами
-        const termsAgreement = document.getElementById("termsAgreement");
-        if (!termsAgreement.checked) {
-          showModal(
-            "Ви повинні погодитись з умовами використання та політикою конфіденційності",
-            "warning"
-          );
-          return;
-        }
-      }
-
-      // Валідація email
-      if (username.includes("@") && !validateEmail(username)) {
-        showModal("Введіть коректний email!", "error");
-        return;
-      }
-
-      // Показ стану завантаження
-      const submitButton = document.querySelector(
-        `form[id="${
-          endpoint === "/register" ? "registerForm" : "loginForm"
-        }"] button[type="submit"]`
-      );
-      const originalContent =
-        submitButton.querySelector(".button-content").innerHTML;
-      submitButton.querySelector(".button-content").innerHTML =
-        '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
-      submitButton.disabled = true;
-
-      // Додавання email до тіла запиту, якщо username схожий на email
-      const requestBody = { username, password };
-      if (username.includes("@") && validateEmail(username)) {
-        requestBody.email = username;
-      }
-
-      // Імітація API-запиту (замініть на реальний API-запит у продакшені)
+  // Close modal when clicking outside the modal
+  modalOverlay.onclick = (event) => {
+    if (event.target === modalOverlay) {
+      modalOverlay.classList.remove("active");
       setTimeout(() => {
-        // Скидання стану кнопки
-        submitButton.querySelector(".button-content").innerHTML =
-          originalContent;
-        submitButton.disabled = false;
+        modalOverlay.style.display = "none";
+      }, 300);
+    }
+  };
+}
 
-        if (endpoint === "/login") {
-          // Імітація успішного входу
-          localStorage.setItem("userId", "user123");
-          localStorage.setItem("token", "sample-token-123");
+// Form validation
+function validatePassword(password) {
+  // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  return regex.test(password);
+}
 
-          // Збереження імені користувача, якщо вибрано "Запам'ятати мене"
-          if (
-            document.getElementById("rememberMe") &&
-            document.getElementById("rememberMe").checked
-          ) {
-            localStorage.setItem("username", username);
-          } else {
-            sessionStorage.setItem("username", username);
-          }
+function validateEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
 
-          showModal("Вхід успішний! Перенаправлення...", "success");
+// Form handling
+async function handleFormSubmit(
+  endpoint,
+  username,
+  password,
+  confirmPassword = null
+) {
+  try {
+    // Basic validation
+    if (!username || !password) {
+      showModal("Усі поля повинні бути заповнені!", "error");
+      return;
+    }
 
-          // Перенаправлення після короткої затримки
-          setTimeout(() => {
-            window.location.href = "index.html";
-          }, 1500);
-        } else {
-          // Імітація успішної реєстрації
-          showModal("Реєстрація успішна! Тепер ви можете увійти.", "success");
-
-          // Перемикання на форму входу після реєстрації
-          setTimeout(() => {
-            loginTab.click();
-          }, 1500);
-        }
-      }, 1500);
-
-      /* 
-      // Розкоментуйте для реальної API-реалізації
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = await response.json();
-
-      // Скидання стану кнопки
-      submitButton.querySelector('.button-content').innerHTML = originalContent;
-      submitButton.disabled = false;
-
-      if (response.ok) {
-        if (data.userId) {
-          localStorage.setItem("userId", data.userId);
-          localStorage.setItem("token", data.token);
-
-          // Збереження імені користувача
-          if (document.getElementById("rememberMe") && document.getElementById("rememberMe").checked) {
-            localStorage.setItem("username", username);
-          } else {
-            sessionStorage.setItem("username", username);
-          }
-        }
-
-        showModal(data.message, "success");
-
-        // Перенаправлення після короткої затримки для показу повідомлення про успіх
-        setTimeout(() => {
-          window.location.href = data.redirect || "index.html";
-        }, 1500);
-      } else {
-        showModal(data.message || "Помилка авторизації", "error");
+    // Registration specific validation
+    if (endpoint === "/register") {
+      if (password !== confirmPassword) {
+        showModal("Паролі не співпадають!", "error");
+        return;
       }
-      */
-    } catch (error) {
-      console.error("Помилка:", error);
-      showModal(
-        "Помилка з'єднання з сервером. Перевірте підключення до бази даних.",
-        "error"
-      );
-    }
-  }
 
-  // Обробка відправки форми
-  if (document.getElementById("registerForm")) {
-    document
-      .getElementById("registerForm")
-      .addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const username = document.getElementById("regUsername").value;
-        const password = document.getElementById("regPassword").value;
-        const confirmPassword =
-          document.getElementById("regPasswordConfirm").value;
-        await handleFormSubmit(
-          "/register",
-          username,
-          password,
-          confirmPassword
+      if (!validatePassword(password)) {
+        showModal(
+          "Пароль повинен містити мінімум 8 символів, 1 велику літеру, 1 малу літеру та 1 цифру",
+          "warning"
         );
-      });
-  }
-
-  if (document.getElementById("loginForm")) {
-    document
-      .getElementById("loginForm")
-      .addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const username = document.getElementById("loginUsername").value;
-        const password = document.getElementById("loginPassword").value;
-        await handleFormSubmit("/login", username, password);
-      });
-  }
-
-  // Перевірка збереженого імені користувача
-  const rememberedUsername = localStorage.getItem("username");
-  if (rememberedUsername && document.getElementById("loginUsername")) {
-    document.getElementById("loginUsername").value = rememberedUsername;
-    if (document.getElementById("rememberMe")) {
-      document.getElementById("rememberMe").checked = true;
+        return;
+      }
     }
-  }
 
-  // Перевірка, чи користувач вже увійшов у систему
+    // Email validation if username looks like an email
+    if (username.includes("@") && !validateEmail(username)) {
+      showModal("Введіть коректний email!", "error");
+      return;
+    }
+
+    // Show loading state
+    const submitButton = document.querySelector(
+      `form[id="${
+        endpoint === "/register" ? "registerForm" : "loginForm"
+      }"] button[type="submit"]`
+    );
+    const originalText = submitButton.innerHTML;
+    submitButton.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Зачекайте...';
+    submitButton.disabled = true;
+
+    // Add email to request body if username looks like an email
+    const requestBody = { username, password };
+    if (username.includes("@") && validateEmail(username)) {
+      requestBody.email = username;
+    }
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+
+    // Reset button state
+    submitButton.innerHTML = originalText;
+    submitButton.disabled = false;
+
+    if (response.ok) {
+      if (data.userId) {
+        localStorage.setItem("userId", data.userId);
+        localStorage.setItem("token", data.token);
+
+        // Store username
+        if (
+          document.getElementById("rememberMe") &&
+          document.getElementById("rememberMe").checked
+        ) {
+          localStorage.setItem("username", username);
+        } else {
+          sessionStorage.setItem("username", username);
+        }
+      }
+
+      showModal(data.message, "success");
+
+      // Redirect after a short delay to show the success message
+      setTimeout(() => {
+        window.location.href = data.redirect || "index.html";
+      }, 1500);
+    } else {
+      showModal(data.message || "Помилка авторизації", "error");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    showModal(
+      "Помилка з'єднання з сервером. Перевірте підключення до бази даних.",
+      "error"
+    );
+  }
+}
+
+document
+  .getElementById("registerForm")
+  .addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("regUsername").value;
+    const password = document.getElementById("regPassword").value;
+    const confirmPassword = document.getElementById("regPasswordConfirm").value;
+    await handleFormSubmit("/register", username, password, confirmPassword);
+  });
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("loginUsername").value;
+  const password = document.getElementById("loginPassword").value;
+  await handleFormSubmit("/login", username, password);
+});
+
+// Check for remembered username
+window.addEventListener("DOMContentLoaded", () => {
+  const rememberedUsername = localStorage.getItem("username");
+  if (rememberedUsername) {
+    document.getElementById("loginUsername").value = rememberedUsername;
+    document.getElementById("rememberMe").checked = true;
+  }
+});
+
+// Initialize UI state
+document.addEventListener("DOMContentLoaded", () => {
+  // Check if user is already logged in
   const userId = localStorage.getItem("userId");
   if (userId) {
     showModal("Ви вже увійшли в систему. Перенаправлення...", "info");
@@ -522,7 +319,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 2000);
   }
 
-  // Кнопка "Вгору"
+  // Back to top button functionality
+  const backToTopButton = document.getElementById("backToTop");
   if (backToTopButton) {
     window.addEventListener("scroll", () => {
       if (window.scrollY > 300) {
@@ -540,12 +338,57 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Ініціалізація іконок перемикання пароля
+  // Initialize password toggle icons
   document.querySelectorAll(".password-toggle").forEach((toggle) => {
     toggle.classList.add("fa-eye");
   });
 
-  // Плавна прокрутка для всіх посилань
+  // Add this function to better handle responsive behavior
+  function handleResponsiveLayout() {
+    const windowWidth = window.innerWidth;
+
+    // Adjust form layout based on screen size
+    if (windowWidth <= 576) {
+      // For very small screens, simplify some elements
+      document.querySelectorAll("form button").forEach((button) => {
+        // Simplify button text on small screens
+        const icon = button.querySelector("i");
+        const text = button.textContent.trim();
+
+        if (button.dataset.originalText === undefined) {
+          button.dataset.originalText = text;
+        }
+
+        if (text.includes("ЗАРЕЄСТРУВАТИСЯ")) {
+          button.innerHTML = "";
+          button.appendChild(icon);
+          button.appendChild(document.createTextNode(" РЕЄСТРАЦІЯ"));
+        } else if (text.includes("УВІЙТИ")) {
+          button.innerHTML = "";
+          button.appendChild(icon);
+          button.appendChild(document.createTextNode(" ВХІД"));
+        }
+      });
+    } else {
+      // Restore original button text on larger screens
+      document.querySelectorAll("form button").forEach((button) => {
+        if (button.dataset.originalText) {
+          const icon = button.querySelector("i");
+          button.innerHTML = "";
+          button.appendChild(icon);
+          button.appendChild(
+            document.createTextNode(" " + button.dataset.originalText)
+          );
+        }
+      });
+    }
+  }
+
+  // Handle responsive layout
+  handleResponsiveLayout();
+  window.addEventListener("resize", handleResponsiveLayout);
+
+  // Add smooth scrolling for all links
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
       if (this.getAttribute("href") !== "#") {
@@ -560,7 +403,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Додавання підтримки сенсорного екрану для кращого мобільного досвіду
+  // Add touch support for better mobile experience
   let touchStartY;
 
   document.addEventListener(
@@ -577,15 +420,16 @@ document.addEventListener("DOMContentLoaded", function () {
       const touchEndY = e.changedTouches[0].screenY;
       const touchDiff = touchStartY - touchEndY;
 
-      // Якщо користувач проводить пальцем вгору значно внизу сторінки, показати кнопку "Вгору"
+      // If user swipes up significantly at the bottom of the page, show back-to-top button
       if (touchDiff > 100 && window.scrollY > window.innerHeight) {
-        if (backToTopButton) {
-          backToTopButton.classList.add("visible");
+        const backToTopButtonElement = document.getElementById("backToTop");
+        if (backToTopButtonElement) {
+          backToTopButtonElement.classList.add("visible");
 
-          // Приховати через 3 секунди, якщо не використовується
+          // Hide after 3 seconds if not used
           setTimeout(() => {
-            if (!backToTopButton.classList.contains("clicked")) {
-              backToTopButton.classList.remove("visible");
+            if (!backToTopButtonElement.classList.contains("clicked")) {
+              backToTopButtonElement.classList.remove("visible");
             }
           }, 3000);
         }
@@ -594,9 +438,10 @@ document.addEventListener("DOMContentLoaded", function () {
     false
   );
 
-  // Позначити кнопку "Вгору" як натиснуту при використанні
-  if (backToTopButton) {
-    backToTopButton.addEventListener("click", function () {
+  // Mark back-to-top button as clicked when used
+  const backToTopButtonElement = document.getElementById("backToTop");
+  if (backToTopButtonElement) {
+    backToTopButtonElement.addEventListener("click", function () {
       this.classList.add("clicked");
       setTimeout(() => {
         this.classList.remove("clicked");
@@ -604,112 +449,143 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Анімація частинок фону
-  function createParticles() {
-    const particles = document.querySelectorAll(".particle");
-    particles.forEach((particle) => {
-      // Випадкові початкові позиції
-      const randomX = Math.random() * window.innerWidth;
-      const randomY = Math.random() * window.innerHeight;
-      particle.style.left = `${randomX}px`;
-      particle.style.top = `${randomY}px`;
-    });
-  }
-
-  // Анімація елементів при прокрутці
-  window.addEventListener("scroll", animateOnScroll);
-
-  // Ініціалізація анімацій
-  initAnimations();
-
-  // Ініціалізація частинок фону
-  createParticles();
-
-  // Додавання анімації для соціальних кнопок
-  const socialButtons = document.querySelectorAll(".social-button");
-  socialButtons.forEach((button, index) => {
-    button.style.animationDelay = `${index * 0.1}s`;
-  });
-
-  // Додавання анімації для елементів форми
-  const formElements = document.querySelectorAll(
-    ".input-group, .auth-options, .auth-button, .form-footer"
-  );
-  formElements.forEach((element, index) => {
-    element.style.animationDelay = `${index * 0.1}s`;
-  });
-
-  // Додавання анімації для елементів футера
-  const footerElements = document.querySelectorAll(".footer-section");
-  footerElements.forEach((element, index) => {
-    element.style.animationDelay = `${index * 0.2}s`;
-  });
-
-  // Додавання анімації для елементів хедера
-  const headerElements = document.querySelectorAll(".nav-link");
-  headerElements.forEach((element, index) => {
-    element.classList.add("animate-fade-in");
-    element.style.animationDelay = `${index * 0.1}s`;
-  });
-
-  // Додавання ефекту хвилі для кнопок при натисканні
-  const buttons = document.querySelectorAll("button");
-  buttons.forEach((button) => {
-    button.addEventListener("click", function (e) {
-      // Створення ефекту хвилі
-      const ripple = document.createElement("span");
-      ripple.classList.add("ripple-effect");
-
-      // Позиціонування ефекту хвилі
-      const rect = this.getBoundingClientRect();
-      const size = Math.max(rect.width, rect.height);
-      const x = e.clientX - rect.left - size / 2;
-      const y = e.clientY - rect.top - size / 2;
-
-      ripple.style.width = ripple.style.height = `${size}px`;
-      ripple.style.left = `${x}px`;
-      ripple.style.top = `${y}px`;
-
-      this.appendChild(ripple);
-
-      // Видалення ефекту хвилі після анімації
-      setTimeout(() => {
-        ripple.remove();
-      }, 600);
+  // Optimize form transitions
+  const forms = document.querySelectorAll("form");
+  forms.forEach((form) => {
+    form.addEventListener("transitionend", function (e) {
+      if (e.propertyName === "transform" && this.style.display === "none") {
+        this.style.transform = "";
+      }
     });
   });
 });
 
-// Додавання CSS для ефекту хвилі
+//role.js
+function updateUIForLoginStatus() {
+  const isLoggedIn = checkUserLoggedIn();
+  const orderSection = document.getElementById("order");
+  const orderLink = document.getElementById("orderLink");
+  const profileLink = document.getElementById("profileLink");
+  const profileFooterLink = document.getElementById("profileFooterLink");
+  const loginBtn = document.getElementById("loginBtn");
+  const loginModal = document.getElementById("loginModal");
+  const reviewSection = document.getElementById("review-form");
+
+  if (isLoggedIn) {
+    // User is logged in
+    if (orderSection) orderSection.style.display = "block";
+    if (orderLink) orderLink.style.display = "block";
+    if (profileLink) profileLink.style.display = "block";
+    if (profileFooterLink) profileFooterLink.style.display = "block";
+    if (reviewSection) reviewSection.style.display = "block";
+    if (loginBtn) {
+      loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Вийти';
+      loginBtn.removeEventListener("click", redirectToAuth);
+      loginBtn.addEventListener("click", logoutUser);
+    }
+
+    // Check user role and update UI accordingly
+    const userId = localStorage.getItem("userId");
+    if (userId && window.RoleSystem) {
+      window.RoleSystem.checkUserRole(userId);
+    } else {
+      // If RoleSystem is not available, hide master elements by default
+      const infoLink = document.getElementById("info");
+      if (infoLink) infoLink.style.display = "none";
+    }
+  } else {
+    // User is not logged in
+    if (orderSection) orderSection.style.display = "none";
+    if (orderLink) orderLink.style.display = "none";
+    if (profileLink) profileLink.style.display = "none";
+    if (profileFooterLink) profileFooterLink.style.display = "none";
+    if (reviewSection) reviewSection.style.display = "none";
+    if (loginBtn) {
+      loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Увійти';
+      loginBtn.removeEventListener("click", logoutUser);
+      loginBtn.addEventListener("click", redirectToAuth);
+    }
+
+    // Show login modal for new users
+    if (loginModal && !localStorage.getItem("modalShown")) {
+      setTimeout(() => {
+        loginModal.classList.add("active");
+        localStorage.setItem("modalShown", "true");
+      }, 1500);
+    }
+
+    // Hide master elements for non-logged in users
+    const infoLink = document.getElementById("info");
+    if (infoLink) infoLink.style.display = "none";
+  }
+}
+
+// Mock functions to resolve undeclared variable errors.  These should be replaced with actual implementations.
+function checkUserLoggedIn() {
+  // Replace with actual implementation
+  return localStorage.getItem("token") !== null;
+}
+
+function redirectToAuth() {
+  // Replace with actual implementation
+  window.location.href = "/auth"; // Or wherever your auth endpoint is
+}
+
+function logoutUser() {
+  // Replace with actual implementation
+  localStorage.removeItem("token");
+  localStorage.removeItem("userId");
+  updateUIForLoginStatus(); // Refresh the UI
+}
 document.addEventListener("DOMContentLoaded", function () {
-  const style = document.createElement("style");
-  style.textContent = `
-    .ripple-effect {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(0);
-      animation: ripple 0.6s linear;
-      pointer-events: none;
+  // Get the login and register form elements
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+
+  // Function to show the appropriate form based on hash
+  function showFormBasedOnHash() {
+    // Get the hash from the URL (remove the # symbol)
+    const hash = window.location.hash.substring(1);
+
+    // Default to login form if no hash or invalid hash
+    if (!hash || (hash !== "loginForm" && hash !== "registerForm")) {
+      // Show login form, hide register form
+      if (loginForm) loginForm.style.display = "block";
+      if (registerForm) registerForm.style.display = "none";
+      return;
     }
-    
-    @keyframes ripple {
-      to {
-        transform: scale(4);
-        opacity: 0;
-      }
+
+    // Show the appropriate form based on the hash
+    if (hash === "loginForm") {
+      if (loginForm) loginForm.style.display = "block";
+      if (registerForm) registerForm.style.display = "none";
+    } else if (hash === "registerForm") {
+      if (loginForm) loginForm.style.display = "none";
+      if (registerForm) registerForm.style.display = "block";
     }
-    
-    @keyframes fadeOut {
-      from {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      to {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-    }
-  `;
-  document.head.appendChild(style);
+  }
+
+  // Show the appropriate form when the page loads
+  showFormBasedOnHash();
+
+  // Listen for hash changes (in case user navigates with browser buttons)
+  window.addEventListener("hashchange", showFormBasedOnHash);
+
+  // Add event listeners for form toggle buttons if they exist
+  const switchToRegisterBtn = document.getElementById("switchToRegister");
+  const switchToLoginBtn = document.getElementById("switchToLogin");
+
+  if (switchToRegisterBtn) {
+    switchToRegisterBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.location.hash = "registerForm";
+    });
+  }
+
+  if (switchToLoginBtn) {
+    switchToLoginBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.location.hash = "loginForm";
+    });
+  }
 });
