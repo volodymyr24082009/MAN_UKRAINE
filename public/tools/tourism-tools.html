@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Туристичні Інструменти та Калькулятори - ProFix Network Hub</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/index.css" />
+    <link rel="stylesheet" href="../css/header.css" />
+    <link rel="stylesheet" href="./css/tourism-tools.css">
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <a href="../index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          <span>ProFix Network Hub</span>
+        </a>
+        <div class="nav-menu" id="navMenu">
+          <a href="../index.html" class="nav-link">Головна</a>
+          <a href="../message.html" class="nav-link">Повідомлення</a>
+          <a href="../chat.html" class="nav-link">Чат</a>
+          <a href="../news.html" class="nav-link">Новини</a>
+          <a href="../profile.html" class="nav-link">Профіль</a>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span>
+            </span>
+          </label>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="tools-container">
+      <a href="../index.html#industries" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Повернутися до галузей
+      </a>
+
+      <h1 class="section-title">
+        <i class="fas fa-plane"></i>
+        Туристичні Інструменти та Калькулятори
+      </h1>
+
+      <div class="tools-grid">
+        <!-- Travel Cost Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор вартості подорожі</h3>
+          <p class="tool-description">
+            Розрахуйте загальну вартість подорожі з усіма витратами
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="travelType">
+              <option value="">Тип подорожі</option>
+              <option value="domestic">Внутрішня (Україна)</option>
+              <option value="europe">Європа</option>
+              <option value="asia">Азія</option>
+              <option value="america">Америка</option>
+              <option value="other">Інші країни</option>
+            </select>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="travelDays"
+                placeholder="Кількість днів"
+                min="1"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="travelers"
+                placeholder="Кількість мандрівників"
+                min="1"
+              />
+            </div>
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Витрати:
+            </h4>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="flightCost"
+                placeholder="Авіаквитки (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="accommodationCost"
+                placeholder="Проживання за ніч (грн)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="foodCost"
+                placeholder="Харчування за день (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="transportCost"
+                placeholder="Місцевий транспорт за день (грн)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="entertainmentCost"
+                placeholder="Розваги за день (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="shoppingCost"
+                placeholder="Покупки (грн)"
+                min="0"
+              />
+            </div>
+            <input
+              type="number"
+              class="calc-input"
+              id="insuranceCost"
+              placeholder="Страхування (грн)"
+              min="0"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="visaCost"
+              placeholder="Віза та документи (грн)"
+              min="0"
+            />
+            <button class="calc-button" onclick="calculateTravelCost()">
+              Розрахувати вартість
+            </button>
+            <div class="calc-result" id="travelCostResult"></div>
+            <div class="chart-container">
+              <canvas id="travelCostChart"></canvas>
+            </div>
+          </div>
+          <div class="travel-tip">
+            ✈️ Заздалегідь бронюйте квитки та готелі для отримання кращих цін
+          </div>
+        </div>
+
+        <!-- Currency Converter for Travel -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-exchange-alt"></i>
+          </div>
+          <h3 class="tool-title">Конвертер валют для подорожей</h3>
+          <p class="tool-description">
+            Конвертуйте валюти та розрахуйте бюджет у місцевій валюті
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="travelAmount"
+              placeholder="Сума"
+              min="0.01"
+              step="0.01"
+            />
+            <div class="input-group">
+              <select class="calc-input" id="fromTravelCurrency">
+                <option value="UAH">Гривня (UAH)</option>
+                <option value="USD">Долар США (USD)</option>
+                <option value="EUR">Євро (EUR)</option>
+                <option value="GBP">Фунт стерлінгів (GBP)</option>
+                <option value="PLN">Злотий (PLN)</option>
+                <option value="CZK">Чеська крона (CZK)</option>
+                <option value="HUF">Угорський форинт (HUF)</option>
+                <option value="RON">Румунський лей (RON)</option>
+                <option value="TRY">Турецька ліра (TRY)</option>
+              </select>
+              <select class="calc-input" id="toTravelCurrency">
+                <option value="UAH">Гривня (UAH)</option>
+                <option value="USD" selected>Долар США (USD)</option>
+                <option value="EUR">Євро (EUR)</option>
+                <option value="GBP">Фунт стерлінгів (GBP)</option>
+                <option value="PLN">Злотий (PLN)</option>
+                <option value="CZK">Чеська крона (CZK)</option>
+                <option value="HUF">Угорський форинт (HUF)</option>
+                <option value="RON">Румунський лей (RON)</option>
+                <option value="TRY">Турецька ліра (TRY)</option>
+              </select>
+            </div>
+            <button class="calc-button" onclick="convertTravelCurrency()">
+              Конвертувати
+            </button>
+            <div class="calc-result" id="travelCurrencyResult"></div>
+
+            <h4 style="color: var(--text-dark); margin: 1.5rem 0 0.5rem 0">
+              Швидкий розрахунок бюджету:
+            </h4>
+            <input
+              type="number"
+              class="calc-input"
+              id="dailyBudget"
+              placeholder="Щоденний бюджет (UAH)"
+              min="0"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="budgetDays"
+              placeholder="Кількість днів"
+              min="1"
+            />
+            <button class="calc-button" onclick="calculateTravelBudget()">
+              Розрахувати бюджет
+            </button>
+            <div class="calc-result" id="travelBudgetResult"></div>
+          </div>
+          <div class="travel-tip">
+            💱 Слідкуйте за курсами валют та використовуйте картки без комісії
+            за конвертацію
+          </div>
+        </div>
+
+        <!-- Hotel Budget Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-bed"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор готельного бюджету</h3>
+          <p class="tool-description">
+            Порівняйте вартість різних типів проживання
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="hotelNights"
+              placeholder="Кількість ночей"
+              min="1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="hotelGuests"
+              placeholder="Кількість гостей"
+              min="1"
+            />
+
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Типи проживання:
+            </h4>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="hostelPrice"
+                placeholder="Хостел за ніч (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="budgetHotelPrice"
+                placeholder="Бюджетний готель (грн)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="midRangeHotelPrice"
+                placeholder="Готель середнього класу (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="luxuryHotelPrice"
+                placeholder="Розкішний готель (грн)"
+                min="0"
+              />
+            </div>
+            <input
+              type="number"
+              class="calc-input"
+              id="airbnbPrice"
+              placeholder="Airbnb за ніч (грн)"
+              min="0"
+            />
+
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Додаткові витрати:
+            </h4>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="cityTax"
+                placeholder="Туристичний збір за ніч (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="parkingFee"
+                placeholder="Паркування за ніч (грн)"
+                min="0"
+              />
+            </div>
+            <input
+              type="number"
+              class="calc-input"
+              id="breakfastFee"
+              placeholder="Сніданок за день (грн)"
+              min="0"
+            />
+
+            <button class="calc-button" onclick="calculateHotelBudget()">
+              Порівняти варіанти
+            </button>
+            <div class="calc-result" id="hotelBudgetResult"></div>
+            <div class="chart-container">
+              <canvas id="hotelBudgetChart"></canvas>
+            </div>
+          </div>
+          <div class="travel-tip">
+            🏨 Читайте відгуки та перевіряйте розташування готелю відносно
+            основних визначних пам'яток
+          </div>
+        </div>
+
+        <!-- Route Planner -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-route"></i>
+          </div>
+          <h3 class="tool-title">Планувальник маршруту</h3>
+          <p class="tool-description">
+            Створіть маршрут подорожі та розрахуйте час і відстань
+          </p>
+          <div class="calculator">
+            <div class="input-group">
+              <input
+                type="text"
+                class="calc-input"
+                id="routePoint"
+                placeholder="Назва місця"
+              />
+              <select class="calc-input" id="transportMode">
+                <option value="car">Автомобіль</option>
+                <option value="train">Поїзд</option>
+                <option value="bus">Автобус</option>
+                <option value="plane">Літак</option>
+                <option value="walking">Пішки</option>
+              </select>
+            </div>
+            <input
+              type="number"
+              class="calc-input"
+              id="stayDuration"
+              placeholder="Тривалість перебування (годин)"
+              min="1"
+            />
+            <button class="calc-button" onclick="addRoutePoint()">
+              Додати точку маршруту
+            </button>
+
+            <div id="routeList" style="margin-top: 1rem"></div>
+
+            <button
+              class="calc-button"
+              onclick="calculateRoute()"
+              style="margin-top: 1rem"
+            >
+              Розрахувати маршрут
+            </button>
+            <div class="calc-result" id="routeResult"></div>
+          </div>
+          <div class="travel-tip">
+            🗺️ Плануйте маршрут з урахуванням часу роботи музеїв та визначних
+            пам'яток
+          </div>
+        </div>
+
+        <!-- Time Zone Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор часових поясів</h3>
+          <p class="tool-description">
+            Дізнайтеся час у різних містах світу та плануйте дзвінки
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="homeCity">
+              <option value="">Ваше місто</option>
+              <option value="Kiev">Київ (UTC+2)</option>
+              <option value="Lviv">Львів (UTC+2)</option>
+              <option value="Odesa">Одеса (UTC+2)</option>
+              <option value="Kharkiv">Харків (UTC+2)</option>
+            </select>
+
+            <select class="calc-input" id="destinationCity">
+              <option value="">Місто призначення</option>
+              <option value="London">Лондон (UTC+0)</option>
+              <option value="Paris">Париж (UTC+1)</option>
+              <option value="Berlin">Берлін (UTC+1)</option>
+              <option value="Rome">Рим (UTC+1)</option>
+              <option value="Madrid">Мадрид (UTC+1)</option>
+              <option value="Warsaw">Варшава (UTC+1)</option>
+              <option value="Prague">Прага (UTC+1)</option>
+              <option value="Vienna">Відень (UTC+1)</option>
+              <option value="Budapest">Будапешт (UTC+1)</option>
+              <option value="Istanbul">Стамбул (UTC+3)</option>
+              <option value="Dubai">Дубай (UTC+4)</option>
+              <option value="Bangkok">Бангкок (UTC+7)</option>
+              <option value="Tokyo">Токіо (UTC+9)</option>
+              <option value="Sydney">Сідней (UTC+10)</option>
+              <option value="New_York">Нью-Йорк (UTC-5)</option>
+              <option value="Los_Angeles">Лос-Анджелес (UTC-8)</option>
+            </select>
+
+            <input
+              type="time"
+              class="calc-input"
+              id="meetingTime"
+              placeholder="Час зустрічі"
+            />
+
+            <button class="calc-button" onclick="calculateTimeZone()">
+              Розрахувати час
+            </button>
+
+            <div class="timezone-display" id="timezoneDisplay"></div>
+            <div class="calc-result" id="timezoneResult"></div>
+          </div>
+          <div class="travel-tip">
+            🕐 Пам'ятайте про літній час, який може змінювати різницю в часових
+            поясах
+          </div>
+        </div>
+
+        <!-- Packing Checklist Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-suitcase"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор упаковки багажу</h3>
+          <p class="tool-description">
+            Створіть список речей для упаковки залежно від типу подорожі
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="tripType">
+              <option value="">Тип подорожі</option>
+              <option value="business">Ділова поїздка</option>
+              <option value="leisure">Відпочинок</option>
+              <option value="adventure">Пригодницька подорож</option>
+              <option value="beach">Пляжний відпочинок</option>
+              <option value="city">Міський туризм</option>
+              <option value="winter">Зимовий відпочинок</option>
+            </select>
+
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="packingDays"
+                placeholder="Кількість днів"
+                min="1"
+              />
+              <select class="calc-input" id="season">
+                <option value="">Сезон</option>
+                <option value="spring">Весна</option>
+                <option value="summer">Літо</option>
+                <option value="autumn">Осінь</option>
+                <option value="winter">Зима</option>
+              </select>
+            </div>
+
+            <select class="calc-input" id="climate">
+              <option value="">Клімат</option>
+              <option value="tropical">Тропічний</option>
+              <option value="temperate">Помірний</option>
+              <option value="cold">Холодний</option>
+              <option value="desert">Пустельний</option>
+              <option value="mountain">Гірський</option>
+            </select>
+
+            <div class="input-group">
+              <select class="calc-input" id="baggageType">
+                <option value="">Тип багажу</option>
+                <option value="carry_on">Ручна поклажа</option>
+                <option value="checked">Реєстрований багаж</option>
+                <option value="backpack">Рюкзак</option>
+              </select>
+              <input
+                type="number"
+                class="calc-input"
+                id="weightLimit"
+                placeholder="Ліміт ваги (кг)"
+                min="1"
+              />
+            </div>
+
+            <button class="calc-button" onclick="generatePackingList()">
+              Створити список
+            </button>
+            <div class="calc-result" id="packingResult"></div>
+          </div>
+          <div class="weather-info">
+            🧳 Перевіряйте обмеження авіакомпанії щодо ваги та розмірів багажу
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./js/tourism-tools.js">
+    </script>
+  </body>
+</html>

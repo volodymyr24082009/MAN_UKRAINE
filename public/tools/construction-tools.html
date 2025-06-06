@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Будівельні Інструменти та Калькулятори - ProFix Network Hub</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/index.css" />
+    <link rel="stylesheet" href="../css/header.css" />
+    <link rel="stylesheet" href="./css/construction-tools.css">
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <a href="../index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          <span>ProFix Network Hub</span>
+        </a>
+        <div class="nav-menu" id="navMenu">
+          <a href="../index.html" class="nav-link">Головна</a>
+          <a href="../message.html" class="nav-link">Повідомлення</a>
+          <a href="../chat.html" class="nav-link">Чат</a>
+          <a href="../news.html" class="nav-link">Новини</a>
+          <a href="../profile.html" class="nav-link">Профіль</a>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span>
+            </span>
+          </label>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="tools-container">
+      <a href="../index.html#industries" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Повернутися до галузей
+      </a>
+
+      <h1 class="section-title">
+        <i class="fas fa-hard-hat"></i>
+        Будівельні Інструменти та Калькулятори
+      </h1>
+
+      <div class="tools-grid">
+        <!-- Mortgage Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-home"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор іпотеки</h3>
+          <p class="tool-description">
+            Розрахуйте щомісячні платежі та загальну вартість іпотечного кредиту
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="propertyPrice"
+              placeholder="Вартість нерухомості (грн)"
+              min="100000"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="downPayment"
+              placeholder="Перший внесок (грн)"
+              min="0"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="mortgageTerm"
+              placeholder="Термін кредиту (років)"
+              min="1"
+              max="30"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="mortgageRate"
+              placeholder="Відсоткова ставка (%)"
+              min="0.1"
+              step="0.1"
+            />
+            <select class="calc-input" id="mortgageType">
+              <option value="annuity">Ануїтетні платежі</option>
+              <option value="differentiated">Диференційовані платежі</option>
+            </select>
+            <button class="calc-button" onclick="calculateMortgage()">
+              Розрахувати іпотеку
+            </button>
+            <div class="calc-result" id="mortgageResult"></div>
+            <div class="chart-container">
+              <canvas id="mortgageChart"></canvas>
+            </div>
+          </div>
+          <div class="construction-tip">
+            🏠 Рекомендований розмір першого внеску - не менше 20% від вартості
+            нерухомості
+          </div>
+        </div>
+
+        <!-- Building Materials Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-cubes"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор будівельних матеріалів</h3>
+          <p class="tool-description">
+            Розрахуйте кількість та вартість будівельних матеріалів
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="materialType">
+              <option value="">Оберіть тип матеріалу</option>
+              <option value="brick">Цегла</option>
+              <option value="concrete">Бетон</option>
+              <option value="tiles">Плитка</option>
+              <option value="paint">Фарба</option>
+              <option value="flooring">Підлогове покриття</option>
+              <option value="roofing">Покрівельні матеріали</option>
+            </select>
+
+            <div id="brickFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Розрахунок цегли:
+              </h4>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="wallLength"
+                  placeholder="Довжина стіни (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="wallHeight"
+                  placeholder="Висота стіни (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+              </div>
+              <input
+                type="number"
+                class="calc-input"
+                id="wallThickness"
+                placeholder="Товщина стіни (см)"
+                min="10"
+                step="5"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="brickPrice"
+                placeholder="Ціна за 1000 шт (грн)"
+                min="1"
+              />
+            </div>
+
+            <div id="concreteFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Розрахунок бетону:
+              </h4>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="concreteLength"
+                  placeholder="Довжина (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="concreteWidth"
+                  placeholder="Ширина (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+              </div>
+              <input
+                type="number"
+                class="calc-input"
+                id="concreteHeight"
+                placeholder="Висота/товщина (м)"
+                min="0.05"
+                step="0.01"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="concretePrice"
+                placeholder="Ціна за м³ (грн)"
+                min="1"
+              />
+            </div>
+
+            <div id="tilesFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Розрахунок плитки:
+              </h4>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="roomLength"
+                  placeholder="Довжина кімнати (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="roomWidth"
+                  placeholder="Ширина кімнати (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+              </div>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="tileLength"
+                  placeholder="Довжина плитки (см)"
+                  min="1"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="tileWidth"
+                  placeholder="Ширина плитки (см)"
+                  min="1"
+                />
+              </div>
+              <input
+                type="number"
+                class="calc-input"
+                id="tilePrice"
+                placeholder="Ціна за м² (грн)"
+                min="1"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="wastePercent"
+                placeholder="Запас на відходи (%)"
+                min="5"
+                max="20"
+                value="10"
+              />
+            </div>
+
+            <div id="paintFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Розрахунок фарби:
+              </h4>
+              <input
+                type="number"
+                class="calc-input"
+                id="paintArea"
+                placeholder="Площа для фарбування (м²)"
+                min="0.1"
+                step="0.1"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="paintCoverage"
+                placeholder="Витрата фарби (м²/л)"
+                min="1"
+                value="10"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="paintLayers"
+                placeholder="Кількість шарів"
+                min="1"
+                max="5"
+                value="2"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="paintPrice"
+                placeholder="Ціна за літр (грн)"
+                min="1"
+              />
+            </div>
+
+            <div id="flooringFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Розрахунок підлогового покриття:
+              </h4>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="floorLength"
+                  placeholder="Довжина кімнати (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="floorWidth"
+                  placeholder="Ширина кімнати (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+              </div>
+              <select class="calc-input" id="flooringType">
+                <option value="">Тип покриття</option>
+                <option value="laminate">Ламінат</option>
+                <option value="parquet">Паркет</option>
+                <option value="linoleum">Лінолеум</option>
+                <option value="carpet">Ковролін</option>
+              </select>
+              <input
+                type="number"
+                class="calc-input"
+                id="flooringPrice"
+                placeholder="Ціна за м² (грн)"
+                min="1"
+              />
+            </div>
+
+            <div id="roofingFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Розрахунок покрівлі:
+              </h4>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="roofLength"
+                  placeholder="Довжина даху (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="roofWidth"
+                  placeholder="Ширина даху (м)"
+                  min="0.1"
+                  step="0.1"
+                />
+              </div>
+              <input
+                type="number"
+                class="calc-input"
+                id="roofAngle"
+                placeholder="Кут нахилу (градуси)"
+                min="0"
+                max="90"
+                value="30"
+              />
+              <select class="calc-input" id="roofingMaterial">
+                <option value="">Тип покрівлі</option>
+                <option value="metal">Металочерепиця</option>
+                <option value="ceramic">Керамічна черепиця</option>
+                <option value="slate">Шифер</option>
+                <option value="soft">М'яка покрівля</option>
+              </select>
+              <input
+                type="number"
+                class="calc-input"
+                id="roofingPrice"
+                placeholder="Ціна за м² (грн)"
+                min="1"
+              />
+            </div>
+
+            <button class="calc-button" onclick="calculateMaterials()">
+              Розрахувати матеріали
+            </button>
+            <div class="calc-result" id="materialsResult"></div>
+          </div>
+          <div class="construction-tip">
+            🧱 Завжди додавайте 10-15% запасу матеріалів на відходи та можливі
+            помилки
+          </div>
+        </div>
+
+        <!-- Area and Volume Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-ruler-combined"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор площі та об'єму</h3>
+          <p class="tool-description">
+            Розрахуйте площі та об'єми різних геометричних фігур
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="shapeType">
+              <option value="">Оберіть фігуру</option>
+              <option value="rectangle">Прямокутник</option>
+              <option value="circle">Коло</option>
+              <option value="triangle">Трикутник</option>
+              <option value="trapezoid">Трапеція</option>
+              <option value="cube">Куб</option>
+              <option value="cylinder">Циліндр</option>
+              <option value="sphere">Сфера</option>
+            </select>
+
+            <div id="rectangleFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Прямокутник:
+              </h4>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="rectLength"
+                  placeholder="Довжина (м)"
+                  min="0.01"
+                  step="0.01"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="rectWidth"
+                  placeholder="Ширина (м)"
+                  min="0.01"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            <div id="circleFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Коло:
+              </h4>
+              <input
+                type="number"
+                class="calc-input"
+                id="circleRadius"
+                placeholder="Радіус (м)"
+                min="0.01"
+                step="0.01"
+              />
+            </div>
+
+            <div id="triangleFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Трикутник:
+              </h4>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="triangleBase"
+                  placeholder="Основа (м)"
+                  min="0.01"
+                  step="0.01"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="triangleHeight"
+                  placeholder="Висота (м)"
+                  min="0.01"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            <div id="trapezoidFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Трапеція:
+              </h4>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="trapezoidBase1"
+                  placeholder="Основа 1 (м)"
+                  min="0.01"
+                  step="0.01"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="trapezoidBase2"
+                  placeholder="Основа 2 (м)"
+                  min="0.01"
+                  step="0.01"
+                />
+              </div>
+              <input
+                type="number"
+                class="calc-input"
+                id="trapezoidHeight"
+                placeholder="Висота (м)"
+                min="0.01"
+                step="0.01"
+              />
+            </div>
+
+            <div id="cubeFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Куб:
+              </h4>
+              <input
+                type="number"
+                class="calc-input"
+                id="cubeSide"
+                placeholder="Сторона (м)"
+                min="0.01"
+                step="0.01"
+              />
+            </div>
+
+            <div id="cylinderFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Циліндр:
+              </h4>
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="cylinderRadius"
+                  placeholder="Радіус (м)"
+                  min="0.01"
+                  step="0.01"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="cylinderHeight"
+                  placeholder="Висота (м)"
+                  min="0.01"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            <div id="sphereFields" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Сфера:
+              </h4>
+              <input
+                type="number"
+                class="calc-input"
+                id="sphereRadius"
+                placeholder="Радіус (м)"
+                min="0.01"
+                step="0.01"
+              />
+            </div>
+
+            <button class="calc-button" onclick="calculateAreaVolume()">
+              Розрахувати
+            </button>
+            <div class="calc-result" id="areaVolumeResult"></div>
+          </div>
+          <div class="construction-tip">
+            📐 Точні розрахунки площ та об'ємів допомагають уникнути перевитрат
+            матеріалів
+          </div>
+        </div>
+
+        <!-- Renovation Cost Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-paint-roller"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор вартості ремонту</h3>
+          <p class="tool-description">
+            Розрахуйте орієнтовну вартість ремонту квартири або будинку
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="renovationArea"
+              placeholder="Площа приміщення (м²)"
+              min="1"
+            />
+            <select class="calc-input" id="renovationType">
+              <option value="">Тип ремонту</option>
+              <option value="cosmetic">Косметичний ремонт</option>
+              <option value="major">Капітальний ремонт</option>
+              <option value="luxury">Елітний ремонт</option>
+              <option value="euro">Євроремонт</option>
+            </select>
+
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Роботи:
+            </h4>
+            <div class="input-group">
+              <label><input type="checkbox" id="wallsWork" /> Стіни</label>
+              <label><input type="checkbox" id="ceilingWork" /> Стеля</label>
+            </div>
+            <div class="input-group">
+              <label><input type="checkbox" id="floorWork" /> Підлога</label>
+              <label
+                ><input type="checkbox" id="plumbingWork" /> Сантехніка</label
+              >
+            </div>
+            <div class="input-group">
+              <label
+                ><input type="checkbox" id="electricalWork" /> Електрика</label
+              >
+              <label><input type="checkbox" id="tilingWork" /> Плитка</label>
+            </div>
+
+            <select class="calc-input" id="renovationRegion">
+              <option value="">Регіон</option>
+              <option value="kyiv">Київ</option>
+              <option value="lviv">Львів</option>
+              <option value="odesa">Одеса</option>
+              <option value="kharkiv">Харків</option>
+              <option value="other">Інші міста</option>
+            </select>
+
+            <button class="calc-button" onclick="calculateRenovationCost()">
+              Розрахувати вартість
+            </button>
+            <div class="calc-result" id="renovationResult"></div>
+            <div class="chart-container">
+              <canvas id="renovationChart"></canvas>
+            </div>
+          </div>
+          <div class="construction-tip">
+            🔨 Закладайте додатково 20-30% від розрахованої суми на
+            непередбачені витрати
+          </div>
+        </div>
+
+        <!-- Property ROI Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор окупності нерухомості</h3>
+          <p class="tool-description">
+            Розрахуйте рентабельність інвестицій у нерухомість
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="investmentAmount"
+              placeholder="Сума інвестицій (грн)"
+              min="100000"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="monthlyRent"
+              placeholder="Щомісячна орендна плата (грн)"
+              min="1000"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="propertyAppreciation"
+              placeholder="Зростання вартості нерухомості (%/рік)"
+              min="0"
+              step="0.1"
+              value="5"
+            />
+
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Щомісячні витрати:
+            </h4>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="propertyTax"
+                placeholder="Податок на нерухомість (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="maintenance"
+                placeholder="Обслуговування (грн)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="insurance"
+                placeholder="Страхування (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="management"
+                placeholder="Управління (грн)"
+                min="0"
+              />
+            </div>
+
+            <input
+              type="number"
+              class="calc-input"
+              id="vacancyRate"
+              placeholder="Рівень вакантності (%)"
+              min="0"
+              max="50"
+              step="1"
+              value="5"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="analysisYears"
+              placeholder="Період аналізу (років)"
+              min="1"
+              max="30"
+              value="10"
+            />
+
+            <button class="calc-button" onclick="calculatePropertyROI()">
+              Розрахувати окупність
+            </button>
+            <div class="calc-result" id="propertyROIResult"></div>
+            <div class="chart-container">
+              <canvas id="roiChart"></canvas>
+            </div>
+          </div>
+          <div class="construction-tip">
+            💰 Хороша рентабельність оренди нерухомості становить 8-12% річних
+          </div>
+        </div>
+
+        <!-- Building Energy Efficiency Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-leaf"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор енергоефективності будівлі</h3>
+          <p class="tool-description">
+            Оцініть енергоефективність та розрахуйте економію від утеплення
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="buildingArea"
+              placeholder="Площа будівлі (м²)"
+              min="10"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="ceilingHeight"
+              placeholder="Висота стель (м)"
+              min="2"
+              step="0.1"
+              value="2.7"
+            />
+
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Характеристики будівлі:
+            </h4>
+            <select class="calc-input" id="wallMaterial">
+              <option value="">Матеріал стін</option>
+              <option value="brick">Цегла</option>
+              <option value="concrete">Бетон</option>
+              <option value="wood">Дерево</option>
+              <option value="panel">Панель</option>
+            </select>
+
+            <select class="calc-input" id="insulationType">
+              <option value="">Тип утеплення</option>
+              <option value="none">Без утеплення</option>
+              <option value="basic">Базове утеплення</option>
+              <option value="advanced">Покращене утеплення</option>
+              <option value="passive">Пасивний будинок</option>
+            </select>
+
+            <select class="calc-input" id="windowType">
+              <option value="">Тип вікон</option>
+              <option value="single">Одинарне скло</option>
+              <option value="double">Подвійне скло</option>
+              <option value="triple">Потрійне скло</option>
+              <option value="energy">Енергозберігаючі</option>
+            </select>
+
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="heatingCost"
+                placeholder="Витрати на опалення (грн/рік)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="coolingCost"
+                placeholder="Витрати на охолодження (грн/рік)"
+                min="0"
+              />
+            </div>
+
+            <input
+              type="number"
+              class="calc-input"
+              id="insulationCost"
+              placeholder="Вартість утеплення (грн)"
+              min="0"
+            />
+
+            <button class="calc-button" onclick="calculateEnergyEfficiency()">
+              Розрахувати ефективність
+            </button>
+            <div class="calc-result" id="energyEfficiencyResult"></div>
+
+            <div class="efficiency-bar">
+              <div
+                class="efficiency-fill"
+                id="efficiencyBar"
+                style="width: 0%"
+              ></div>
+            </div>
+            <p
+              id="efficiencyText"
+              style="text-align: center; margin-top: 0.5rem"
+            >
+              Рівень енергоефективності: 0%
+            </p>
+          </div>
+          <div class="construction-tip">
+            🌱 Енергоефективні будівлі можуть зменшити витрати на опалення до
+            80%
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./js/construction-tools.js">
+    </script>
+  </body>
+</html>

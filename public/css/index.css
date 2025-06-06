@@ -532,6 +532,8 @@ html.light .stats-subtext {
   overflow: hidden;
   z-index: 1;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .industry-card::before {
@@ -597,19 +599,72 @@ html.light .industry-name {
   font-size: 0.9rem;
   color: var(--text-dark);
   opacity: 0.8;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height var(--transition-medium),
-    opacity var(--transition-medium);
+  margin-bottom: 1.25rem;
+  flex-grow: 1;
 }
 
 html.light .industry-description {
   color: var(--text-light);
 }
 
-.industry-card:hover .industry-description {
-  max-height: 100px;
-  opacity: 1;
+/* Industry Tools Button */
+.industry-tools-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  margin-top: auto;
+}
+
+.industry-tools-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--secondary-color),
+    var(--primary-color)
+  );
+  transition: all var(--transition-medium);
+  z-index: -1;
+}
+
+.industry-tools-btn:hover::before {
+  left: 0;
+}
+
+.industry-tools-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+}
+
+.industry-tools-btn i {
+  transition: transform var(--transition-medium);
+}
+
+.industry-tools-btn:hover i {
+  transform: rotate(15deg);
 }
 
 /* Testimonials Section */

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Фінансові Інструменти та Калькулятори - ProFix Network Hub</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/index.css" />
+    <link rel="stylesheet" href="../css/header.css" />
+    <link rel="stylesheet" href="./css/finance-tools.css">
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <a href="../index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          <span>ProFix Network Hub</span>
+        </a>
+        <div class="nav-menu" id="navMenu">
+          <a href="../index.html" class="nav-link">Головна</a>
+          <a href="../message.html" class="nav-link">Повідомлення</a>
+          <a href="../chat.html" class="nav-link">Чат</a>
+          <a href="../news.html" class="nav-link">Новини</a>
+          <a href="../profile.html" class="nav-link">Профіль</a>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span>
+            </span>
+          </label>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="tools-container">
+      <a href="../index.html#industries" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Повернутися до галузей
+      </a>
+
+      <h1 class="section-title">
+        <i class="fas fa-chart-line"></i>
+        Фінансові Інструменти та Калькулятори
+      </h1>
+
+      <div class="tools-grid">
+        <!-- Credit Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-credit-card"></i>
+          </div>
+          <h3 class="tool-title">Кредитний калькулятор</h3>
+          <p class="tool-description">
+            Розрахуйте щомісячні платежі та загальну вартість кредиту
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="loanAmount"
+              placeholder="Сума кредиту (грн)"
+              min="1000"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="loanTerm"
+              placeholder="Термін кредиту (місяців)"
+              min="1"
+              max="360"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="interestRate"
+              placeholder="Відсоткова ставка (%)"
+              min="0.1"
+              step="0.1"
+            />
+            <select class="calc-input" id="paymentType">
+              <option value="annuity">Ануїтетні платежі</option>
+              <option value="differentiated">Диференційовані платежі</option>
+            </select>
+            <button class="calc-button" onclick="calculateLoan()">
+              Розрахувати кредит
+            </button>
+            <div class="calc-result" id="loanResult"></div>
+            <div class="chart-container">
+              <canvas id="loanChart"></canvas>
+            </div>
+          </div>
+          <div class="finance-tip">
+            💡 Ануїтетні платежі рівні протягом усього терміну, а
+            диференційовані зменшуються з часом
+          </div>
+        </div>
+
+        <!-- Investment Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-piggy-bank"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор інвестицій</h3>
+          <p class="tool-description">
+            Розрахуйте майбутню вартість ваших інвестицій
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="initialInvestment"
+              placeholder="Початкова сума (грн)"
+              min="0"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="monthlyContribution"
+              placeholder="Щомісячний внесок (грн)"
+              min="0"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="annualReturn"
+              placeholder="Річна дохідність (%)"
+              min="0.1"
+              step="0.1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="investmentYears"
+              placeholder="Термін інвестування (років)"
+              min="1"
+              max="50"
+            />
+            <select class="calc-input" id="compoundingFrequency">
+              <option value="1">Щорічно</option>
+              <option value="2">Раз на півроку</option>
+              <option value="4">Щоквартально</option>
+              <option value="12" selected>Щомісяця</option>
+            </select>
+            <button class="calc-button" onclick="calculateInvestment()">
+              Розрахувати інвестиції
+            </button>
+            <div class="calc-result" id="investmentResult"></div>
+            <div class="chart-container">
+              <canvas id="investmentChart"></canvas>
+            </div>
+          </div>
+          <div class="finance-tip">
+            💡 Чим частіше відбувається капіталізація відсотків, тим вищий
+            кінцевий результат
+          </div>
+        </div>
+
+        <!-- Retirement Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-umbrella-beach"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор пенсійних накопичень</h3>
+          <p class="tool-description">
+            Розрахуйте необхідні накопичення для комфортної пенсії
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="currentAge"
+              placeholder="Поточний вік"
+              min="18"
+              max="65"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="retirementAge"
+              placeholder="Вік виходу на пенсію"
+              min="55"
+              max="75"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="lifeExpectancy"
+              placeholder="Очікувана тривалість життя"
+              min="65"
+              max="100"
+              value="85"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="currentSavings"
+              placeholder="Поточні накопичення (грн)"
+              min="0"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="desiredIncome"
+              placeholder="Бажаний місячний дохід (грн)"
+              min="1000"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="inflationRate"
+              placeholder="Рівень інфляції (%)"
+              min="0"
+              step="0.1"
+              value="5"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="returnRate"
+              placeholder="Очікувана дохідність (%)"
+              min="0.1"
+              step="0.1"
+              value="8"
+            />
+            <button class="calc-button" onclick="calculateRetirement()">
+              Розрахувати пенсію
+            </button>
+            <div class="calc-result" id="retirementResult"></div>
+          </div>
+          <div class="finance-tip">
+            💡 Починайте накопичувати на пенсію якомога раніше, щоб скористатися
+            силою складних відсотків
+          </div>
+        </div>
+
+        <!-- Currency Converter -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-exchange-alt"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор валютного обміну</h3>
+          <p class="tool-description">
+            Конвертуйте валюти за актуальними курсами
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="currencyAmount"
+              placeholder="Сума"
+              min="0.01"
+              step="0.01"
+            />
+            <div class="input-group">
+              <select class="calc-input" id="fromCurrency">
+                <option value="UAH">Гривня (UAH)</option>
+                <option value="USD">Долар США (USD)</option>
+                <option value="EUR">Євро (EUR)</option>
+                <option value="GBP">Фунт стерлінгів (GBP)</option>
+                <option value="PLN">Злотий (PLN)</option>
+              </select>
+              <select class="calc-input" id="toCurrency">
+                <option value="UAH">Гривня (UAH)</option>
+                <option value="USD" selected>Долар США (USD)</option>
+                <option value="EUR">Євро (EUR)</option>
+                <option value="GBP">Фунт стерлінгів (GBP)</option>
+                <option value="PLN">Злотий (PLN)</option>
+              </select>
+            </div>
+            <button class="calc-button" onclick="convertCurrency()">
+              Конвертувати валюту
+            </button>
+            <div class="calc-result" id="currencyResult"></div>
+          </div>
+          <div class="finance-tip">
+            💱 Курси валют оновлюються щодня. Використовуйте актуальні дані для
+            точних розрахунків
+          </div>
+        </div>
+
+        <!-- Tax Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-file-invoice-dollar"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор податків</h3>
+          <p class="tool-description">
+            Розрахуйте податки для фізичних осіб та підприємців
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="taxType">
+              <option value="">Оберіть тип оподаткування</option>
+              <option value="employee">Найманий працівник</option>
+              <option value="fop1">ФОП 1 група</option>
+              <option value="fop2">ФОП 2 група</option>
+              <option value="fop3">ФОП 3 група</option>
+            </select>
+            <input
+              type="number"
+              class="calc-input"
+              id="income"
+              placeholder="Дохід (грн)"
+              min="0"
+            />
+            <div id="employeeFields" style="display: none">
+              <input
+                type="number"
+                class="calc-input"
+                id="deductions"
+                placeholder="Податкові пільги (грн)"
+                min="0"
+              />
+            </div>
+            <div id="fopFields" style="display: none">
+              <input
+                type="number"
+                class="calc-input"
+                id="expenses"
+                placeholder="Витрати (грн)"
+                min="0"
+              />
+            </div>
+            <button class="calc-button" onclick="calculateTax()">
+              Розрахувати податки
+            </button>
+            <div class="calc-result" id="taxResult"></div>
+          </div>
+          <div class="finance-tip">
+            📊 Правильне планування податків допомагає оптимізувати фінансові
+            витрати
+          </div>
+        </div>
+
+        <!-- Budget Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор бюджету</h3>
+          <p class="tool-description">
+            Створіть та аналізуйте свій особистий або сімейний бюджет
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="totalIncome"
+              placeholder="Загальний дохід (грн)"
+              min="0"
+            />
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Витрати:
+            </h4>
+            <div class="input-group">
+              <input
+                type="text"
+                class="calc-input"
+                id="expenseName"
+                placeholder="Назва витрати"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="expenseAmount"
+                placeholder="Сума (грн)"
+                min="0"
+              />
+            </div>
+            <button class="calc-button" onclick="addExpense()">
+              Додати витрату
+            </button>
+            <div id="expensesList" style="margin-top: 1rem"></div>
+            <button
+              class="calc-button"
+              onclick="calculateBudget()"
+              style="margin-top: 1rem"
+            >
+              Розрахувати бюджет
+            </button>
+            <div class="calc-result" id="budgetResult"></div>
+            <div class="chart-container">
+              <canvas id="budgetChart"></canvas>
+            </div>
+          </div>
+          <div class="finance-tip">
+            💰 Правило 50/30/20: 50% на необхідні витрати, 30% на бажання, 20%
+            на заощадження
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./js/finance-tools.js"></script>
+  </body>
+</html>

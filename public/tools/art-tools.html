@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Мистецькі Інструменти та Калькулятори - ProFix Network Hub</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/index.css" />
+    <link rel="stylesheet" href="../css/header.css" />
+    <link rel="stylesheet" href="./css/art-tools.css">
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <a href="../index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          <span>ProFix Network Hub</span>
+        </a>
+        <div class="nav-menu" id="navMenu">
+          <a href="../index.html" class="nav-link">Головна</a>
+          <a href="../message.html" class="nav-link">Повідомлення</a>
+          <a href="../chat.html" class="nav-link">Чат</a>
+          <a href="../news.html" class="nav-link">Новини</a>
+          <a href="../profile.html" class="nav-link">Профіль</a>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span>
+            </span>
+          </label>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="tools-container">
+      <a href="../index.html#industries" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Повернутися до галузей
+      </a>
+
+      <h1 class="section-title">
+        <i class="fas fa-palette"></i>
+        Мистецькі Інструменти та Калькулятори
+      </h1>
+
+      <div class="tools-grid">
+        <!-- Art Commission Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-paint-brush"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор вартості художніх робіт</h3>
+          <p class="tool-description">
+            Розрахуйте справедливу ціну за художні роботи та комісії
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="artworkType">
+              <option value="">Тип роботи</option>
+              <option value="painting">Живопис</option>
+              <option value="drawing">Графіка</option>
+              <option value="digital">Цифрове мистецтво</option>
+              <option value="sculpture">Скульптура</option>
+              <option value="photography">Фотографія</option>
+              <option value="illustration">Ілюстрація</option>
+            </select>
+
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="artworkWidth"
+                placeholder="Ширина (см)"
+                min="1"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="artworkHeight"
+                placeholder="Висота (см)"
+                min="1"
+              />
+            </div>
+
+            <select class="calc-input" id="complexityLevel">
+              <option value="">Рівень складності</option>
+              <option value="simple">Простий</option>
+              <option value="medium">Середній</option>
+              <option value="complex">Складний</option>
+              <option value="masterpiece">Шедевр</option>
+            </select>
+
+            <input
+              type="number"
+              class="calc-input"
+              id="workingHours"
+              placeholder="Години роботи"
+              min="1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="hourlyRate"
+              placeholder="Погодинна ставка (грн)"
+              min="50"
+            />
+
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Матеріали:
+            </h4>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="canvasCost"
+                placeholder="Полотно/папір (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="paintCost"
+                placeholder="Фарби (грн)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="brushesCost"
+                placeholder="Пензлі/інструменти (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="otherMaterials"
+                placeholder="Інші матеріали (грн)"
+                min="0"
+              />
+            </div>
+
+            <select class="calc-input" id="artistExperience">
+              <option value="">Досвід художника</option>
+              <option value="beginner">Початківець (0-2 роки)</option>
+              <option value="intermediate">Середній (2-5 років)</option>
+              <option value="advanced">Досвідчений (5-10 років)</option>
+              <option value="expert">Експерт (10+ років)</option>
+            </select>
+
+            <input
+              type="number"
+              class="calc-input"
+              id="profitMargin"
+              placeholder="Прибуток (%)"
+              min="10"
+              max="100"
+              value="30"
+            />
+
+            <button class="calc-button" onclick="calculateArtworkPrice()">
+              Розрахувати вартість
+            </button>
+            <div class="calc-result" id="artworkPriceResult"></div>
+            <div class="chart-container">
+              <canvas id="artworkPriceChart"></canvas>
+            </div>
+          </div>
+          <div class="art-tip">
+            🎨 Не забувайте враховувати свій досвід, унікальність стилю та попит
+            на ваші роботи
+          </div>
+        </div>
+
+        <!-- Color Palette Generator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-palette"></i>
+          </div>
+          <h3 class="tool-title">Генератор кольорових палітр</h3>
+          <p class="tool-description">
+            Створюйте гармонійні кольорові палітри для ваших проектів
+          </p>
+          <div class="calculator">
+            <input
+              type="color"
+              class="calc-input"
+              id="baseColor"
+              value="#3b82f6"
+            />
+            <label for="baseColor">Базовий колір</label>
+
+            <select class="calc-input" id="colorScheme">
+              <option value="monochromatic">Монохроматична</option>
+              <option value="analogous">Аналогова</option>
+              <option value="complementary">Комплементарна</option>
+              <option value="triadic">Тріадична</option>
+              <option value="tetradic">Тетрадична</option>
+              <option value="split">Розділена комплементарна</option>
+            </select>
+
+            <button class="calc-button" onclick="generateColorPalette()">
+              Генерувати палітру
+            </button>
+
+            <div id="colorPaletteResult" style="display: none">
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Кольорова палітра:
+              </h4>
+              <div class="color-palette" id="colorPalette"></div>
+              <div id="colorCodes"></div>
+            </div>
+
+            <button
+              class="calc-button"
+              onclick="saveColorPalette()"
+              style="display: none"
+              id="savePaletteBtn"
+            >
+              Зберегти палітру
+            </button>
+          </div>
+          <div class="art-tip">
+            🌈 Використовуйте теорію кольору для створення емоційно впливових
+            композицій
+          </div>
+        </div>
+
+        <!-- Canvas Size Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-crop"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор розмірів полотна</h3>
+          <p class="tool-description">
+            Розрахуйте оптимальні розміри полотна та співвідношення сторін
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="canvasFormat">
+              <option value="">Стандартний формат</option>
+              <option value="A4">A4 (21×29.7 см)</option>
+              <option value="A3">A3 (29.7×42 см)</option>
+              <option value="A2">A2 (42×59.4 см)</option>
+              <option value="A1">A1 (59.4×84.1 см)</option>
+              <option value="A0">A0 (84.1×118.9 см)</option>
+              <option value="square">Квадрат</option>
+              <option value="golden">Золотий перетин</option>
+              <option value="custom">Користувацький</option>
+            </select>
+
+            <div id="customSizeFields" style="display: none">
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="customWidth"
+                  placeholder="Ширина (см)"
+                  min="1"
+                />
+                <input
+                  type="number"
+                  class="calc-input"
+                  id="customHeight"
+                  placeholder="Висота (см)"
+                  min="1"
+                />
+              </div>
+            </div>
+
+            <select class="calc-input" id="orientation">
+              <option value="landscape">Альбомна орієнтація</option>
+              <option value="portrait">Книжкова орієнтація</option>
+            </select>
+
+            <input
+              type="number"
+              class="calc-input"
+              id="dpi"
+              placeholder="DPI (для цифрових робіт)"
+              min="72"
+              value="300"
+            />
+
+            <select class="calc-input" id="units">
+              <option value="cm">Сантиметри</option>
+              <option value="inches">Дюйми</option>
+              <option value="pixels">Пікселі</option>
+            </select>
+
+            <button class="calc-button" onclick="calculateCanvasSize()">
+              Розрахувати розміри
+            </button>
+            <div class="calc-result" id="canvasSizeResult"></div>
+
+            <div class="canvas-preview" id="canvasPreview">
+              <span>Попередній перегляд полотна</span>
+            </div>
+          </div>
+          <div class="art-tip">
+            📐 Золотий перетин (1:1.618) створює найбільш приємні для ока
+            пропорції
+          </div>
+        </div>
+
+        <!-- Art Portfolio Value Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор вартості портфоліо</h3>
+          <p class="tool-description">
+            Оцініть загальну вартість вашого мистецького портфоліо
+          </p>
+          <div class="calculator">
+            <div class="input-group">
+              <input
+                type="text"
+                class="calc-input"
+                id="artworkName"
+                placeholder="Назва роботи"
+              />
+              <select class="calc-input" id="portfolioArtworkType">
+                <option value="">Тип роботи</option>
+                <option value="painting">Живопис</option>
+                <option value="drawing">Графіка</option>
+                <option value="digital">Цифрове мистецтво</option>
+                <option value="sculpture">Скульптура</option>
+                <option value="photography">Фотографія</option>
+                <option value="mixed">Змішана техніка</option>
+              </select>
+            </div>
+
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="portfolioWidth"
+                placeholder="Ширина (см)"
+                min="1"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="portfolioHeight"
+                placeholder="Висота (см)"
+                min="1"
+              />
+            </div>
+
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="creationYear"
+                placeholder="Рік створення"
+                min="1900"
+                max="2024"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="estimatedPrice"
+                placeholder="Оціночна вартість (грн)"
+                min="100"
+              />
+            </div>
+
+            <select class="calc-input" id="condition">
+              <option value="">Стан роботи</option>
+              <option value="excellent">Відмінний</option>
+              <option value="good">Добрий</option>
+              <option value="fair">Задовільний</option>
+              <option value="poor">Поганий</option>
+            </select>
+
+            <button class="calc-button" onclick="addArtworkToPortfolio()">
+              Додати роботу
+            </button>
+
+            <div id="portfolioList" style="margin-top: 1rem"></div>
+
+            <button class="calc-button" onclick="calculatePortfolioValue()">
+              Розрахувати загальну вартість
+            </button>
+            <div class="calc-result" id="portfolioValueResult"></div>
+            <div class="chart-container">
+              <canvas id="portfolioChart"></canvas>
+            </div>
+          </div>
+          <div class="art-tip">
+            💼 Регулярно оновлюйте оцінку вартості ваших робіт відповідно до
+            ринкових тенденцій
+          </div>
+        </div>
+
+        <!-- Exhibition Planning Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-calendar-alt"></i>
+          </div>
+          <h3 class="tool-title">Планувальник виставки</h3>
+          <p class="tool-description">
+            Плануйте виставки та розраховуйте бюджет і терміни
+          </p>
+          <div class="calculator">
+            <input
+              type="text"
+              class="calc-input"
+              id="exhibitionName"
+              placeholder="Назва виставки"
+            />
+            <input type="date" class="calc-input" id="exhibitionDate" />
+            <input
+              type="number"
+              class="calc-input"
+              id="exhibitionDuration"
+              placeholder="Тривалість (днів)"
+              min="1"
+              max="365"
+            />
+
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Витрати на виставку:
+            </h4>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="venueRent"
+                placeholder="Оренда приміщення (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="insuranceCost"
+                placeholder="Страхування (грн)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="marketingCost"
+                placeholder="Маркетинг (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="catalogCost"
+                placeholder="Каталог (грн)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="transportCost"
+                placeholder="Транспортування (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="installationCost"
+                placeholder="Монтаж (грн)"
+                min="0"
+              />
+            </div>
+            <input
+              type="number"
+              class="calc-input"
+              id="otherCosts"
+              placeholder="Інші витрати (грн)"
+              min="0"
+            />
+
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Очікувані доходи:
+            </h4>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="expectedSales"
+                placeholder="Очікувані продажі (грн)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="ticketSales"
+                placeholder="Продаж квитків (грн)"
+                min="0"
+              />
+            </div>
+            <input
+              type="number"
+              class="calc-input"
+              id="sponsorship"
+              placeholder="Спонсорство (грн)"
+              min="0"
+            />
+
+            <button class="calc-button" onclick="calculateExhibition()">
+              Розрахувати виставку
+            </button>
+            <div class="calc-result" id="exhibitionResult"></div>
+
+            <div
+              class="exhibition-timeline"
+              id="exhibitionTimeline"
+              style="display: none"
+            >
+              <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+                Таймлайн підготовки:
+              </h4>
+            </div>
+          </div>
+          <div class="art-tip">
+            🖼️ Почніть планування виставки принаймні за 6 місяців до відкриття
+          </div>
+        </div>
+
+        <!-- Art Skills Assessment -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <h3 class="tool-title">Оцінка мистецьких навичок</h3>
+          <p class="tool-description">
+            Оцініть свої навички та отримайте рекомендації для розвитку
+          </p>
+          <div class="calculator">
+            <h4 style="color: var(--text-dark); margin: 1rem 0 0.5rem 0">
+              Оцініть свої навички (1-10):
+            </h4>
+
+            <div class="skill-label">
+              <span>Малювання</span>
+              <span id="drawingValue">5</span>
+            </div>
+            <input
+              type="range"
+              class="calc-input"
+              id="drawingSkill"
+              min="1"
+              max="10"
+              value="5"
+              oninput="updateSkillValue('drawing', this.value)"
+            />
+
+            <div class="skill-label">
+              <span>Живопис</span>
+              <span id="paintingValue">5</span>
+            </div>
+            <input
+              type="range"
+              class="calc-input"
+              id="paintingSkill"
+              min="1"
+              max="10"
+              value="5"
+              oninput="updateSkillValue('painting', this.value)"
+            />
+
+            <div class="skill-label">
+              <span>Композиція</span>
+              <span id="compositionValue">5</span>
+            </div>
+            <input
+              type="range"
+              class="calc-input"
+              id="compositionSkill"
+              min="1"
+              max="10"
+              value="5"
+              oninput="updateSkillValue('composition', this.value)"
+            />
+
+            <div class="skill-label">
+              <span>Колір</span>
+              <span id="colorValue">5</span>
+            </div>
+            <input
+              type="range"
+              class="calc-input"
+              id="colorSkill"
+              min="1"
+              max="10"
+              value="5"
+              oninput="updateSkillValue('color', this.value)"
+            />
+
+            <div class="skill-label">
+              <span>Світло і тінь</span>
+              <span id="lightValue">5</span>
+            </div>
+            <input
+              type="range"
+              class="calc-input"
+              id="lightSkill"
+              min="1"
+              max="10"
+              value="5"
+              oninput="updateSkillValue('light', this.value)"
+            />
+
+            <div class="skill-label">
+              <span>Перспектива</span>
+              <span id="perspectiveValue">5</span>
+            </div>
+            <input
+              type="range"
+              class="calc-input"
+              id="perspectiveSkill"
+              min="1"
+              max="10"
+              value="5"
+              oninput="updateSkillValue('perspective', this.value)"
+            />
+
+            <div class="skill-label">
+              <span>Анатомія</span>
+              <span id="anatomyValue">5</span>
+            </div>
+            <input
+              type="range"
+              class="calc-input"
+              id="anatomySkill"
+              min="1"
+              max="10"
+              value="5"
+              oninput="updateSkillValue('anatomy', this.value)"
+            />
+
+            <input
+              type="number"
+              class="calc-input"
+              id="practiceHours"
+              placeholder="Години практики на тиждень"
+              min="1"
+              max="100"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="artExperience"
+              placeholder="Роки досвіду"
+              min="0"
+              max="50"
+            />
+
+            <button class="calc-button" onclick="assessArtSkills()">
+              Оцінити навички
+            </button>
+            <div class="calc-result" id="skillsAssessmentResult"></div>
+
+            <div id="skillsVisualization" style="margin-top: 1rem"></div>
+          </div>
+          <div class="art-tip">
+            📚 Постійна практика та навчання - ключ до розвитку мистецьких
+            навичок
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./js/art-tools.js"></script>
+  </body>
+</html>

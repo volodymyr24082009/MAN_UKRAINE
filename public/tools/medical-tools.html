@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Медичні Інструменти та Калькулятори - ProFix Network Hub</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/index.css" />
+    <link rel="stylesheet" href="../css/header.css" />
+    <link rel="stylesheet" href="./css/medical-tools.css">
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <a href="../index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          <span>ProFix Network Hub</span>
+        </a>
+        <div class="nav-menu" id="navMenu">
+          <a href="../index.html" class="nav-link">Головна</a>
+          <a href="../message.html" class="nav-link">Повідомлення</a>
+          <a href="../chat.html" class="nav-link">Чат</a>
+          <a href="../news.html" class="nav-link">Новини</a>
+          <a href="../profile.html" class="nav-link">Профіль</a>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span>
+            </span>
+          </label>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="tools-container">
+      <a href="../index.html#industries" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Повернутися до галузей
+      </a>
+
+      <h1 class="section-title">
+        <i class="fas fa-heartbeat"></i>
+        Медичні Інструменти та Калькулятори
+      </h1>
+
+      <div class="tools-grid">
+        <!-- BMI Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-weight"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор ІМТ</h3>
+          <p class="tool-description">
+            Розрахуйте індекс маси тіла та отримайте рекомендації щодо ваги
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="weight"
+              placeholder="Вага (кг)"
+              min="1"
+              step="0.1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="height"
+              placeholder="Зріст (см)"
+              min="1"
+            />
+            <select class="calc-input" id="gender">
+              <option value="">Оберіть стать</option>
+              <option value="male">Чоловіча</option>
+              <option value="female">Жіноча</option>
+            </select>
+            <button class="calc-button" onclick="calculateBMI()">
+              Розрахувати ІМТ
+            </button>
+            <div class="calc-result" id="bmiResult"></div>
+          </div>
+          <div class="warning">
+            ⚠️ Цей калькулятор призначений лише для інформаційних цілей. Завжди
+            консультуйтеся з лікарем.
+          </div>
+        </div>
+
+        <!-- Dosage Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-pills"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор дозування</h3>
+          <p class="tool-description">
+            Розрахуйте дозування ліків на основі ваги пацієнта
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="patientWeight"
+              placeholder="Вага пацієнта (кг)"
+              min="1"
+              step="0.1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="dosagePerKg"
+              placeholder="Доза на кг (мг/кг)"
+              min="0.1"
+              step="0.1"
+            />
+            <select class="calc-input" id="frequency">
+              <option value="">Частота прийому</option>
+              <option value="1">1 раз на день</option>
+              <option value="2">2 рази на день</option>
+              <option value="3">3 рази на день</option>
+              <option value="4">4 рази на день</option>
+            </select>
+            <input
+              type="number"
+              class="calc-input"
+              id="treatmentDays"
+              placeholder="Тривалість лікування (днів)"
+              min="1"
+            />
+            <button class="calc-button" onclick="calculateDosage()">
+              Розрахувати дозування
+            </button>
+            <div class="calc-result" id="dosageResult"></div>
+          </div>
+          <div class="warning">
+            ⚠️ Лише для медичних працівників. Завжди перевіряйте розрахунки та
+            консультуйтеся з фармацевтом.
+          </div>
+        </div>
+
+        <!-- Blood Pressure Monitor -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-heartbeat"></i>
+          </div>
+          <h3 class="tool-title">Аналізатор артеріального тиску</h3>
+          <p class="tool-description">
+            Проаналізуйте показники артеріального тиску та отримайте
+            рекомендації
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="systolic"
+              placeholder="Систолічний тиск (мм рт.ст.)"
+              min="50"
+              max="300"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="diastolic"
+              placeholder="Діастолічний тиск (мм рт.ст.)"
+              min="30"
+              max="200"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="patientAge"
+              placeholder="Вік пацієнта"
+              min="1"
+              max="120"
+            />
+            <button class="calc-button" onclick="analyzeBP()">
+              Проаналізувати тиск
+            </button>
+            <div class="calc-result" id="bpResult"></div>
+          </div>
+          <div class="warning">
+            ⚠️ При критичних показниках негайно зверніться до лікаря або
+            викличте швидку допомогу.
+          </div>
+        </div>
+
+        <!-- Calorie Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-apple-alt"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор калорій</h3>
+          <p class="tool-description">
+            Розрахуйте денну норму калорій та макронутрієнтів
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="calAge"
+              placeholder="Вік"
+              min="1"
+              max="120"
+            />
+            <select class="calc-input" id="calGender">
+              <option value="">Оберіть стать</option>
+              <option value="male">Чоловіча</option>
+              <option value="female">Жіноча</option>
+            </select>
+            <input
+              type="number"
+              class="calc-input"
+              id="calWeight"
+              placeholder="Вага (кг)"
+              min="1"
+              step="0.1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="calHeight"
+              placeholder="Зріст (см)"
+              min="1"
+            />
+            <select class="calc-input" id="activityLevel">
+              <option value="">Рівень активності</option>
+              <option value="1.2">Сидячий спосіб життя</option>
+              <option value="1.375">Легка активність (1-3 дні/тиждень)</option>
+              <option value="1.55">
+                Помірна активність (3-5 днів/тиждень)
+              </option>
+              <option value="1.725">
+                Висока активність (6-7 днів/тиждень)
+              </option>
+              <option value="1.9">Дуже висока активність</option>
+            </select>
+            <button class="calc-button" onclick="calculateCalories()">
+              Розрахувати калорії
+            </button>
+            <div class="calc-result" id="calorieResult"></div>
+          </div>
+        </div>
+
+        <!-- Medical Cost Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор медичних витрат</h3>
+          <p class="tool-description">
+            Розрахуйте вартість медичних послуг та процедур
+          </p>
+          <div class="calculator">
+            <div class="checkbox-group">
+              <div class="checkbox-item">
+                <input type="checkbox" id="consultation" value="500" />
+                <label>Консультація лікаря (500 грн)</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="bloodTest" value="300" />
+                <label>Загальний аналіз крові (300 грн)</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="urine" value="150" />
+                <label>Аналіз сечі (150 грн)</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="ecg" value="200" />
+                <label>ЕКГ (200 грн)</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="ultrasound" value="800" />
+                <label>УЗД (800 грн)</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="xray" value="400" />
+                <label>Рентген (400 грн)</label>
+              </div>
+            </div>
+            <input
+              type="number"
+              class="calc-input"
+              id="additionalCost"
+              placeholder="Додаткові витрати (грн)"
+              min="0"
+            />
+            <button class="calc-button" onclick="calculateMedicalCost()">
+              Розрахувати вартість
+            </button>
+            <div class="calc-result" id="medicalCostResult"></div>
+          </div>
+        </div>
+
+        <!-- Heart Rate Zones -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-heart"></i>
+          </div>
+          <h3 class="tool-title">Зони пульсу для тренувань</h3>
+          <p class="tool-description">
+            Розрахуйте оптимальні зони пульсу для різних видів тренувань
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="hrAge"
+              placeholder="Вік"
+              min="1"
+              max="120"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="restingHR"
+              placeholder="Пульс у спокої (уд/хв)"
+              min="40"
+              max="120"
+            />
+            <button class="calc-button" onclick="calculateHeartRateZones()">
+              Розрахувати зони пульсу
+            </button>
+            <div class="calc-result" id="heartRateResult"></div>
+          </div>
+          <div class="warning">
+            ⚠️ Перед початком тренувань проконсультуйтеся з лікарем, особливо
+            при наявності серцево-судинних захворювань.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="./js/medical-rools.js"></script>
+  </body>
+</html>

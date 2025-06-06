@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Транспортні Інструменти та Калькулятори - ProFix Network Hub</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/index.css" />
+    <link rel="stylesheet" href="../css/header.css" />
+    <link rel="stylesheet" href="./css/transport-tools.css">
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <a href="../index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          <span>ProFix Network Hub</span>
+        </a>
+        <div class="nav-menu" id="navMenu">
+          <a href="../index.html" class="nav-link">Головна</a>
+          <a href="../message.html" class="nav-link">Повідомлення</a>
+          <a href="../chat.html" class="nav-link">Чат</a>
+          <a href="../news.html" class="nav-link">Новини</a>
+          <a href="../profile.html" class="nav-link">Профіль</a>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span>
+            </span>
+          </label>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="tools-container">
+      <a href="../index.html#industries" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Повернутися до галузей
+      </a>
+
+      <h1 class="section-title">
+        <i class="fas fa-truck"></i>
+        Транспортні Інструменти та Калькулятори
+      </h1>
+
+      <div class="tools-grid">
+        <!-- Fuel Consumption Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-gas-pump"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор витрат палива</h3>
+          <p class="tool-description">
+            Розрахуйте витрати палива та вартість поїздки
+          </p>
+          <div class="calculator">
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="distance"
+                placeholder="Відстань (км)"
+                min="1"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="fuelConsumption"
+                placeholder="Витрата палива (л/100км)"
+                min="0.1"
+                step="0.1"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="fuelPrice"
+                placeholder="Ціна палива (грн/л)"
+                min="0.1"
+                step="0.1"
+              />
+              <select class="calc-input" id="fuelType">
+                <option value="petrol">Бензин</option>
+                <option value="diesel">Дизель</option>
+                <option value="gas">Газ</option>
+                <option value="electric">Електроенергія</option>
+              </select>
+            </div>
+            <input
+              type="number"
+              class="calc-input"
+              id="additionalExpenses"
+              placeholder="Додаткові витрати (грн)"
+              min="0"
+            />
+            <button class="calc-button" onclick="calculateFuelConsumption()">
+              Розрахувати витрати
+            </button>
+            <div class="calc-result" id="fuelResult"></div>
+            <div class="chart-container">
+              <canvas id="fuelChart"></canvas>
+            </div>
+          </div>
+          <div class="transport-tip">
+            ⛽ Економічний стиль водіння може зменшити витрати палива на 10-15%
+          </div>
+        </div>
+
+        <!-- Cargo Transportation Cost Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-shipping-fast"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор вартості перевезення вантажу</h3>
+          <p class="tool-description">
+            Розрахуйте вартість перевезення вантажу різними видами транспорту
+          </p>
+          <div class="calculator">
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="cargoWeight"
+                placeholder="Вага вантажу (кг)"
+                min="1"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="cargoVolume"
+                placeholder="Об'єм вантажу (м³)"
+                min="0.01"
+                step="0.01"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="cargoDistance"
+                placeholder="Відстань (км)"
+                min="1"
+              />
+              <select class="calc-input" id="transportType">
+                <option value="">Тип транспорту</option>
+                <option value="truck">Вантажівка</option>
+                <option value="train">Залізниця</option>
+                <option value="ship">Морський транспорт</option>
+                <option value="air">Авіаперевезення</option>
+              </select>
+            </div>
+            <select class="calc-input" id="cargoType">
+              <option value="">Тип вантажу</option>
+              <option value="general">Загальний вантаж</option>
+              <option value="fragile">Крихкий вантаж</option>
+              <option value="dangerous">Небезпечний вантаж</option>
+              <option value="perishable">Швидкопсувний вантаж</option>
+              <option value="oversized">Негабаритний вантаж</option>
+            </select>
+            <div class="input-group">
+              <select class="calc-input" id="loadingType">
+                <option value="">Тип завантаження</option>
+                <option value="manual">Ручне завантаження</option>
+                <option value="forklift">Навантажувач</option>
+                <option value="crane">Кран</option>
+              </select>
+              <select class="calc-input" id="urgency">
+                <option value="normal">Звичайна доставка</option>
+                <option value="express">Експрес-доставка</option>
+                <option value="urgent">Термінова доставка</option>
+              </select>
+            </div>
+            <button
+              class="calc-button"
+              onclick="calculateCargoTransportation()"
+            >
+              Розрахувати вартість
+            </button>
+            <div class="calc-result" id="cargoResult"></div>
+            <div class="chart-container">
+              <canvas id="cargoChart"></canvas>
+            </div>
+          </div>
+          <div class="transport-tip">
+            🚚 Консолідація вантажів може значно зменшити вартість перевезення
+          </div>
+        </div>
+
+        <!-- Vehicle Depreciation Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-car"></i>
+          </div>
+          <h3 class="tool-title">
+            Калькулятор амортизації транспортного засобу
+          </h3>
+          <p class="tool-description">
+            Розрахуйте амортизацію та залишкову вартість транспортного засобу
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="vehiclePrice"
+              placeholder="Початкова вартість (грн)"
+              min="1000"
+            />
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="vehicleAge"
+                placeholder="Вік транспорту (років)"
+                min="0"
+                max="30"
+              />
+              <select class="calc-input" id="vehicleType">
+                <option value="">Тип транспорту</option>
+                <option value="car">Легковий автомобіль</option>
+                <option value="truck">Вантажівка</option>
+                <option value="bus">Автобус</option>
+                <option value="motorcycle">Мотоцикл</option>
+                <option value="special">Спецтехніка</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="mileage"
+                placeholder="Пробіг (км)"
+                min="0"
+              />
+              <select class="calc-input" id="fuelType2">
+                <option value="petrol">Бензин</option>
+                <option value="diesel">Дизель</option>
+                <option value="gas">Газ</option>
+                <option value="hybrid">Гібрид</option>
+                <option value="electric">Електромобіль</option>
+              </select>
+            </div>
+            <select class="calc-input" id="condition">
+              <option value="">Стан транспорту</option>
+              <option value="excellent">Відмінний</option>
+              <option value="good">Добрий</option>
+              <option value="average">Середній</option>
+              <option value="poor">Поганий</option>
+            </select>
+            <input
+              type="number"
+              class="calc-input"
+              id="depreciationYears"
+              placeholder="Період амортизації (років)"
+              min="1"
+              max="20"
+              value="5"
+            />
+            <button class="calc-button" onclick="calculateDepreciation()">
+              Розрахувати амортизацію
+            </button>
+            <div class="calc-result" id="depreciationResult"></div>
+            <div class="chart-container">
+              <canvas id="depreciationChart"></canvas>
+            </div>
+          </div>
+          <div class="transport-tip">
+            🚗 Регулярне технічне обслуговування сповільнює темпи амортизації
+            транспортного засобу
+          </div>
+        </div>
+
+        <!-- Route Optimization Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-route"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор оптимізації маршруту</h3>
+          <p class="tool-description">
+            Оптимізуйте маршрут для економії часу та палива
+          </p>
+          <div class="calculator">
+            <div class="input-group">
+              <input
+                type="text"
+                class="calc-input"
+                id="routePoint"
+                placeholder="Назва пункту"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="pointDistance"
+                placeholder="Відстань від попереднього (км)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="stopTime"
+                placeholder="Час зупинки (хв)"
+                min="0"
+              />
+              <select class="calc-input" id="roadType">
+                <option value="highway">Автомагістраль</option>
+                <option value="city">Місто</option>
+                <option value="country">Сільська місцевість</option>
+                <option value="mountain">Гірська дорога</option>
+              </select>
+            </div>
+            <button class="calc-button" onclick="addRoutePoint()">
+              Додати точку маршруту
+            </button>
+
+            <div id="routeList" style="margin-top: 1rem"></div>
+
+            <div class="input-group" style="margin-top: 1rem">
+              <input
+                type="number"
+                class="calc-input"
+                id="avgSpeed"
+                placeholder="Середня швидкість (км/год)"
+                min="10"
+                max="150"
+                value="60"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="fuelConsumptionRoute"
+                placeholder="Витрата палива (л/100км)"
+                min="0.1"
+                step="0.1"
+                value="8"
+              />
+            </div>
+            <input
+              type="number"
+              class="calc-input"
+              id="fuelPriceRoute"
+              placeholder="Ціна палива (грн/л)"
+              min="0.1"
+              step="0.1"
+            />
+
+            <button
+              class="calc-button"
+              onclick="calculateRoute()"
+              style="margin-top: 1rem"
+            >
+              Розрахувати маршрут
+            </button>
+            <div class="calc-result" id="routeResult"></div>
+          </div>
+          <div class="transport-tip">
+            🗺️ Оптимізація маршруту може зменшити витрати палива до 20% та
+            скоротити час у дорозі
+          </div>
+        </div>
+
+        <!-- Vehicle Maintenance Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-wrench"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор технічного обслуговування</h3>
+          <p class="tool-description">
+            Розрахуйте графік та вартість технічного обслуговування транспорту
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="vehicleTypeTO">
+              <option value="">Тип транспорту</option>
+              <option value="car">Легковий автомобіль</option>
+              <option value="truck">Вантажівка</option>
+              <option value="bus">Автобус</option>
+              <option value="motorcycle">Мотоцикл</option>
+              <option value="special">Спецтехніка</option>
+            </select>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="currentMileage"
+                placeholder="Поточний пробіг (км)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="yearlyMileage"
+                placeholder="Річний пробіг (км)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="vehicleAge2"
+                placeholder="Вік транспорту (років)"
+                min="0"
+                max="30"
+              />
+              <select class="calc-input" id="fuelType3">
+                <option value="petrol">Бензин</option>
+                <option value="diesel">Дизель</option>
+                <option value="gas">Газ</option>
+                <option value="hybrid">Гібрид</option>
+                <option value="electric">Електромобіль</option>
+              </select>
+            </div>
+            <select class="calc-input" id="maintenanceLevel">
+              <option value="">Рівень обслуговування</option>
+              <option value="basic">Базовий</option>
+              <option value="standard">Стандартний</option>
+              <option value="extended">Розширений</option>
+              <option value="premium">Преміум</option>
+            </select>
+            <button class="calc-button" onclick="calculateMaintenance()">
+              Розрахувати обслуговування
+            </button>
+            <div class="calc-result" id="maintenanceResult"></div>
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                id="maintenanceProgress"
+                style="width: 0%"
+              ></div>
+            </div>
+            <p id="progressText" style="text-align: center; margin-top: 0.5rem">
+              Прогрес до наступного ТО: 0%
+            </p>
+          </div>
+          <div class="transport-tip">
+            🔧 Своєчасне технічне обслуговування подовжує термін служби
+            транспортного засобу та зменшує ризик поломок
+          </div>
+        </div>
+
+        <!-- Vehicle Insurance Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор страхування транспорту</h3>
+          <p class="tool-description">
+            Розрахуйте вартість ОСЦПВ, КАСКО та інших видів страхування
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="insuranceType">
+              <option value="">Тип страхування</option>
+              <option value="osago">ОСЦПВ (обов'язкове)</option>
+              <option value="kasko">КАСКО (добровільне)</option>
+              <option value="green">Зелена карта</option>
+              <option value="cargo">Страхування вантажу</option>
+            </select>
+            <select class="calc-input" id="vehicleTypeInsurance">
+              <option value="">Тип транспорту</option>
+              <option value="car">Легковий автомобіль</option>
+              <option value="truck">Вантажівка</option>
+              <option value="bus">Автобус</option>
+              <option value="motorcycle">Мотоцикл</option>
+              <option value="special">Спецтехніка</option>
+            </select>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="vehicleValue"
+                placeholder="Вартість транспорту (грн)"
+                min="1000"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="vehicleAge3"
+                placeholder="Вік транспорту (років)"
+                min="0"
+                max="30"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="enginePower"
+                placeholder="Потужність двигуна (к.с.)"
+                min="1"
+              />
+              <select class="calc-input" id="driverExperience">
+                <option value="">Стаж водія</option>
+                <option value="0">Менше 1 року</option>
+                <option value="1">1-3 роки</option>
+                <option value="3">3-5 років</option>
+                <option value="5">5-10 років</option>
+                <option value="10">Більше 10 років</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <select class="calc-input" id="accidentHistory">
+                <option value="0">Без аварій</option>
+                <option value="1">1 аварія</option>
+                <option value="2">2 аварії</option>
+                <option value="3">3+ аварії</option>
+              </select>
+              <select class="calc-input" id="region">
+                <option value="">Регіон реєстрації</option>
+                <option value="kyiv">Київ</option>
+                <option value="oblast">Обласний центр</option>
+                <option value="town">Місто</option>
+                <option value="village">Село</option>
+              </select>
+            </div>
+            <button class="calc-button" onclick="calculateInsurance()">
+              Розрахувати страхування
+            </button>
+            <div class="calc-result" id="insuranceResult"></div>
+            <div class="chart-container">
+              <canvas id="insuranceChart"></canvas>
+            </div>
+          </div>
+          <div class="warning-info">
+            🛡️ Страхування КАСКО захищає від викрадення, пошкодження та інших
+            ризиків, не покритих ОСЦПВ
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./js/transport-tools.js"></script>
+
+    </script>
+  </body>
+</html>

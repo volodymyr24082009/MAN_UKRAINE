@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Енергетичні Інструменти та Калькулятори - ProFix Network Hub</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/index.css" />
+    <link rel="stylesheet" href="../css/header.css" />
+    <link rel="stylesheet" href="./css/energy-tools.css">
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-container">
+        <a href="../index.html" class="logo">
+          <i class="fas fa-tools"></i>
+          <span>ProFix Network Hub</span>
+        </a>
+        <div class="nav-menu" id="navMenu">
+          <a href="../index.html" class="nav-link">Головна</a>
+          <a href="../message.html" class="nav-link">Повідомлення</a>
+          <a href="../chat.html" class="nav-link">Чат</a>
+          <a href="../news.html" class="nav-link">Новини</a>
+          <a href="../profile.html" class="nav-link">Профіль</a>
+          <label class="theme-switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="slider">
+              <span class="moon">🌙</span><span class="sun">☀️</span>
+            </span>
+          </label>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="tools-container">
+      <a href="../index.html#industries" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Повернутися до галузей
+      </a>
+
+      <h1 class="section-title">
+        <i class="fas fa-bolt"></i>
+        Енергетичні Інструменти та Калькулятори
+      </h1>
+
+      <div class="tools-grid">
+        <!-- Solar Panel Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-solar-panel"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор сонячних панелей</h3>
+          <p class="tool-description">
+            Розрахуйте потужність та кількість сонячних панелей для вашого дому
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="monthlyConsumption"
+              placeholder="Місячне споживання (кВт·год)"
+              min="1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="roofArea"
+              placeholder="Площа даху (м²)"
+              min="1"
+            />
+            <select class="calc-input" id="region">
+              <option value="">Оберіть регіон</option>
+              <option value="1200">Північна Україна (1200 год/рік)</option>
+              <option value="1300">Центральна Україна (1300 год/рік)</option>
+              <option value="1400">Південна Україна (1400 год/рік)</option>
+              <option value="1500">Крим (1500 год/рік)</option>
+            </select>
+            <select class="calc-input" id="panelType">
+              <option value="">Тип панелей</option>
+              <option value="300">Монокристалічні (300 Вт)</option>
+              <option value="280">Полікристалічні (280 Вт)</option>
+              <option value="250">Тонкоплівкові (250 Вт)</option>
+            </select>
+            <button class="calc-button" onclick="calculateSolar()">
+              Розрахувати систему
+            </button>
+            <div class="calc-result" id="solarResult"></div>
+          </div>
+          <div class="eco-info">
+            🌱 Сонячна енергетика зменшує викиди CO₂ та забезпечує енергетичну
+            незалежність
+          </div>
+        </div>
+
+        <!-- Energy Consumption Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-plug"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор споживання електроенергії</h3>
+          <p class="tool-description">
+            Розрахуйте споживання електроенергії побутовими приладами
+          </p>
+          <div class="calculator">
+            <select class="calc-input" id="appliance">
+              <option value="">Оберіть прилад</option>
+              <option value="2000">Електрочайник (2000 Вт)</option>
+              <option value="1500">Мікрохвильовка (1500 Вт)</option>
+              <option value="200">Холодильник (200 Вт)</option>
+              <option value="100">Телевізор (100 Вт)</option>
+              <option value="60">Лампа LED (60 Вт)</option>
+              <option value="2500">Кондиціонер (2500 Вт)</option>
+              <option value="1000">Пральна машина (1000 Вт)</option>
+            </select>
+            <input
+              type="number"
+              class="calc-input"
+              id="customPower"
+              placeholder="Або введіть потужність (Вт)"
+              min="1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="hoursPerDay"
+              placeholder="Години роботи на день"
+              min="0.1"
+              step="0.1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="daysPerMonth"
+              placeholder="Днів на місяць"
+              min="1"
+              max="31"
+              value="30"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="tariff"
+              placeholder="Тариф (грн/кВт·год)"
+              min="0.1"
+              step="0.01"
+              value="4.32"
+            />
+            <button class="calc-button" onclick="calculateConsumption()">
+              Розрахувати споживання
+            </button>
+            <div class="calc-result" id="consumptionResult"></div>
+          </div>
+        </div>
+
+        <!-- Wind Energy Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-wind"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор вітрової енергії</h3>
+          <p class="tool-description">
+            Оцініть потенціал вітрової енергії для вашої місцевості
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="windSpeed"
+              placeholder="Середня швидкість вітру (м/с)"
+              min="1"
+              step="0.1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="turbinePower"
+              placeholder="Потужність турбіни (кВт)"
+              min="1"
+              value="5"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="hubHeight"
+              placeholder="Висота установки (м)"
+              min="10"
+              value="30"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="efficiency"
+              placeholder="Ефективність (%)"
+              min="20"
+              max="50"
+              value="35"
+            />
+            <button class="calc-button" onclick="calculateWind()">
+              Розрахувати вітрову енергію
+            </button>
+            <div class="calc-result" id="windResult"></div>
+          </div>
+          <div class="eco-info">
+            💨 Вітрова енергія - чисте джерело енергії без викидів парникових
+            газів
+          </div>
+        </div>
+
+        <!-- Energy Efficiency Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-leaf"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор енергоефективності</h3>
+          <p class="tool-description">
+            Розрахуйте економію від заходів з енергоефективності
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="currentConsumption"
+              placeholder="Поточне споживання (кВт·год/місяць)"
+              min="1"
+            />
+            <select class="calc-input" id="efficiencyMeasure">
+              <option value="">Оберіть захід</option>
+              <option value="15">LED освітлення (15% економії)</option>
+              <option value="20">Утеплення стін (20% економії)</option>
+              <option value="25">Заміна вікон (25% економії)</option>
+              <option value="30">Енергоефективний котел (30% економії)</option>
+              <option value="10">Програмований термостат (10% економії)</option>
+            </select>
+            <input
+              type="number"
+              class="calc-input"
+              id="investmentCost"
+              placeholder="Вартість інвестицій (грн)"
+              min="1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="energyPrice"
+              placeholder="Ціна енергії (грн/кВт·год)"
+              min="0.1"
+              step="0.01"
+              value="4.32"
+            />
+            <button class="calc-button" onclick="calculateEfficiency()">
+              Розрахувати ефективність
+            </button>
+            <div class="calc-result" id="efficiencyResult"></div>
+          </div>
+        </div>
+
+        <!-- Battery Storage Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-battery-full"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор накопичувачів енергії</h3>
+          <p class="tool-description">
+            Розрахуйте необхідну ємність батарей для автономного живлення
+          </p>
+          <div class="calculator">
+            <input
+              type="number"
+              class="calc-input"
+              id="dailyConsumption"
+              placeholder="Добове споживання (кВт·год)"
+              min="1"
+              step="0.1"
+            />
+            <input
+              type="number"
+              class="calc-input"
+              id="autonomyDays"
+              placeholder="Днів автономії"
+              min="1"
+              max="7"
+              value="2"
+            />
+            <select class="calc-input" id="batteryType">
+              <option value="">Тип батарей</option>
+              <option value="0.8">Свинцево-кислотні (80% DOD)</option>
+              <option value="0.9">Літій-іонні (90% DOD)</option>
+              <option value="0.95">LiFePO4 (95% DOD)</option>
+            </select>
+            <input
+              type="number"
+              class="calc-input"
+              id="systemVoltage"
+              placeholder="Напруга системи (В)"
+              value="48"
+            />
+            <button class="calc-button" onclick="calculateBattery()">
+              Розрахувати батареї
+            </button>
+            <div class="calc-result" id="batteryResult"></div>
+          </div>
+        </div>
+
+        <!-- Carbon Footprint Calculator -->
+        <div class="tool-card">
+          <div class="tool-icon">
+            <i class="fas fa-globe-americas"></i>
+          </div>
+          <h3 class="tool-title">Калькулятор вуглецевого сліду</h3>
+          <p class="tool-description">
+            Розрахуйте викиди CO₂ від споживання енергії
+          </p>
+          <div class="calculator">
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="electricityUsage"
+                placeholder="Електроенергія (кВт·год/рік)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="gasUsage"
+                placeholder="Природний газ (м³/рік)"
+                min="0"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="number"
+                class="calc-input"
+                id="coalUsage"
+                placeholder="Вугілля (кг/рік)"
+                min="0"
+              />
+              <input
+                type="number"
+                class="calc-input"
+                id="fuelUsage"
+                placeholder="Паливо (л/рік)"
+                min="0"
+              />
+            </div>
+            <select class="calc-input" id="energySource">
+              <option value="">Джерело електроенергії</option>
+              <option value="0.8">Вугільна ТЕС (0.8 кг CO₂/кВт·год)</option>
+              <option value="0.5">Газова ТЕС (0.5 кг CO₂/кВт·год)</option>
+              <option value="0.02">Атомна ТЕС (0.02 кг CO₂/кВт·год)</option>
+              <option value="0.01">
+                Відновлювані джерела (0.01 кг CO₂/кВт·год)
+              </option>
+            </select>
+            <button class="calc-button" onclick="calculateCarbon()">
+              Розрахувати викиди
+            </button>
+            <div class="calc-result" id="carbonResult"></div>
+          </div>
+          <div class="eco-info">
+            🌍 Зменшення вуглецевого сліду допомагає боротися зі зміною клімату
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="./js/energy-tools.js"></script>
+  </body>
+</html>

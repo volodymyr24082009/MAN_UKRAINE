@@ -503,65 +503,75 @@ document.getElementById("findMasterBtn").addEventListener("click", () => {
   });
 });
 
-// Industry data with icons and descriptions
+// Industry data with icons, descriptions, and tools pages
 const industryData = [
   {
     name: "Інформаційні технології",
     icon: "fas fa-laptop-code",
     description:
       "Розробка програмного забезпечення, веб-сайтів, мобільних додатків та IT-консультації",
+    toolsPage: "tools/it-tools.html",
   },
   {
     name: "Медицина",
     icon: "fas fa-heartbeat",
     description:
       "Медичні консультації, догляд за пацієнтами та медичне обладнання",
+    toolsPage: "tools/medical-tools.html",
   },
   {
     name: "Енергетика",
     icon: "fas fa-bolt",
     description:
       "Енергетичні рішення, відновлювані джерела енергії та енергоефективність",
+    toolsPage: "tools/energy-tools.html",
   },
   {
     name: "Аграрна галузь",
     icon: "fas fa-tractor",
     description: "Сільськогосподарські послуги, агрономія та тваринництво",
+    toolsPage: "tools/agriculture-tools.html",
   },
   {
     name: "Фінанси та банківська справа",
     icon: "fas fa-money-bill-wave",
     description: "Фінансові консультації, бухгалтерія та інвестиційні поради",
+    toolsPage: "tools/finance-tools.html",
   },
   {
     name: "Освіта",
     icon: "fas fa-graduation-cap",
     description: "Навчання, тренінги та освітні програми",
+    toolsPage: "tools/education-tools.html",
   },
   {
     name: "Туризм і гостинність",
     icon: "fas fa-plane",
     description:
       "Туристичні послуги, організація подорожей та готельний бізнес",
+    toolsPage: "tools/tourism-tools.html",
   },
   {
     name: "Будівництво та нерухомість",
     icon: "fas fa-hard-hat",
     description: "Будівельні роботи, ремонт та консультації з нерухомості",
+    toolsPage: "tools/construction-tools.html",
   },
   {
     name: "Транспорт",
     icon: "fas fa-truck",
     description: "Транспортні послуги, логістика та доставка",
+    toolsPage: "tools/transport-tools.html",
   },
   {
     name: "Мистецтво і культура",
     icon: "fas fa-palette",
     description: "Творчі послуги, дизайн та організація культурних заходів",
+    toolsPage: "tools/art-tools.html",
   },
 ];
 
-// Render industries with animations
+// Render industries with animations and tools buttons
 function renderIndustries() {
   const industriesContainer = document.getElementById("industriesContainer");
   industriesContainer.innerHTML = "";
@@ -576,6 +586,10 @@ function renderIndustries() {
     <i class="${industry.icon} industry-icon"></i>
     <div class="industry-name">${industry.name}</div>
     <div class="industry-description">${industry.description}</div>
+    <button class="industry-tools-btn" onclick="openToolsPage('${industry.toolsPage}')">
+      <i class="fas fa-tools"></i>
+      Інструменти та калькулятори
+    </button>
   `;
 
     industriesContainer.appendChild(industryCard);
@@ -588,6 +602,11 @@ function renderIndustries() {
         "all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
     }, 100 * index);
   });
+}
+
+// Function to open tools page
+function openToolsPage(toolsPage) {
+  window.location.href = toolsPage;
 }
 
 // Render industries for dropdown
@@ -1222,6 +1241,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
 document.addEventListener("DOMContentLoaded", function () {
   const stars = document.querySelectorAll(".star-rating i");
   const ratingInput = document.getElementById("reviewRating");
@@ -1267,6 +1287,7 @@ document.addEventListener("DOMContentLoaded", function () {
     link.setAttribute("href", "admin-login.html");
   });
 });
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
@@ -1279,6 +1300,7 @@ if ("serviceWorker" in navigator) {
       );
   });
 }
+
 // Observe elements with animation classes
 function setupAnimations() {
   const animatedElements = document.querySelectorAll(
